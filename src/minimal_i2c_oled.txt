@@ -1,0 +1,32 @@
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET    -1  // Reset pin # (or -1 if sharing Arduino reset pin)
+#define SCREEN_ADDRESS 0x3C  //0x3D ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+#define SDA_PIN 6
+#define SCL_PIN 7
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+void setup() {
+  Serial.begin(460800);
+  Wire.begin(SDA_PIN, SCL_PIN); // SDA, SCL
+  delay(5000);
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) { // I2C address
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+  Serial.println(F("SSD1306 allocation OK"));
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0,0);
+  display.println("Hello, ESP32!");
+  display.display();
+}
+
+void loop() {
+}
