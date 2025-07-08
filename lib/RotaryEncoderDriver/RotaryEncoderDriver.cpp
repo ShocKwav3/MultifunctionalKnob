@@ -9,16 +9,7 @@ RotaryEncoderDriver::RotaryEncoderDriver(
     int swPin,
     int vccPin,
     uint8_t steps
-): clkPin(clkPin), dtPin(dtPin), swPin(swPin), vccPin(vccPin), steps(steps) {}
-
-void RotaryEncoderDriver::encoderTask(void* pvParameters) {
-    for (;;) {
-        if (rotaryEncoderDriverInstance) {
-            rotaryEncoderDriverInstance->runLoop();
-        }
-        vTaskDelay(pdMS_TO_TICKS(10));  // ~100Hz
-    }
-}
+) : clkPin(clkPin), dtPin(dtPin), swPin(swPin), vccPin(vccPin), steps(steps) {}
 
 RotaryEncoderDriver* RotaryEncoderDriver::getInstance(
     uint8_t clkPin,
@@ -30,7 +21,6 @@ RotaryEncoderDriver* RotaryEncoderDriver::getInstance(
     if (!rotaryEncoderDriverInstance) {
         rotaryEncoderDriverInstance = new RotaryEncoderDriver(clkPin, dtPin, swPin, vccPin, steps);
     }
-
     return rotaryEncoderDriverInstance;
 }
 
@@ -44,14 +34,7 @@ void RotaryEncoderDriver::begin() {
     rotaryEncoderInstance->setBoundaries(0, 1000, false);
     rotaryEncoderInstance->setAcceleration(250);
 
-    xTaskCreate(
-        encoderTask,
-        "EncoderTask",
-        4096,
-        nullptr,
-        1,
-        nullptr
-    );
+    xTaskCreate(encoderTask, "RotaryEncoderTask", 4096, nullptr, 1, nullptr);
 }
 
 void IRAM_ATTR RotaryEncoderDriver::readEncoderISR() {
@@ -60,15 +43,24 @@ void IRAM_ATTR RotaryEncoderDriver::readEncoderISR() {
     }
 }
 
-void RotaryEncoderDriver::runLoop() {
-        if (rotaryEncoderInstance->encoderChanged()) {
-        int32_t newValue = rotaryEncoderInstance->readEncoder();
-        if (onValueChangeCallback) {
-            onValueChangeCallback(newValue);
-        } else {
-            Serial.print("Value: ");
-            Serial.println(newValue);
+void RotaryEncoderDriver::encoderTask(void* pvParameters) {
+    while (true) {
+        if (rotaryEncoderDriverInstance) {
+            rotaryEncoderDriverInstance->runLoop();
         }
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
+
+void RotaryEncoderDriver::runLoop() {
+    static int32_t lastValue = 0;
+    int32_t current = rotaryEncoderInstance->readEncoder();
+
+    if (current != lastValue) {
+        if (onValueChangeCallback) {
+            onValueChangeCallback(current);
+        }
+        lastValue = current;
     }
     handleButton();
 }
@@ -76,8 +68,8 @@ void RotaryEncoderDriver::runLoop() {
 void RotaryEncoderDriver::handleButton() {
     static unsigned long lastTimeButtonDown = 0;
     static bool wasButtonDown = false;
-    unsigned long shortPressAfterMs = 50;
-    unsigned long longPressAfterMs = 1000;
+    const unsigned long shortPressAfterMs = 50;
+    const unsigned long longPressAfterMs = 1000;
 
     bool isDown = rotaryEncoderInstance->isEncoderButtonDown();
 
@@ -104,18 +96,12 @@ void RotaryEncoderDriver::handleButton() {
 void RotaryEncoderDriver::onShortClick() {
     if (onShortClickCallback) {
         onShortClickCallback();
-    } else {
-        Serial.print("button SHORT press ");
-        Serial.println(millis());
     }
 }
 
 void RotaryEncoderDriver::onLongClick() {
     if (onLongClickCallback) {
         onLongClickCallback();
-    } else {
-        Serial.print("button LONG press ");
-        Serial.println(millis());
     }
 }
 

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Wire.h"
 #include "Adafruit_GFX.h"
 #include "Adafruit_SSD1306.h"
@@ -6,6 +8,7 @@
 
 #include "config/device_config.h"
 #include "config/encoder_config.h"
+#include "event/RotaryEvent.h"
 #include "AppState.h"
 
 #define SCREEN_WIDTH 128
@@ -18,7 +21,33 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 BleKeyboard bleKeyboard(BLUETOOTH_DEVICE_NAME, BLUETOOTH_DEVICE_MANUFACTURER, BLUETOOTH_DEVICE_BATTERY_LEVEL_DEFAULT);
 RotaryEncoderDriver* rotaryEncoderDriver;
+QueueHandle_t rotaryEventQueue;
 AppState appState;
+
+void rotaryEventTask(void* param) {
+    RotaryEvent evt;
+
+    while (true) {
+        if (xQueueReceive(rotaryEventQueue, &evt, portMAX_DELAY)) {
+            switch (evt.type) {
+                case EventEnum::RotaryEventType::ROTATE:
+                    Serial.printf("Rotated: delta=%d\n", evt.delta);
+                    // TODO: Handle scroll/volume via BLE HID
+                    break;
+
+                case EventEnum::RotaryEventType::SHORT_CLICK:
+                    Serial.println("Short click detected");
+                    // TODO: Handle short press (e.g., mode switch)
+                    break;
+
+                case EventEnum::RotaryEventType::LONG_CLICK:
+                    Serial.println("Long click detected");
+                    // TODO: Handle long press (e.g., power toggle)
+                    break;
+            }
+        }
+    }
+}
 
 void setup()
 {
@@ -27,23 +56,39 @@ void setup()
     display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
     bleKeyboard.begin();
 
+    rotaryEventQueue = xQueueCreate(10, sizeof(RotaryEvent));
+
     rotaryEncoderDriver = RotaryEncoderDriver::getInstance(
-        ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS
+        ROTARY_ENCODER_A_PIN,
+        ROTARY_ENCODER_B_PIN,
+        ROTARY_ENCODER_BUTTON_PIN,
+        ROTARY_ENCODER_VCC_PIN,
+        ROTARY_ENCODER_STEPS
     );
     rotaryEncoderDriver->begin();
 
+    rotaryEncoderDriver->setOnValueChange([](int32_t newValue) {
+        static int32_t lastValue = 0;
+        int32_t delta = newValue - lastValue;
+        lastValue = newValue;
+
+        if (delta != 0) {
+            RotaryEvent evt{EventEnum::RotaryEventType::ROTATE, delta};
+            xQueueSend(rotaryEventQueue, &evt, 0);
+        }
+    });
+
     rotaryEncoderDriver->setOnShortClick([]() {
-        Serial.println("From setup - Short press");
+        RotaryEvent evt{EventEnum::RotaryEventType::SHORT_CLICK};
+        xQueueSend(rotaryEventQueue, &evt, 0);
     });
 
     rotaryEncoderDriver->setOnLongClick([]() {
-        Serial.println("From setup - Long press");
+        RotaryEvent evt{EventEnum::RotaryEventType::LONG_CLICK};
+        xQueueSend(rotaryEventQueue, &evt, 0);
     });
 
-    rotaryEncoderDriver->setOnValueChange([](int32_t val) {
-        Serial.print("From setup - Encoder changed: ");
-        Serial.println(val);
-    });
+    xTaskCreate(rotaryEventTask, "RotaryEventTask", 4096, nullptr, 1, nullptr);
 
     display.clearDisplay();
     display.setTextSize(1);
@@ -55,7 +100,7 @@ void setup()
 
 void loop()
 {
-    rotaryEncoderDriver->runLoop();
+    //rotaryEncoderDriver->runLoop();
 
     if (bleKeyboard.isConnected())
     {

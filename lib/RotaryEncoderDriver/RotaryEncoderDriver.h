@@ -23,7 +23,6 @@ public:
     );
 
     void begin();
-    void runLoop();
     void setOnShortClick(std::function<void()> callback);
     void setOnLongClick(std::function<void()> callback);
     void setOnValueChange(std::function<void(int32_t newValue)> callback);
@@ -31,17 +30,19 @@ public:
     static void IRAM_ATTR readEncoderISR();
 
 private:
-    static AiEsp32RotaryEncoder* rotaryEncoderInstance;
     static RotaryEncoderDriver* rotaryEncoderDriverInstance;
+    static AiEsp32RotaryEncoder* rotaryEncoderInstance;
+
+    static void encoderTask(void* pvParameters);
+
     std::function<void()> onShortClickCallback = nullptr;
     std::function<void()> onLongClickCallback = nullptr;
     std::function<void(int32_t)> onValueChangeCallback = nullptr;
 
-    static void encoderTask(void* pvParameters);
-
     void handleButton();
     void onShortClick();
     void onLongClick();
+    void runLoop();
 
     uint8_t clkPin;
     uint8_t dtPin;
