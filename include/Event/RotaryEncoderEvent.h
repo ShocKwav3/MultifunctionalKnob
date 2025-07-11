@@ -3,11 +3,10 @@
 #include "Arduino.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
-#include "enums/EventEnum.h"
+#include "Enum/EventEnum.h"
 
-
-struct RotaryEvent {
-    EventEnum::RotaryEventType type;
+struct RotaryEncoderEvent {
+    EventEnum::RotaryEncoderEventType type;
 
     int32_t delta = 0;
 };
