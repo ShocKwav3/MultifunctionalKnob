@@ -7,7 +7,7 @@
 #include "Config/device_config.h"
 #include "Config/encoder_config.h"
 #include "Event/RotaryEncoderEvent.h"
-#include "EventHandler/RotaryEncoderEventHandler.h"
+#include "Event/Dispatcher/RotaryEncoderEventDispatcher.h"
 #include "AppState.h"
 
 #define SCREEN_WIDTH 128
@@ -56,7 +56,7 @@ void setup()
 
     appState.rotaryEventQueue = xQueueCreate(10, sizeof(RotaryEncoderEvent));
 
-    static RotaryEncoderEventHandler rotaryHandler(appState.rotaryEventQueue);
+    static RotaryEncoderEventDispatcher rotaryDispatcher(appState.rotaryEventQueue);
 
     rotaryEncoderDriver = RotaryEncoderDriver::getInstance(
         ROTARY_ENCODER_A_PIN,
@@ -67,15 +67,15 @@ void setup()
     );
     rotaryEncoderDriver->begin();
     rotaryEncoderDriver->setOnValueChange([](int32_t newValue) {
-        rotaryHandler.onEncoderValueChange(newValue);
+        rotaryDispatcher.onEncoderValueChange(newValue);
     });
 
     rotaryEncoderDriver->setOnShortClick([]() {
-        rotaryHandler.onShortClick();
+        rotaryDispatcher.onShortClick();
     });
 
     rotaryEncoderDriver->setOnLongClick([]() {
-        rotaryHandler.onLongClick();
+        rotaryDispatcher.onLongClick();
     });
 
     xTaskCreate(rotaryEventTask, "RotaryEventTask", 4096, nullptr, 1, nullptr);
