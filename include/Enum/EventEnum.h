@@ -1,7 +1,7 @@
 #pragma once
 
 namespace EventEnum {
-    enum class RotaryEncoderEventType {
+    enum class RotaryEncoderEventTypes {
         ROTATE,
         SHORT_CLICK,
         LONG_CLICK

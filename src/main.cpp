@@ -6,7 +6,7 @@
 
 #include "Config/device_config.h"
 #include "Config/encoder_config.h"
-#include "Event/RotaryEncoderEvent.h"
+#include "Type/RotaryEncoderEventType.h"
 #include "Event/Dispatcher/RotaryEncoderEventDispatcher.h"
 #include "AppState.h"
 
@@ -23,22 +23,22 @@ RotaryEncoderDriver* rotaryEncoderDriver;
 AppState appState;
 
 void rotaryEventTask(void* param) {
-    RotaryEncoderEvent evt;
+    RotaryEncoderEventType evt;
 
     while (true) {
         if (xQueueReceive(appState.rotaryEventQueue, &evt, portMAX_DELAY)) {
             switch (evt.type) {
-                case EventEnum::RotaryEncoderEventType::ROTATE:
+                case EventEnum::RotaryEncoderEventTypes::ROTATE:
                     Serial.printf("Rotated: delta=%d\n", evt.delta);
                     // TODO: Handle scroll/volume via BLE HID
                     break;
 
-                case EventEnum::RotaryEncoderEventType::SHORT_CLICK:
+                case EventEnum::RotaryEncoderEventTypes::SHORT_CLICK:
                     Serial.println("Short click detected");
                     // TODO: Handle short press (e.g., mode switch)
                     break;
 
-                case EventEnum::RotaryEncoderEventType::LONG_CLICK:
+                case EventEnum::RotaryEncoderEventTypes::LONG_CLICK:
                     Serial.println("Long click detected");
                     // TODO: Handle long press (e.g., power toggle)
                     break;
@@ -54,7 +54,7 @@ void setup()
     display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
     bleKeyboard.begin();
 
-    appState.rotaryEventQueue = xQueueCreate(10, sizeof(RotaryEncoderEvent));
+    appState.rotaryEventQueue = xQueueCreate(10, sizeof(RotaryEncoderEventType));
 
     static RotaryEncoderEventDispatcher rotaryDispatcher(appState.rotaryEventQueue);
 

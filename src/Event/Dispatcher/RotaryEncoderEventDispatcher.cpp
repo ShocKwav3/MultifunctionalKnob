@@ -8,21 +8,21 @@ void RotaryEncoderEventDispatcher::onEncoderValueChange(int32_t newValue) {
     lastValue = newValue;
 
     if (delta != 0 && eventQueue) {
-        RotaryEncoderEvent evt{ EventEnum::RotaryEncoderEventType::ROTATE, delta };
+        RotaryEncoderEventType evt{ EventEnum::RotaryEncoderEventTypes::ROTATE, delta };
         xQueueSend(eventQueue, &evt, 0);
     }
 }
 
 void RotaryEncoderEventDispatcher::onShortClick() {
     if (eventQueue) {
-        RotaryEncoderEvent evt{ EventEnum::RotaryEncoderEventType::SHORT_CLICK };
+        RotaryEncoderEventType evt{ EventEnum::RotaryEncoderEventTypes::SHORT_CLICK };
         xQueueSend(eventQueue, &evt, 0);
     }
 }
 
 void RotaryEncoderEventDispatcher::onLongClick() {
     if (eventQueue) {
-        RotaryEncoderEvent evt{ EventEnum::RotaryEncoderEventType::LONG_CLICK };
+        RotaryEncoderEventType evt{ EventEnum::RotaryEncoderEventTypes::LONG_CLICK };
         xQueueSend(eventQueue, &evt, 0);
     }
 }
