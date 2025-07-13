@@ -56,7 +56,7 @@ void setup()
 
     appState.rotaryEventQueue = xQueueCreate(10, sizeof(RotaryEncoderEvent));
 
-    RotaryEncoderEventHandler::setQueue(appState.rotaryEventQueue);
+    static RotaryEncoderEventHandler rotaryHandler(appState.rotaryEventQueue);
 
     rotaryEncoderDriver = RotaryEncoderDriver::getInstance(
         ROTARY_ENCODER_A_PIN,
@@ -66,9 +66,17 @@ void setup()
         ROTARY_ENCODER_STEPS
     );
     rotaryEncoderDriver->begin();
-    rotaryEncoderDriver->setOnValueChange(RotaryEncoderEventHandler::onEncoderValueChange);
-    rotaryEncoderDriver->setOnShortClick(RotaryEncoderEventHandler::onShortClick);
-    rotaryEncoderDriver->setOnLongClick(RotaryEncoderEventHandler::onLongClick);
+    rotaryEncoderDriver->setOnValueChange([](int32_t newValue) {
+        rotaryHandler.onEncoderValueChange(newValue);
+    });
+
+    rotaryEncoderDriver->setOnShortClick([]() {
+        rotaryHandler.onShortClick();
+    });
+
+    rotaryEncoderDriver->setOnLongClick([]() {
+        rotaryHandler.onLongClick();
+    });
 
     xTaskCreate(rotaryEventTask, "RotaryEventTask", 4096, nullptr, 1, nullptr);
 

@@ -6,12 +6,13 @@
 
 class RotaryEncoderEventHandler {
 public:
-    static void setQueue(QueueHandle_t queue);
+    RotaryEncoderEventHandler(QueueHandle_t queue);
 
-    static void onEncoderValueChange(int32_t newValue);
-    static void onShortClick();
-    static void onLongClick();
+    void onEncoderValueChange(int32_t newValue);
+    void onShortClick();
+    void onLongClick();
 
 private:
-    static QueueHandle_t rotaryEventQueue;
+    QueueHandle_t eventQueue;
+    int32_t lastValue = 0;
 };
