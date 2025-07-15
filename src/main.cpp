@@ -1,14 +1,14 @@
 #include "Wire.h"
 #include "Adafruit_GFX.h"
 #include "Adafruit_SSD1306.h"
-#include "AiEsp32RotaryEncoder.h"
+#include "RotaryEncoderDriver.h"
 #include "BleKeyboard.h"
 
-#define ROTARY_ENCODER_A_PIN 1
-#define ROTARY_ENCODER_B_PIN 0
-#define ROTARY_ENCODER_BUTTON_PIN 2
-#define ROTARY_ENCODER_VCC_PIN -1
-#define ROTARY_ENCODER_STEPS 4
+#include "Config/device_config.h"
+#include "Config/encoder_config.h"
+#include "Type/RotaryEncoderEventType.h"
+#include "Event/Dispatcher/RotaryEncoderEventDispatcher.h"
+#include "AppState.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -18,80 +18,33 @@
 #define SCL_PIN 7
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+BleKeyboard bleKeyboard(BLUETOOTH_DEVICE_NAME, BLUETOOTH_DEVICE_MANUFACTURER, BLUETOOTH_DEVICE_BATTERY_LEVEL_DEFAULT);
+RotaryEncoderDriver* rotaryEncoderDriver;
+AppState appState;
 
-BleKeyboard bleKeyboard("KnobKoKy", "KoKy", 69);
+void rotaryEventTask(void* param) {
+    RotaryEncoderEventType evt;
 
-AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS);
+    while (true) {
+        if (xQueueReceive(appState.rotaryEventQueue, &evt, portMAX_DELAY)) {
+            switch (evt.type) {
+                case EventEnum::RotaryEncoderEventTypes::ROTATE:
+                    Serial.printf("Rotated: delta=%d\n", evt.delta);
+                    // TODO: Handle scroll/volume via BLE HID
+                    break;
 
-unsigned long shortPressAfterMiliseconds = 50;
-unsigned long longPressAfterMiliseconds = 1000;
+                case EventEnum::RotaryEncoderEventTypes::SHORT_CLICK:
+                    Serial.println("Short click detected");
+                    // TODO: Handle short press (e.g., mode switch)
+                    break;
 
-void on_button_short_click()
-{
-    Serial.print("button SHORT press ");
-    Serial.print(millis());
-    Serial.println(" milliseconds after restart");
-}
-
-void on_button_long_click()
-{
-    Serial.print("button LONG press ");
-    Serial.print(millis());
-    Serial.println(" milliseconds after restart");
-}
-
-void handle_rotary_button()
-{
-    static unsigned long lastTimeButtonDown = 0;
-    static bool wasButtonDown = false;
-
-    bool isEncoderButtonDown = rotaryEncoder.isEncoderButtonDown();
-    // isEncoderButtonDown = !isEncoderButtonDown; //uncomment this line if your button is reversed
-
-    if (isEncoderButtonDown)
-    {
-        Serial.print("+"); // REMOVE THIS LINE IF YOU DONT WANT TO SEE
-        if (!wasButtonDown)
-        {
-            // start measuring
-            lastTimeButtonDown = millis();
-        }
-        // else we wait since button is still down
-        wasButtonDown = true;
-        return;
-    }
-
-    // button is up
-    if (wasButtonDown)
-    {
-        Serial.println(""); // REMOVE THIS LINE IF YOU DONT WANT TO SEE
-        // click happened, lets see if it was short click, long click or just too short
-        if (millis() - lastTimeButtonDown >= longPressAfterMiliseconds)
-        {
-            on_button_long_click();
-        }
-        else if (millis() - lastTimeButtonDown >= shortPressAfterMiliseconds)
-        {
-            on_button_short_click();
+                case EventEnum::RotaryEncoderEventTypes::LONG_CLICK:
+                    Serial.println("Long click detected");
+                    // TODO: Handle long press (e.g., power toggle)
+                    break;
+            }
         }
     }
-    wasButtonDown = false;
-}
-
-void rotary_loop()
-{
-    // dont print anything unless value changed
-    if (rotaryEncoder.encoderChanged())
-    {
-        Serial.print("Value: ");
-        Serial.println(rotaryEncoder.readEncoder());
-    }
-    handle_rotary_button();
-}
-
-void IRAM_ATTR readEncoderISR()
-{
-    rotaryEncoder.readEncoder_ISR();
 }
 
 void setup()
@@ -99,25 +52,45 @@ void setup()
     Serial.begin(460800);
     Wire.begin(SDA_PIN, SCL_PIN);
     display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
-    rotaryEncoder.begin();
-    rotaryEncoder.setup(readEncoderISR);
     bleKeyboard.begin();
 
-    bool circleValues = false;
-    rotaryEncoder.setBoundaries(0, 1000, circleValues);
-    rotaryEncoder.setAcceleration(250);
+    appState.rotaryEventQueue = xQueueCreate(10, sizeof(RotaryEncoderEventType));
+
+    static RotaryEncoderEventDispatcher rotaryDispatcher(appState.rotaryEventQueue);
+
+    rotaryEncoderDriver = RotaryEncoderDriver::getInstance(
+        ROTARY_ENCODER_A_PIN,
+        ROTARY_ENCODER_B_PIN,
+        ROTARY_ENCODER_BUTTON_PIN,
+        ROTARY_ENCODER_VCC_PIN,
+        ROTARY_ENCODER_STEPS
+    );
+    rotaryEncoderDriver->begin();
+    rotaryEncoderDriver->setOnValueChange([](int32_t newValue) {
+        rotaryDispatcher.onEncoderValueChange(newValue);
+    });
+
+    rotaryEncoderDriver->setOnShortClick([]() {
+        rotaryDispatcher.onShortClick();
+    });
+
+    rotaryEncoderDriver->setOnLongClick([]() {
+        rotaryDispatcher.onLongClick();
+    });
+
+    xTaskCreate(rotaryEventTask, "RotaryEventTask", 4096, nullptr, 1, nullptr);
 
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(WHITE);
     display.setCursor(5, 5);
-    display.println("Knob firmware running!");
+    display.println("Knob firmware!");
     display.display();
 }
 
 void loop()
 {
-    rotary_loop();
+    //rotaryEncoderDriver->runLoop();
 
     if (bleKeyboard.isConnected())
     {
@@ -146,5 +119,5 @@ void loop()
     }
 
     Serial.println("Waiting 3 seconds...");
-    delay(3000);
+    delay(1000);
 }
