@@ -8,6 +8,8 @@
 #include "Config/encoder_config.h"
 #include "Type/RotaryEncoderEventType.h"
 #include "Event/Dispatcher/RotaryEncoderEventDispatcher.h"
+#include "Event/Handler/RotaryEncoderEventHandler.h"
+#include "Mode/Handler/ScrollModeHandler.cpp"
 #include "AppState.h"
 
 #define SCREEN_WIDTH 128
@@ -22,31 +24,6 @@ BleKeyboard bleKeyboard(BLUETOOTH_DEVICE_NAME, BLUETOOTH_DEVICE_MANUFACTURER, BL
 RotaryEncoderDriver* rotaryEncoderDriver;
 AppState appState;
 
-void rotaryEventTask(void* param) {
-    RotaryEncoderEventType evt;
-
-    while (true) {
-        if (xQueueReceive(appState.rotaryEventQueue, &evt, portMAX_DELAY)) {
-            switch (evt.type) {
-                case EventEnum::RotaryEncoderEventTypes::ROTATE:
-                    Serial.printf("Rotated: delta=%d\n", evt.delta);
-                    // TODO: Handle scroll/volume via BLE HID
-                    break;
-
-                case EventEnum::RotaryEncoderEventTypes::SHORT_CLICK:
-                    Serial.println("Short click detected");
-                    // TODO: Handle short press (e.g., mode switch)
-                    break;
-
-                case EventEnum::RotaryEncoderEventTypes::LONG_CLICK:
-                    Serial.println("Long click detected");
-                    // TODO: Handle long press (e.g., power toggle)
-                    break;
-            }
-        }
-    }
-}
-
 void setup()
 {
     Serial.begin(460800);
@@ -56,7 +33,7 @@ void setup()
 
     appState.rotaryEventQueue = xQueueCreate(10, sizeof(RotaryEncoderEventType));
 
-    static RotaryEncoderEventDispatcher rotaryDispatcher(appState.rotaryEventQueue);
+    static RotaryEncoderEventDispatcher rotaryEventDispatcher(appState.rotaryEventQueue);
 
     rotaryEncoderDriver = RotaryEncoderDriver::getInstance(
         ROTARY_ENCODER_A_PIN,
@@ -67,18 +44,22 @@ void setup()
     );
     rotaryEncoderDriver->begin();
     rotaryEncoderDriver->setOnValueChange([](int32_t newValue) {
-        rotaryDispatcher.onEncoderValueChange(newValue);
+        rotaryEventDispatcher.onEncoderValueChange(newValue);
     });
 
     rotaryEncoderDriver->setOnShortClick([]() {
-        rotaryDispatcher.onShortClick();
+        rotaryEventDispatcher.onShortClick();
     });
 
     rotaryEncoderDriver->setOnLongClick([]() {
-        rotaryDispatcher.onLongClick();
+        rotaryEventDispatcher.onLongClick();
     });
 
-    xTaskCreate(rotaryEventTask, "RotaryEventTask", 4096, nullptr, 1, nullptr);
+    static RotaryEncoderEventHandler rotaryEventHandler(appState.rotaryEventQueue);
+    static ScrollModeHandler scrollModeHandler;
+
+    rotaryEventHandler.setModeHandler(&scrollModeHandler);
+    rotaryEventHandler.start();
 
     display.clearDisplay();
     display.setTextSize(1);
