@@ -7,9 +7,10 @@
 #include "Config/device_config.h"
 #include "Config/encoder_config.h"
 #include "Type/EncoderInputEvent.h"
+#include "Type/AppEvent.h"
 #include "Event/Dispatcher/RotaryEncoderEventDispatcher.h"
 #include "Event/Handler/RotaryEncoderEventHandler.h"
-#include "Mode/Handler/ScrollModeHandler.cpp"
+#include "Mode/Handler/ScrollModeHandler.h"
 #include "AppState.h"
 
 #define SCREEN_WIDTH 128
@@ -31,9 +32,10 @@ void setup()
     display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
     bleKeyboard.begin();
 
-    appState.rotaryEventQueue = xQueueCreate(10, sizeof(EncoderInputEvent));
+    appState.encoderInputEventQueue = xQueueCreate(10, sizeof(EncoderInputEvent));
+    appState.appEventQueue = xQueueCreate(10, sizeof(AppEvent));
 
-    static RotaryEncoderEventDispatcher rotaryEventDispatcher(appState.rotaryEventQueue);
+    static RotaryEncoderEventDispatcher rotaryEventDispatcher(appState.encoderInputEventQueue);
 
     rotaryEncoderDriver = RotaryEncoderDriver::getInstance(
         ROTARY_ENCODER_A_PIN,
@@ -55,8 +57,9 @@ void setup()
         rotaryEventDispatcher.onLongClick();
     });
 
-    static RotaryEncoderEventHandler rotaryEventHandler(appState.rotaryEventQueue);
-    static ScrollModeHandler scrollModeHandler;
+    static AppEventDispatcher appDispatcher(appState.appEventQueue);
+    static ScrollModeHandler scrollModeHandler(&appDispatcher);
+    static RotaryEncoderEventHandler rotaryEventHandler(appState.encoderInputEventQueue);
 
     rotaryEventHandler.setModeHandler(&scrollModeHandler);
     rotaryEventHandler.start();
