@@ -5,8 +5,8 @@
 #include "freertos/queue.h"
 #include "Enum/EventEnum.h"
 
-struct RotaryEncoderEventType {
-    EventEnum::RotaryEncoderEventTypes type;
+struct EncoderInputEvent {
+    EventEnum::EncoderInputEventTypes type;
 
     int32_t delta = 0;
 };

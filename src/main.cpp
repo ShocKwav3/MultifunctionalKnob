@@ -6,7 +6,7 @@
 
 #include "Config/device_config.h"
 #include "Config/encoder_config.h"
-#include "Type/RotaryEncoderEventType.h"
+#include "Type/EncoderInputEvent.h"
 #include "Event/Dispatcher/RotaryEncoderEventDispatcher.h"
 #include "Event/Handler/RotaryEncoderEventHandler.h"
 #include "Mode/Handler/ScrollModeHandler.cpp"
@@ -31,7 +31,7 @@ void setup()
     display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
     bleKeyboard.begin();
 
-    appState.rotaryEventQueue = xQueueCreate(10, sizeof(RotaryEncoderEventType));
+    appState.rotaryEventQueue = xQueueCreate(10, sizeof(EncoderInputEvent));
 
     static RotaryEncoderEventDispatcher rotaryEventDispatcher(appState.rotaryEventQueue);
 

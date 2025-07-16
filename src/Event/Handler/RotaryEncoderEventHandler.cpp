@@ -16,20 +16,20 @@ void RotaryEncoderEventHandler::taskEntry(void* param) {
 }
 
 void RotaryEncoderEventHandler::taskLoop() {
-    RotaryEncoderEventType evt;
+    EncoderInputEvent evt;
 
     while (true) {
         if (xQueueReceive(eventQueue, &evt, portMAX_DELAY)) {
             if (!currentHandler) continue;
 
             switch (evt.type) {
-                case EventEnum::RotaryEncoderEventTypes::ROTATE:
+                case EventEnum::EncoderInputEventTypes::ROTATE:
                     currentHandler->handleRotate(evt.delta);
                     break;
-                case EventEnum::RotaryEncoderEventTypes::SHORT_CLICK:
+                case EventEnum::EncoderInputEventTypes::SHORT_CLICK:
                     currentHandler->handleShortClick();
                     break;
-                case EventEnum::RotaryEncoderEventTypes::LONG_CLICK:
+                case EventEnum::EncoderInputEventTypes::LONG_CLICK:
                     currentHandler->handleLongClick();
                     break;
             }
