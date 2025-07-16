@@ -1,0 +1,12 @@
+#include "AppEventDispatcher.h"
+
+AppEventDispatcher::AppEventDispatcher(QueueHandle_t queue)
+    : appEventQueue(queue) {}
+
+void AppEventDispatcher::dispatchAppEvent(ModeEnum::AppEventTypes type) {
+    if (appEventQueue) {
+        AppEvent event{ type };
+
+        xQueueSend(appEventQueue, &event, 0);
+    }
+}
