@@ -3,7 +3,8 @@
 #include "atomic"
 
 struct AppState {
-    QueueHandle_t rotaryEventQueue = nullptr;
+    QueueHandle_t encoderInputEventQueue = nullptr;
+    QueueHandle_t appEventQueue = nullptr;
 };
 
 extern AppState appState;
