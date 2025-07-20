@@ -10,7 +10,12 @@
 #include "Type/AppEvent.h"
 #include "Event/Dispatcher/RotaryEncoderEventDispatcher.h"
 #include "Event/Handler/RotaryEncoderEventHandler.h"
+#include "Event/Dispatcher/AppEventDispatcher.h"
+#include "Event/Handler/AppEventHandler.h"
 #include "Mode/Handler/ScrollModeHandler.h"
+#include "Mode/Handler/VolumeModeHandler.h"
+#include "Mode/Handler/ModeSelectionHandler.h"
+#include "Mode/Manager/ModeManager.h"
 #include "AppState.h"
 
 #define SCREEN_WIDTH 128
@@ -59,10 +64,21 @@ void setup()
 
     static AppEventDispatcher appDispatcher(appState.appEventQueue);
     static ScrollModeHandler scrollModeHandler(&appDispatcher);
-    static RotaryEncoderEventHandler rotaryEventHandler(appState.encoderInputEventQueue);
+    static VolumeModeHandler volumeModeHandler(&appDispatcher);
+    static ModeSelectionHandler selectionHandler(&appDispatcher);
 
+    static RotaryEncoderEventHandler rotaryEventHandler(appState.encoderInputEventQueue);
     rotaryEventHandler.setModeHandler(&scrollModeHandler);
     rotaryEventHandler.start();
+
+    static ModeManager modeManager(&rotaryEventHandler);
+    modeManager.registerHandler(ModeEnum::AppEventTypes::SCROLL, &scrollModeHandler);
+    modeManager.registerHandler(ModeEnum::AppEventTypes::VOLUME, &volumeModeHandler);
+    modeManager.setSelectionHandler(&selectionHandler);
+    modeManager.setMode(ModeEnum::AppEventTypes::SCROLL);
+
+    static AppEventHandler appEventHandler(appState.appEventQueue, &modeManager);
+    appEventHandler.start();
 
     display.clearDisplay();
     display.setTextSize(1);
@@ -102,6 +118,6 @@ void loop()
         bleKeyboard.mouseMove(0, 0, 3, 0); // vertical scrool up
     }
 
-    Serial.println("Waiting 3 seconds...");
-    delay(1000);
+    Serial.println("Waiting 5 seconds...");
+    delay(5000);
 }
