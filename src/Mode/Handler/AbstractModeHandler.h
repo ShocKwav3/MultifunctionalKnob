@@ -10,6 +10,7 @@ public:
     AbstractModeHandler(AppEventDispatcher* dispatcher);
 
     virtual void handleLongClick() override;
+    const char* getModeName() const override;
 
 protected:
     AppEventDispatcher* appEventDispatcher;

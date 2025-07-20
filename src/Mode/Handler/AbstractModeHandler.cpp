@@ -11,3 +11,7 @@ void AbstractModeHandler::handleLongClick() {
         appEventDispatcher->dispatchAppEvent(ModeEnum::AppEventTypes::MODE_SELECTION);
     }
 }
+
+const char* AbstractModeHandler::getModeName() const {
+    return "AbstractMode";
+}
