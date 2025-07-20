@@ -4,6 +4,13 @@ RotaryEncoderEventHandler::RotaryEncoderEventHandler(QueueHandle_t queue)
     : eventQueue(queue) {}
 
 void RotaryEncoderEventHandler::setModeHandler(ModeHandlerInterface* handler) {
+    if (!handler) {
+        Serial.println("RotaryEncoderEventHandler: Invalid mode handler");
+        return;
+    }
+
+    Serial.printf("RotaryEncoderEventHandler: Setting mode handler: %s\n", handler->getModeName());
+
     currentHandler = handler;
 }
 

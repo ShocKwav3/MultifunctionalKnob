@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Arduino.h"
 #include "Type/EncoderInputEvent.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
