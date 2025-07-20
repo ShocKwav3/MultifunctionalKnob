@@ -1,10 +1,12 @@
 #pragma once
 
+#include "Arduino.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 
 #include "Type/AppEvent.h"
 #include "Enum/ModeEnum.h"
+#include "Helper/ModeHelper.h"
 
 class AppEventDispatcher {
 public:
