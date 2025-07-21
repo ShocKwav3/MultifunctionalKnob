@@ -40,8 +40,24 @@ void setup()
     appState.encoderInputEventQueue = xQueueCreate(10, sizeof(EncoderInputEvent));
     appState.appEventQueue = xQueueCreate(10, sizeof(AppEvent));
 
-    static RotaryEncoderEventDispatcher rotaryEventDispatcher(appState.encoderInputEventQueue);
+    static AppEventDispatcher appDispatcher(appState.appEventQueue);
+    static ScrollModeHandler scrollModeHandler(&appDispatcher);
+    static VolumeModeHandler volumeModeHandler(&appDispatcher);
+    static ModeSelectionHandler selectionHandler(&appDispatcher);
 
+    static RotaryEncoderEventHandler rotaryEventHandler(appState.encoderInputEventQueue);
+    rotaryEventHandler.start();
+
+    static ModeManager modeManager(&rotaryEventHandler);
+    modeManager.registerHandler(ModeEnum::AppEventTypes::SCROLL, &scrollModeHandler);
+    modeManager.registerHandler(ModeEnum::AppEventTypes::VOLUME, &volumeModeHandler);
+    modeManager.setSelectionHandler(&selectionHandler);
+    modeManager.setMode(ModeEnum::AppEventTypes::SCROLL);
+
+    static AppEventHandler appEventHandler(appState.appEventQueue, &modeManager);
+    appEventHandler.start();
+
+    static RotaryEncoderEventDispatcher rotaryEventDispatcher(appState.encoderInputEventQueue);
     rotaryEncoderDriver = RotaryEncoderDriver::getInstance(
         ROTARY_ENCODER_A_PIN,
         ROTARY_ENCODER_B_PIN,
@@ -49,7 +65,6 @@ void setup()
         ROTARY_ENCODER_VCC_PIN,
         ROTARY_ENCODER_STEPS
     );
-    rotaryEncoderDriver->begin();
     rotaryEncoderDriver->setOnValueChange([](int32_t newValue) {
         rotaryEventDispatcher.onEncoderValueChange(newValue);
     });
@@ -61,24 +76,7 @@ void setup()
     rotaryEncoderDriver->setOnLongClick([]() {
         rotaryEventDispatcher.onLongClick();
     });
-
-    static AppEventDispatcher appDispatcher(appState.appEventQueue);
-    static ScrollModeHandler scrollModeHandler(&appDispatcher);
-    static VolumeModeHandler volumeModeHandler(&appDispatcher);
-    static ModeSelectionHandler selectionHandler(&appDispatcher);
-
-    static RotaryEncoderEventHandler rotaryEventHandler(appState.encoderInputEventQueue);
-    rotaryEventHandler.setModeHandler(&scrollModeHandler);
-    rotaryEventHandler.start();
-
-    static ModeManager modeManager(&rotaryEventHandler);
-    modeManager.registerHandler(ModeEnum::AppEventTypes::SCROLL, &scrollModeHandler);
-    modeManager.registerHandler(ModeEnum::AppEventTypes::VOLUME, &volumeModeHandler);
-    modeManager.setSelectionHandler(&selectionHandler);
-    modeManager.setMode(ModeEnum::AppEventTypes::SCROLL);
-
-    static AppEventHandler appEventHandler(appState.appEventQueue, &modeManager);
-    appEventHandler.start();
+    rotaryEncoderDriver->begin();
 
     display.clearDisplay();
     display.setTextSize(1);
