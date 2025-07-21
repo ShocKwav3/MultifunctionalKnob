@@ -3,8 +3,8 @@
 #include "Arduino.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
-#include "Enum/ModeEnum.h"
+#include "Enum/EventEnum.h"
 
 struct AppEvent {
-    ModeEnum::AppEventTypes type;
+    EventEnum::AppEventTypes type;
 };

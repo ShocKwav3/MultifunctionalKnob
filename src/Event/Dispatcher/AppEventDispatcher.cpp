@@ -3,7 +3,7 @@
 AppEventDispatcher::AppEventDispatcher(QueueHandle_t queue)
     : appEventQueue(queue) {}
 
-void AppEventDispatcher::dispatchAppEvent(ModeEnum::AppEventTypes type) {
+void AppEventDispatcher::dispatchAppEvent(EventEnum::AppEventTypes type) {
     if (appEventQueue) {
         AppEvent event{ type };
 

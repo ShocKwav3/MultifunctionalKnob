@@ -1,14 +1,12 @@
 #include "ModeManager.h"
 
-using namespace ModeEnum;
-
 ModeManager::ModeManager(RotaryEncoderEventHandler* rotaryHandler)
     : rotaryEventHandler(rotaryHandler),
-      currentMode(AppEventTypes::SCROLL),
-      previousMode(AppEventTypes::SCROLL) {}
+      currentMode(EventEnum::AppEventTypes::SCROLL),
+      previousMode(EventEnum::AppEventTypes::SCROLL) {}
 
-void ModeManager::registerHandler(AppEventTypes mode, ModeHandlerInterface* handler) {
-    if (static_cast<int>(mode) >= static_cast<int>(AppEventTypes::__MODE_SELECTION_LIMIT)) return;
+void ModeManager::registerHandler(EventEnum::AppEventTypes mode, ModeHandlerInterface* handler) {
+    if (static_cast<int>(mode) >= static_cast<int>(EventEnum::AppEventTypes::__MODE_SELECTION_LIMIT)) return;
     modeHandlers[static_cast<int>(mode)] = handler;
 }
 
@@ -22,8 +20,8 @@ void ModeManager::setCurrentHandler(ModeHandlerInterface* handler) {
     }
 }
 
-void ModeManager::setMode(AppEventTypes mode) {
-    if (static_cast<int>(mode) >= static_cast<int>(AppEventTypes::__MODE_SELECTION_LIMIT)) {
+void ModeManager::setMode(EventEnum::AppEventTypes mode) {
+    if (static_cast<int>(mode) >= static_cast<int>(EventEnum::AppEventTypes::__MODE_SELECTION_LIMIT)) {
         Serial.println("ModeManager: Invalid mode");
         return;
     }
@@ -40,7 +38,7 @@ void ModeManager::setMode(AppEventTypes mode) {
 
 void ModeManager::enterModeSelection() {
     previousMode = currentMode;
-    currentMode = AppEventTypes::MODE_SELECTION;
+    currentMode = EventEnum::AppEventTypes::MODE_SELECTION;
 
     if (selectionHandler) {
         setCurrentHandler(selectionHandler);

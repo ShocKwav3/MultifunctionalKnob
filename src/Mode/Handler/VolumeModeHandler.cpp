@@ -1,7 +1,5 @@
 #include "VolumeModeHandler.h"
 
-using namespace ModeEnum;
-
 VolumeModeHandler::VolumeModeHandler(AppEventDispatcher* dispatcher)
     : AbstractModeHandler(dispatcher) {}
 
@@ -16,5 +14,5 @@ void VolumeModeHandler::handleShortClick() {
 }
 
 const char* VolumeModeHandler::getModeName() const {
-    return ModeHelper::toString(AppEventTypes::VOLUME);
+    return ModeHelper::toString(EventEnum::AppEventTypes::VOLUME);
 }

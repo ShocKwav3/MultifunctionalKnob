@@ -4,6 +4,7 @@
 
 #include "ModeHandlerInterface.h"
 #include "Event/Dispatcher/AppEventDispatcher.h"
+#include "Enum/EventEnum.h"
 
 class AbstractModeHandler : public ModeHandlerInterface {
 public:

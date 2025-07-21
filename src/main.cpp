@@ -8,6 +8,7 @@
 #include "Config/encoder_config.h"
 #include "Type/EncoderInputEvent.h"
 #include "Type/AppEvent.h"
+#include "Enum/EventEnum.h"
 #include "Event/Dispatcher/RotaryEncoderEventDispatcher.h"
 #include "Event/Handler/RotaryEncoderEventHandler.h"
 #include "Event/Dispatcher/AppEventDispatcher.h"
@@ -49,10 +50,10 @@ void setup()
     rotaryEventHandler.start();
 
     static ModeManager modeManager(&rotaryEventHandler);
-    modeManager.registerHandler(ModeEnum::AppEventTypes::SCROLL, &scrollModeHandler);
-    modeManager.registerHandler(ModeEnum::AppEventTypes::VOLUME, &volumeModeHandler);
+    modeManager.registerHandler(EventEnum::AppEventTypes::SCROLL, &scrollModeHandler);
+    modeManager.registerHandler(EventEnum::AppEventTypes::VOLUME, &volumeModeHandler);
     modeManager.setSelectionHandler(&selectionHandler);
-    modeManager.setMode(ModeEnum::AppEventTypes::SCROLL);
+    modeManager.setMode(EventEnum::AppEventTypes::SCROLL);
 
     static AppEventHandler appEventHandler(appState.appEventQueue, &modeManager);
     appEventHandler.start();

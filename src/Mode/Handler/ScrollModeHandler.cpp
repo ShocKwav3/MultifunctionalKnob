@@ -1,7 +1,5 @@
 #include "ScrollModeHandler.h"
 
-using namespace ModeEnum;
-
 ScrollModeHandler::ScrollModeHandler(AppEventDispatcher* dispatcher)
     : AbstractModeHandler(dispatcher) {}
 
@@ -16,5 +14,5 @@ void ScrollModeHandler::handleShortClick() {
 }
 
 const char* ScrollModeHandler::getModeName() const {
-    return ModeHelper::toString(AppEventTypes::SCROLL);
+    return ModeHelper::toString(EventEnum::AppEventTypes::SCROLL);
 }

@@ -3,7 +3,7 @@
 #include "Arduino.h"
 
 #include "AbstractModeHandler.h"
-#include "Enum/ModeEnum.h"
+#include "Enum/EventEnum.h"
 #include "Helper/ModeHelper.h"
 
 class ModeSelectionHandler : public AbstractModeHandler {

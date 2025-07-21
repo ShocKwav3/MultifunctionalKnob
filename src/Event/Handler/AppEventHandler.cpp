@@ -1,7 +1,5 @@
 #include "AppEventHandler.h"
 
-using namespace ModeEnum;
-
 AppEventHandler::AppEventHandler(QueueHandle_t queue, ModeManager* modeManager)
     : eventQueue(queue), modeManager(modeManager) {}
 
@@ -21,17 +19,17 @@ void AppEventHandler::taskLoop() {
             Serial.print("AppEvent received: ");
             Serial.println(ModeHelper::toString(evt.type));
 
-            if (evt.type == AppEventTypes::MODE_SELECTION) {
+            if (evt.type == EventEnum::AppEventTypes::MODE_SELECTION) {
                 Serial.print("AppEvent mode selection");
                 modeManager->enterModeSelection();
                 //Serial.println(static_cast<int>(evt.type));
             }
-            else if (evt.type == AppEventTypes::MODE_SELECTION_CANCELLED) {
+            else if (evt.type == EventEnum::AppEventTypes::MODE_SELECTION_CANCELLED) {
                 Serial.print("AppEvent mode selection cancelled");
                 modeManager->cancelModeSelection();
                 //Serial.println(static_cast<int>(evt.type));
             }
-            else if (static_cast<int>(evt.type) < static_cast<int>(AppEventTypes::__MODE_SELECTION_LIMIT)) {
+            else if (static_cast<int>(evt.type) < static_cast<int>(EventEnum::AppEventTypes::__MODE_SELECTION_LIMIT)) {
                 Serial.print("AppEvent mode selection limit: ");
                 modeManager->setMode(evt.type);  // e.g., SCROLL, VOLUME, etc.
                 //Serial.println(static_cast<int>(evt.type));

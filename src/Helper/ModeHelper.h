@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Enum/ModeEnum.h"
+#include "Enum/EventEnum.h"
 
 class ModeHelper {
 public:
-    static const char* toString(ModeEnum::AppEventTypes type);
+    static const char* toString(EventEnum::AppEventTypes type);
 };
