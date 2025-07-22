@@ -2,7 +2,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
-#include "Type/RotaryEncoderEventType.h"
+#include "Type/EncoderInputEvent.h"
 
 class RotaryEncoderEventDispatcher {
 public:

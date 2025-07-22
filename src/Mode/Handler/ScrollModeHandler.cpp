@@ -1,13 +1,18 @@
-#include "AbstractModeHandler.cpp"
+#include "ScrollModeHandler.h"
 
-class ScrollModeHandler : public AbstractModeHandler {
-public:
-    void handleRotate(int delta) override {
-        Serial.printf("Scrolling by %d\n", delta);
-        // bleKeyboard.mouseMove(...);
-    }
+ScrollModeHandler::ScrollModeHandler(AppEventDispatcher* dispatcher)
+    : AbstractModeHandler(dispatcher) {}
 
-    void handleShortClick() override {
-        Serial.println("ScrollMode: short click");
-    }
-};
+void ScrollModeHandler::handleRotate(int delta) {
+    Serial.printf("ScrollModeHandler: Rotating by %d\n", delta);
+    // TODO: Send BLE horizontal scroll event via bleKeyboard.mouseMove(...)
+}
+
+void ScrollModeHandler::handleShortClick() {
+    Serial.println("ScrollModeHandler: Short click detected.");
+    // TODO: Maybe toggle scroll direction or switch sub-mode
+}
+
+const char* ScrollModeHandler::getModeName() const {
+    return ModeHelper::toString(EventEnum::AppEventTypes::SCROLL);
+}

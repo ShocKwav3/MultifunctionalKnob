@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Type/RotaryEncoderEventType.h"
+#include "Arduino.h"
+#include "Type/EncoderInputEvent.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "../../Mode/Handler/ModeHandlerInterface.h"
