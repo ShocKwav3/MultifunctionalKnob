@@ -19,17 +19,17 @@ void AppEventHandler::taskLoop() {
             Serial.print("AppEvent received: ");
             Serial.println(EncoderModeHelper::toString(evt.type));
 
-            if (evt.type == EventEnum::AppEventTypes::MODE_SELECTION) {
+            if (evt.type == EventEnum::EncoderModeEventTypes::ENCODER_MODE_SELECTION) {
                 Serial.print("AppEvent mode selection");
                 encoderModeManager->enterModeSelection();
                 //Serial.println(static_cast<int>(evt.type));
             }
-            else if (evt.type == EventEnum::AppEventTypes::MODE_SELECTION_CANCELLED) {
+            else if (evt.type == EventEnum::EncoderModeEventTypes::ENCODER_MODE_SELECTION_CANCELLED) {
                 Serial.print("AppEvent mode selection cancelled");
                 encoderModeManager->cancelModeSelection();
                 //Serial.println(static_cast<int>(evt.type));
             }
-            else if (static_cast<int>(evt.type) < static_cast<int>(EventEnum::AppEventTypes::__MODE_SELECTION_LIMIT)) {
+            else if (static_cast<int>(evt.type) < static_cast<int>(EventEnum::EncoderModeEventTypes::__ENCODER_MODE_SELECTION_LIMIT)) {
                 Serial.print("AppEvent mode selection limit: ");
                 encoderModeManager->setMode(evt.type);  // e.g., SCROLL, VOLUME, etc.
                 //Serial.println(static_cast<int>(evt.type));

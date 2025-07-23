@@ -1,12 +1,12 @@
 #include "EncoderModeHelper.h"
 
-const char* EncoderModeHelper::toString(EventEnum::AppEventTypes type) {
+const char* EncoderModeHelper::toString(EventEnum::EncoderModeEventTypes type) {
     switch (type) {
-        case EventEnum::AppEventTypes::MODE_SELECTION: return "MODE_SELECTION";
-        case EventEnum::AppEventTypes::MODE_SELECTED: return "MODE_SELECTED";
-        case EventEnum::AppEventTypes::MODE_SELECTION_CANCELLED: return "MODE_SELECTION_CANCELLED";
-        case EventEnum::AppEventTypes::SCROLL: return "SCROLL";
-        case EventEnum::AppEventTypes::VOLUME: return "VOLUME";
+        case EventEnum::EncoderModeEventTypes::ENCODER_MODE_SELECTION: return "Encoder mode: Selection";
+        case EventEnum::EncoderModeEventTypes::ENCODER_MODE_SELECTED: return "Encoder mode: Selected";
+        case EventEnum::EncoderModeEventTypes::ENCODER_MODE_SELECTION_CANCELLED: return "Encoder mode: Selection cancelled";
+        case EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL: return "Encoder mode: Scroll";
+        case EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME: return "Encoder mode: Volume";
         default: return "UNKNOWN";
     }
 }

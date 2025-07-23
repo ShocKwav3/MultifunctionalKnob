@@ -50,10 +50,10 @@ void setup()
     encoderEventHandler.start();
 
     static EncoderModeManager encoderModeManager(&encoderEventHandler);
-    encoderModeManager.registerHandler(EventEnum::AppEventTypes::SCROLL, &encoderModeHandlerScroll);
-    encoderModeManager.registerHandler(EventEnum::AppEventTypes::VOLUME, &encoderModeHandlerVolume);
+    encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL, &encoderModeHandlerScroll);
+    encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME, &encoderModeHandlerVolume);
     encoderModeManager.setSelectionHandler(&encoderModeSelectionHandler);
-    encoderModeManager.setMode(EventEnum::AppEventTypes::SCROLL);
+    encoderModeManager.setMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL);
 
     static AppEventHandler appEventHandler(appState.appEventQueue, &encoderModeManager);
     appEventHandler.start();

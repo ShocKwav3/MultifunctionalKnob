@@ -13,18 +13,18 @@ class EncoderModeManager {
 public:
     EncoderModeManager(EncoderEventHandler* encoderEventHandler);
 
-    void registerHandler(EventEnum::AppEventTypes mode, EncoderModeHandlerInterface* handler);
+    void registerHandler(EventEnum::EncoderModeEventTypes mode, EncoderModeHandlerInterface* handler);
     void setSelectionHandler(EncoderModeSelectionHandler* handler);
 
-    void setMode(EventEnum::AppEventTypes mode);
+    void setMode(EventEnum::EncoderModeEventTypes mode);
     void enterModeSelection();
     void cancelModeSelection();
 
 private:
-    EventEnum::AppEventTypes currentMode;
-    EventEnum::AppEventTypes previousMode;
+    EventEnum::EncoderModeEventTypes currentMode;
+    EventEnum::EncoderModeEventTypes previousMode;
 
-    EncoderModeHandlerInterface* modeHandlers[static_cast<int>(EventEnum::AppEventTypes::__MODE_SELECTION_LIMIT)] = {};
+    EncoderModeHandlerInterface* modeHandlers[static_cast<int>(EventEnum::EncoderModeEventTypes::__ENCODER_MODE_SELECTION_LIMIT)] = {};
     EncoderModeSelectionHandler* selectionHandler = nullptr;
 
     EncoderEventHandler* encoderEventHandler;

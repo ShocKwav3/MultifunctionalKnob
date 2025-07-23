@@ -4,5 +4,5 @@
 
 class EncoderModeHelper {
 public:
-    static const char* toString(EventEnum::AppEventTypes type);
+    static const char* toString(EventEnum::EncoderModeEventTypes type);
 };

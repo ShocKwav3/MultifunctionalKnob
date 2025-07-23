@@ -12,7 +12,7 @@ class AppEventDispatcher {
 public:
     AppEventDispatcher(QueueHandle_t queue);
 
-    void dispatchAppEvent(EventEnum::AppEventTypes type);
+    void dispatchAppEvent(EventEnum::EncoderModeEventTypes type);
 
 private:
     QueueHandle_t appEventQueue;
