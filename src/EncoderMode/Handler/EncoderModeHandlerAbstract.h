@@ -2,13 +2,13 @@
 
 #include "Arduino.h"
 
-#include "ModeHandlerInterface.h"
+#include "EncoderModeHandlerInterface.h"
 #include "Event/Dispatcher/AppEventDispatcher.h"
 #include "Enum/EventEnum.h"
 
-class AbstractModeHandler : public ModeHandlerInterface {
+class EncoderModeHandlerAbstract : public EncoderModeHandlerInterface {
 public:
-    AbstractModeHandler(AppEventDispatcher* dispatcher);
+    EncoderModeHandlerAbstract(AppEventDispatcher* dispatcher);
 
     virtual void handleLongClick() override;
     const char* getModeName() const override;

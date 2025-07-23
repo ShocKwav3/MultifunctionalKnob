@@ -2,7 +2,7 @@
 
 #include "Enum/EventEnum.h"
 
-class ModeHelper {
+class EncoderModeHelper {
 public:
     static const char* toString(EventEnum::AppEventTypes type);
 };

@@ -4,9 +4,9 @@
 #include "Arduino.h"
 #include "functional"
 
-class RotaryEncoderDriver {
+class EncoderDriver {
 public:
-    RotaryEncoderDriver(
+    EncoderDriver(
         uint8_t clkPin,
         uint8_t dtPin,
         int swPin,
@@ -14,7 +14,7 @@ public:
         uint8_t steps
     );
 
-    static RotaryEncoderDriver* getInstance(
+    static EncoderDriver* getInstance(
         uint8_t clkPin,
         uint8_t dtPin,
         int swPin,
@@ -30,8 +30,8 @@ public:
     static void IRAM_ATTR readEncoderISR();
 
 private:
-    static RotaryEncoderDriver* rotaryEncoderDriverInstance;
-    static AiEsp32RotaryEncoder* rotaryEncoderInstance;
+    static EncoderDriver* encoderDriverInstance;
+    static AiEsp32RotaryEncoder* encoderInstance;
 
     static void encoderTask(void* pvParameters);
 

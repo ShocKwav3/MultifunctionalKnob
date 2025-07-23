@@ -1,28 +1,28 @@
-#include "RotaryEncoderEventHandler.h"
+#include "EncoderEventHandler.h"
 
-RotaryEncoderEventHandler::RotaryEncoderEventHandler(QueueHandle_t queue)
+EncoderEventHandler::EncoderEventHandler(QueueHandle_t queue)
     : eventQueue(queue) {}
 
-void RotaryEncoderEventHandler::setModeHandler(ModeHandlerInterface* handler) {
+void EncoderEventHandler::setModeHandler(EncoderModeHandlerInterface* handler) {
     if (!handler) {
-        Serial.println("RotaryEncoderEventHandler: Invalid mode handler");
+        Serial.println("EncoderEventHandler: Invalid mode handler");
         return;
     }
 
-    Serial.printf("RotaryEncoderEventHandler: Setting mode handler: %s\n", handler->getModeName());
+    Serial.printf("EncoderEventHandler: Setting mode handler: %s\n", handler->getModeName());
 
     currentHandler = handler;
 }
 
-void RotaryEncoderEventHandler::start() {
+void EncoderEventHandler::start() {
     xTaskCreate(taskEntry, "RotaryEventTask", 4096, this, 1, nullptr);
 }
 
-void RotaryEncoderEventHandler::taskEntry(void* param) {
-    static_cast<RotaryEncoderEventHandler*>(param)->taskLoop();
+void EncoderEventHandler::taskEntry(void* param) {
+    static_cast<EncoderEventHandler*>(param)->taskLoop();
 }
 
-void RotaryEncoderEventHandler::taskLoop() {
+void EncoderEventHandler::taskLoop() {
     EncoderInputEvent evt;
 
     while (true) {

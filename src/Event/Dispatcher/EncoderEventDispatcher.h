@@ -4,9 +4,9 @@
 #include "freertos/queue.h"
 #include "Type/EncoderInputEvent.h"
 
-class RotaryEncoderEventDispatcher {
+class EncoderEventDispatcher {
 public:
-    RotaryEncoderEventDispatcher(QueueHandle_t queue);
+    EncoderEventDispatcher(QueueHandle_t queue);
 
     void onEncoderValueChange(int32_t newValue);
     void onShortClick();

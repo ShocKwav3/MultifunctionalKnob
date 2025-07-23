@@ -1,12 +1,12 @@
 #pragma once
 
-#include <Arduino.h> // TODO: Remove later
+#include "Arduino.h"
 
-class ModeHandlerInterface {
+class EncoderModeHandlerInterface {
 public:
     virtual void handleRotate(int delta) = 0;
     virtual void handleShortClick() = 0;
     virtual void handleLongClick() = 0;
     virtual const char* getModeName() const = 0;
-    virtual ~ModeHandlerInterface() = default;
+    virtual ~EncoderModeHandlerInterface() = default;
 };

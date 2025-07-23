@@ -4,18 +4,18 @@
 #include "Type/EncoderInputEvent.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
-#include "../../Mode/Handler/ModeHandlerInterface.h"
+#include "EncoderMode/Handler/EncoderModeHandlerInterface.h"
 
-class RotaryEncoderEventHandler {
+class EncoderEventHandler {
 public:
-    RotaryEncoderEventHandler(QueueHandle_t queue);
+    EncoderEventHandler(QueueHandle_t queue);
 
-    void setModeHandler(ModeHandlerInterface* handler);
+    void setModeHandler(EncoderModeHandlerInterface* handler);
     void start();  // creates the FreeRTOS task
 
 private:
     QueueHandle_t eventQueue;
-    ModeHandlerInterface* currentHandler = nullptr;
+    EncoderModeHandlerInterface* currentHandler = nullptr;
 
     static void taskEntry(void* param); // FreeRTOS static entry
     void taskLoop();                    // actual loop

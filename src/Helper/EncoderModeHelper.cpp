@@ -1,6 +1,6 @@
-#include "ModeHelper.h"
+#include "EncoderModeHelper.h"
 
-const char* ModeHelper::toString(EventEnum::AppEventTypes type) {
+const char* EncoderModeHelper::toString(EventEnum::AppEventTypes type) {
     switch (type) {
         case EventEnum::AppEventTypes::MODE_SELECTION: return "MODE_SELECTION";
         case EventEnum::AppEventTypes::MODE_SELECTED: return "MODE_SELECTED";

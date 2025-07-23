@@ -1,9 +1,9 @@
-#include "RotaryEncoderEventDispatcher.h"
+#include "EncoderEventDispatcher.h"
 
-RotaryEncoderEventDispatcher::RotaryEncoderEventDispatcher(QueueHandle_t queue)
+EncoderEventDispatcher::EncoderEventDispatcher(QueueHandle_t queue)
     : eventQueue(queue) {}
 
-void RotaryEncoderEventDispatcher::onEncoderValueChange(int32_t newValue) {
+void EncoderEventDispatcher::onEncoderValueChange(int32_t newValue) {
     int32_t delta = newValue - lastValue;
     lastValue = newValue;
 
@@ -13,14 +13,14 @@ void RotaryEncoderEventDispatcher::onEncoderValueChange(int32_t newValue) {
     }
 }
 
-void RotaryEncoderEventDispatcher::onShortClick() {
+void EncoderEventDispatcher::onShortClick() {
     if (eventQueue) {
         EncoderInputEvent evt{ EventEnum::EncoderInputEventTypes::SHORT_CLICK };
         xQueueSend(eventQueue, &evt, 0);
     }
 }
 
-void RotaryEncoderEventDispatcher::onLongClick() {
+void EncoderEventDispatcher::onLongClick() {
     if (eventQueue) {
         EncoderInputEvent evt{ EventEnum::EncoderInputEventTypes::LONG_CLICK };
         xQueueSend(eventQueue, &evt, 0);

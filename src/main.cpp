@@ -1,7 +1,7 @@
 #include "Wire.h"
 #include "Adafruit_GFX.h"
 #include "Adafruit_SSD1306.h"
-#include "RotaryEncoderDriver.h"
+#include "EncoderDriver.h"
 #include "BleKeyboard.h"
 
 #include "Config/device_config.h"
@@ -9,14 +9,14 @@
 #include "Type/EncoderInputEvent.h"
 #include "Type/AppEvent.h"
 #include "Enum/EventEnum.h"
-#include "Event/Dispatcher/RotaryEncoderEventDispatcher.h"
-#include "Event/Handler/RotaryEncoderEventHandler.h"
+#include "Event/Dispatcher/EncoderEventDispatcher.h"
+#include "Event/Handler/EncoderEventHandler.h"
 #include "Event/Dispatcher/AppEventDispatcher.h"
 #include "Event/Handler/AppEventHandler.h"
-#include "Mode/Handler/ScrollModeHandler.h"
-#include "Mode/Handler/VolumeModeHandler.h"
-#include "Mode/Handler/ModeSelectionHandler.h"
-#include "Mode/Manager/ModeManager.h"
+#include "EncoderMode/Handler/EncoderModeHandlerScroll.h"
+#include "EncoderMode/Handler/EncoderModeHandlerVolume.h"
+#include "EncoderMode/Handler/EncoderModeSelectionHandler.h"
+#include "EncoderMode/Manager/EncoderModeManager.h"
 #include "AppState.h"
 
 #define SCREEN_WIDTH 128
@@ -28,7 +28,7 @@
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 BleKeyboard bleKeyboard(BLUETOOTH_DEVICE_NAME, BLUETOOTH_DEVICE_MANUFACTURER, BLUETOOTH_DEVICE_BATTERY_LEVEL_DEFAULT);
-RotaryEncoderDriver* rotaryEncoderDriver;
+EncoderDriver* encoderDriver;
 AppState appState;
 
 void setup()
@@ -42,42 +42,42 @@ void setup()
     appState.appEventQueue = xQueueCreate(10, sizeof(AppEvent));
 
     static AppEventDispatcher appDispatcher(appState.appEventQueue);
-    static ScrollModeHandler scrollModeHandler(&appDispatcher);
-    static VolumeModeHandler volumeModeHandler(&appDispatcher);
-    static ModeSelectionHandler selectionHandler(&appDispatcher);
+    static EncoderModeHandlerScroll encoderModeHandlerScroll(&appDispatcher);
+    static EncoderModeHandlerVolume encoderModeHandlerVolume(&appDispatcher);
+    static EncoderModeSelectionHandler encoderModeSelectionHandler(&appDispatcher);
 
-    static RotaryEncoderEventHandler rotaryEventHandler(appState.encoderInputEventQueue);
-    rotaryEventHandler.start();
+    static EncoderEventHandler encoderEventHandler(appState.encoderInputEventQueue);
+    encoderEventHandler.start();
 
-    static ModeManager modeManager(&rotaryEventHandler);
-    modeManager.registerHandler(EventEnum::AppEventTypes::SCROLL, &scrollModeHandler);
-    modeManager.registerHandler(EventEnum::AppEventTypes::VOLUME, &volumeModeHandler);
-    modeManager.setSelectionHandler(&selectionHandler);
-    modeManager.setMode(EventEnum::AppEventTypes::SCROLL);
+    static EncoderModeManager encoderModeManager(&encoderEventHandler);
+    encoderModeManager.registerHandler(EventEnum::AppEventTypes::SCROLL, &encoderModeHandlerScroll);
+    encoderModeManager.registerHandler(EventEnum::AppEventTypes::VOLUME, &encoderModeHandlerVolume);
+    encoderModeManager.setSelectionHandler(&encoderModeSelectionHandler);
+    encoderModeManager.setMode(EventEnum::AppEventTypes::SCROLL);
 
-    static AppEventHandler appEventHandler(appState.appEventQueue, &modeManager);
+    static AppEventHandler appEventHandler(appState.appEventQueue, &encoderModeManager);
     appEventHandler.start();
 
-    static RotaryEncoderEventDispatcher rotaryEventDispatcher(appState.encoderInputEventQueue);
-    rotaryEncoderDriver = RotaryEncoderDriver::getInstance(
-        ROTARY_ENCODER_A_PIN,
-        ROTARY_ENCODER_B_PIN,
-        ROTARY_ENCODER_BUTTON_PIN,
-        ROTARY_ENCODER_VCC_PIN,
-        ROTARY_ENCODER_STEPS
+    static EncoderEventDispatcher encoderEventDispatcher(appState.encoderInputEventQueue);
+    encoderDriver = EncoderDriver::getInstance(
+        ENCODER_PIN_A,
+        ENCODER_PIN_B,
+        ENCODER_PIN_BUTTON,
+        ENCODER_PIN_VCC,
+        ENCODER_STEPS
     );
-    rotaryEncoderDriver->setOnValueChange([](int32_t newValue) {
-        rotaryEventDispatcher.onEncoderValueChange(newValue);
+    encoderDriver->setOnValueChange([](int32_t newValue) {
+        encoderEventDispatcher.onEncoderValueChange(newValue);
     });
 
-    rotaryEncoderDriver->setOnShortClick([]() {
-        rotaryEventDispatcher.onShortClick();
+    encoderDriver->setOnShortClick([]() {
+        encoderEventDispatcher.onShortClick();
     });
 
-    rotaryEncoderDriver->setOnLongClick([]() {
-        rotaryEventDispatcher.onLongClick();
+    encoderDriver->setOnLongClick([]() {
+        encoderEventDispatcher.onLongClick();
     });
-    rotaryEncoderDriver->begin();
+    encoderDriver->begin();
 
     display.clearDisplay();
     display.setTextSize(1);

@@ -10,23 +10,23 @@ CLK (A pin)            any microcontroler intput pin with interrupt -> in this e
 DT (B pin)             any microcontroler intput pin with interrupt -> in this example pin 21
 SW (button pin)        any microcontroler intput pin with interrupt -> in this example pin 25
 GND - to microcontroler GND
-VCC                    microcontroler VCC (then set ROTARY_ENCODER_VCC_PIN -1)
+VCC                    microcontroler VCC (then set ENCODER_PIN_VCC -1)
 
 ***OR in case VCC pin is not free you can cheat and connect:***
-VCC                    any microcontroler output pin - but set also ROTARY_ENCODER_VCC_PIN 25
+VCC                    any microcontroler output pin - but set also ENCODER_PIN_VCC 25
                         in this example pin 25
 
 */
-#define ROTARY_ENCODER_A_PIN 1 //CLK
-#define ROTARY_ENCODER_B_PIN 0 //DT
-#define ROTARY_ENCODER_BUTTON_PIN 2 //SW
-#define ROTARY_ENCODER_VCC_PIN -1 /* 27 put -1 of Rotary encoder Vcc is connected directly to 3,3V; else you can use declared output pin for powering rotary encoder */
+#define ENCODER_PIN_A 1 //CLK
+#define ENCODER_PIN_B 0 //DT
+#define ENCODER_PIN_BUTTON 2 //SW
+#define ENCODER_PIN_VCC -1 /* 27 put -1 of Rotary encoder Vcc is connected directly to 3,3V; else you can use declared output pin for powering rotary encoder */
 
 //depending on your encoder - try 1,2 or 4 to get expected behaviour
-#define ROTARY_ENCODER_STEPS 4
+#define ENCODER_STEPS 4
 
 //instead of changing here, rather change numbers above
-AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, ROTARY_ENCODER_VCC_PIN, ROTARY_ENCODER_STEPS);
+AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ENCODER_PIN_A, ENCODER_PIN_B, ENCODER_PIN_BUTTON, ENCODER_PIN_VCC, ENCODER_STEPS);
 
 //paramaters for button
 unsigned long shortPressAfterMiliseconds = 50;   //how long short press shoud be. Do not set too low to avoid bouncing (false press events).

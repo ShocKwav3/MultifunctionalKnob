@@ -2,13 +2,13 @@
 
 #include "Arduino.h"
 
-#include "AbstractModeHandler.h"
+#include "EncoderModeHandlerAbstract.h"
 #include "Enum/EventEnum.h"
-#include "Helper/ModeHelper.h"
+#include "Helper/EncoderModeHelper.h"
 
-class ModeSelectionHandler : public AbstractModeHandler {
+class EncoderModeSelectionHandler : public EncoderModeHandlerAbstract {
 public:
-    ModeSelectionHandler(AppEventDispatcher* dispatcher);
+    EncoderModeSelectionHandler(AppEventDispatcher* dispatcher);
 
     void handleRotate(int delta) override;
     void handleShortClick() override;

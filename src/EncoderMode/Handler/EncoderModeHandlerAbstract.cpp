@@ -1,9 +1,9 @@
-#include "AbstractModeHandler.h"
+#include "EncoderModeHandlerAbstract.h"
 
-AbstractModeHandler::AbstractModeHandler(AppEventDispatcher* dispatcher)
+EncoderModeHandlerAbstract::EncoderModeHandlerAbstract(AppEventDispatcher* dispatcher)
     : appEventDispatcher(dispatcher) {}
 
-void AbstractModeHandler::handleLongClick() {
+void EncoderModeHandlerAbstract::handleLongClick() {
     Serial.println("AbstractModeHandler: Long click → entering mode selection...");
 
     if (appEventDispatcher) {
@@ -11,6 +11,6 @@ void AbstractModeHandler::handleLongClick() {
     }
 }
 
-const char* AbstractModeHandler::getModeName() const {
+const char* EncoderModeHandlerAbstract::getModeName() const {
     return "AbstractMode";
 }

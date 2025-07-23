@@ -6,7 +6,7 @@
 
 #include "Type/AppEvent.h"
 #include "Enum/EventEnum.h"
-#include "Helper/ModeHelper.h"
+#include "Helper/EncoderModeHelper.h"
 
 class AppEventDispatcher {
 public:

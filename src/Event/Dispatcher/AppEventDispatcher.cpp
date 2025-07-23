@@ -8,7 +8,7 @@ void AppEventDispatcher::dispatchAppEvent(EventEnum::AppEventTypes type) {
         AppEvent event{ type };
 
         Serial.print("Dispatching AppEvent: ");
-        Serial.println(ModeHelper::toString(type));
+        Serial.println(EncoderModeHelper::toString(type));
 
         xQueueSend(appEventQueue, &event, 0);
     }
