@@ -34,7 +34,7 @@ void EncoderDriver::begin() {
     encoderInstance->setBoundaries(0, 1000, false);
     encoderInstance->setAcceleration(250);
 
-    xTaskCreate(encoderTask, "RotaryEncoderTask", 4096, nullptr, 1, nullptr);
+    xTaskCreate(encoderTask, "EncoderDriverTask", 4096, nullptr, 1, nullptr);
 }
 
 void IRAM_ATTR EncoderDriver::readEncoderISR() {

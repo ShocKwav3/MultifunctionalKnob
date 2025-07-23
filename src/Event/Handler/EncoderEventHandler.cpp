@@ -15,7 +15,7 @@ void EncoderEventHandler::setModeHandler(EncoderModeHandlerInterface* handler) {
 }
 
 void EncoderEventHandler::start() {
-    xTaskCreate(taskEntry, "RotaryEventTask", 4096, this, 1, nullptr);
+    xTaskCreate(taskEntry, "EncoderEventTask", 4096, this, 1, nullptr);
 }
 
 void EncoderEventHandler::taskEntry(void* param) {
