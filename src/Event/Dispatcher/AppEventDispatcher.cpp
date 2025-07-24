@@ -3,12 +3,12 @@
 AppEventDispatcher::AppEventDispatcher(QueueHandle_t queue)
     : appEventQueue(queue) {}
 
-void AppEventDispatcher::dispatchAppEvent(EventEnum::AppEventTypes type) {
+void AppEventDispatcher::dispatchAppEvent(EventEnum::EncoderModeEventTypes type) {
     if (appEventQueue) {
         AppEvent event{ type };
 
         Serial.print("Dispatching AppEvent: ");
-        Serial.println(ModeHelper::toString(type));
+        Serial.println(EncoderModeHelper::toString(type));
 
         xQueueSend(appEventQueue, &event, 0);
     }

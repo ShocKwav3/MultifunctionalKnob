@@ -6,5 +6,5 @@
 #include "Enum/EventEnum.h"
 
 struct AppEvent {
-    EventEnum::AppEventTypes type;
+    EventEnum::EncoderModeEventTypes type;
 };
