@@ -1,12 +1,14 @@
 #pragma once
 
-#include "Arduino.h"
+#include "EncoderMode/Interface/EncoderModeBaseInterface.h"
 
-class EncoderModeHandlerInterface {
+class EncoderModeHandlerInterface: public EncoderModeBaseInterface {
 public:
-    virtual void handleRotate(int delta) = 0;
-    virtual void handleShortClick() = 0;
-    virtual void handleLongClick() = 0;
-    virtual const char* getModeName() const = 0;
     virtual ~EncoderModeHandlerInterface() = default;
+
+    virtual void handleRotate(int delta) override = 0;
+    virtual void handleShortClick() override = 0;
+    virtual void handleLongClick() override = 0;
+
+    virtual const char* getModeName() const override = 0;
 };

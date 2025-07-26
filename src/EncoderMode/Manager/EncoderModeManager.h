@@ -4,17 +4,17 @@
 
 #include "Enum/EventEnum.h"
 #include "EncoderMode/Handler/EncoderModeHandlerInterface.h"
-#include "EncoderMode/Handler/EncoderModeSelectionHandler.h"
+#include "EncoderMode/Selector/EncoderModeSelector.h"
+#include "EncoderMode/Interface/EncoderModeBaseInterface.h"
 #include "Event/Handler/EncoderEventHandler.h"
 
 class EncoderEventHandler;
 
 class EncoderModeManager {
 public:
-    EncoderModeManager(EncoderEventHandler* encoderEventHandler);
+    EncoderModeManager(EncoderEventHandler* encoderEventHandler, EncoderModeSelector* encoderModeSelector);
 
     void registerHandler(EventEnum::EncoderModeEventTypes mode, EncoderModeHandlerInterface* handler);
-    void setSelectionHandler(EncoderModeSelectionHandler* handler);
 
     void setMode(EventEnum::EncoderModeEventTypes mode);
     void enterModeSelection();
@@ -25,9 +25,9 @@ private:
     EventEnum::EncoderModeEventTypes previousMode;
 
     EncoderModeHandlerInterface* modeHandlers[static_cast<int>(EventEnum::EncoderModeEventTypes::__ENCODER_MODE_SELECTION_LIMIT)] = {};
-    EncoderModeSelectionHandler* selectionHandler = nullptr;
+    EncoderModeSelector* encoderModeSelector = nullptr;
 
     EncoderEventHandler* encoderEventHandler;
 
-    void setCurrentHandler(EncoderModeHandlerInterface* handler);
+    void setCurrentHandler(EncoderModeBaseInterface* handler);
 };
