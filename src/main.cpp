@@ -15,7 +15,7 @@
 #include "Event/Handler/AppEventHandler.h"
 #include "EncoderMode/Handler/EncoderModeHandlerScroll.h"
 #include "EncoderMode/Handler/EncoderModeHandlerVolume.h"
-#include "EncoderMode/Handler/EncoderModeSelectionHandler.h"
+#include "EncoderMode/Selector/EncoderModeSelector.h"
 #include "EncoderMode/Manager/EncoderModeManager.h"
 #include "AppState.h"
 
@@ -44,15 +44,14 @@ void setup()
     static AppEventDispatcher appDispatcher(appState.appEventQueue);
     static EncoderModeHandlerScroll encoderModeHandlerScroll(&appDispatcher);
     static EncoderModeHandlerVolume encoderModeHandlerVolume(&appDispatcher);
-    static EncoderModeSelectionHandler encoderModeSelectionHandler(&appDispatcher);
+    static EncoderModeSelector encoderModeSelector(&appDispatcher);
 
     static EncoderEventHandler encoderEventHandler(appState.encoderInputEventQueue);
     encoderEventHandler.start();
 
-    static EncoderModeManager encoderModeManager(&encoderEventHandler);
+    static EncoderModeManager encoderModeManager(&encoderEventHandler, &encoderModeSelector);
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL, &encoderModeHandlerScroll);
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME, &encoderModeHandlerVolume);
-    encoderModeManager.setSelectionHandler(&encoderModeSelectionHandler);
     encoderModeManager.setMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL);
 
     static AppEventHandler appEventHandler(appState.appEventQueue, &encoderModeManager);
