@@ -5,18 +5,19 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "EncoderMode/Handler/EncoderModeHandlerInterface.h"
+#include "EncoderMode/Interface/EncoderModeBaseInterface.h"
 
 class EncoderEventHandler {
 public:
     EncoderEventHandler(QueueHandle_t queue);
 
-    void setModeHandler(EncoderModeHandlerInterface* handler);
-    void start();  // creates the FreeRTOS task
+    void setModeHandler(EncoderModeBaseInterface* handler);
+    void start();
 
 private:
     QueueHandle_t eventQueue;
-    EncoderModeHandlerInterface* currentHandler = nullptr;
+    EncoderModeBaseInterface* currentHandler = nullptr;
 
-    static void taskEntry(void* param); // FreeRTOS static entry
-    void taskLoop();                    // actual loop
+    static void taskEntry(void* param);
+    void taskLoop();
 };

@@ -1,9 +1,9 @@
-#include "EncoderModeSelectionHandler.h"
+#include "EncoderModeSelector.h"
 
-EncoderModeSelectionHandler::EncoderModeSelectionHandler(AppEventDispatcher* dispatcher)
-    : EncoderModeHandlerAbstract(dispatcher) {}
+EncoderModeSelector::EncoderModeSelector(AppEventDispatcher* dispatcher)
+    : appEventDispatcher(dispatcher) {}
 
-void EncoderModeSelectionHandler::handleRotate(int delta) {
+void EncoderModeSelector::handleRotate(int delta) {
     int modeCount = static_cast<int>(EventEnum::EncoderModeEventTypes::__ENCODER_MODE_SELECTION_LIMIT);
 
     selectionIndex = (selectionIndex + delta) % modeCount;
@@ -13,19 +13,19 @@ void EncoderModeSelectionHandler::handleRotate(int delta) {
     Serial.println(EncoderModeHelper::toString(static_cast<EventEnum::EncoderModeEventTypes>(selectionIndex)));
 }
 
-void EncoderModeSelectionHandler::handleShortClick() {
+void EncoderModeSelector::handleShortClick() {
     if (appEventDispatcher) {
         EventEnum::EncoderModeEventTypes selectedMode = static_cast<EventEnum::EncoderModeEventTypes>(selectionIndex);
         appEventDispatcher->dispatchAppEvent(selectedMode);
     }
 }
 
-void EncoderModeSelectionHandler::handleLongClick() {
+void EncoderModeSelector::handleLongClick() {
     if (appEventDispatcher) {
         appEventDispatcher->dispatchAppEvent(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SELECTION_CANCELLED);
     }
 }
 
-const char* EncoderModeSelectionHandler::getModeName() const {
+const char* EncoderModeSelector::getModeName() const {
     return EncoderModeHelper::toString(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SELECTION);
 }

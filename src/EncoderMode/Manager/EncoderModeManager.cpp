@@ -1,7 +1,8 @@
 #include "EncoderModeManager.h"
 
-EncoderModeManager::EncoderModeManager(EncoderEventHandler* encoderEventHandler)
+EncoderModeManager::EncoderModeManager(EncoderEventHandler* encoderEventHandler, EncoderModeSelector* encoderModeSelector)
     : encoderEventHandler(encoderEventHandler),
+      encoderModeSelector(encoderModeSelector),
       currentMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL),
       previousMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL) {}
 
@@ -10,11 +11,7 @@ void EncoderModeManager::registerHandler(EventEnum::EncoderModeEventTypes mode, 
     modeHandlers[static_cast<int>(mode)] = handler;
 }
 
-void EncoderModeManager::setSelectionHandler(EncoderModeSelectionHandler* handler) {
-    selectionHandler = handler;
-}
-
-void EncoderModeManager::setCurrentHandler(EncoderModeHandlerInterface* handler) {
+void EncoderModeManager::setCurrentHandler(EncoderModeBaseInterface* handler) {
     if (encoderEventHandler && handler) {
         encoderEventHandler->setModeHandler(handler);
     }
@@ -40,8 +37,8 @@ void EncoderModeManager::enterModeSelection() {
     previousMode = currentMode;
     currentMode = EventEnum::EncoderModeEventTypes::ENCODER_MODE_SELECTION;
 
-    if (selectionHandler) {
-        setCurrentHandler(selectionHandler);
+    if (encoderModeSelector) {
+        setCurrentHandler(encoderModeSelector);
     }
 }
 

@@ -3,7 +3,7 @@
 EncoderEventHandler::EncoderEventHandler(QueueHandle_t queue)
     : eventQueue(queue) {}
 
-void EncoderEventHandler::setModeHandler(EncoderModeHandlerInterface* handler) {
+void EncoderEventHandler::setModeHandler(EncoderModeBaseInterface* handler) {
     if (!handler) {
         Serial.println("EncoderEventHandler: Invalid mode handler");
         return;
