@@ -89,5 +89,10 @@ void setup()
 void loop()
 {
     Serial.println("Knob firmware running...");
+
+    if (bleKeyboard.isConnected()) {
+        Serial.println("BLE connected!");
+    }
+
     delay(5000);
 }
