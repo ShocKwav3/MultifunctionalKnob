@@ -8,7 +8,7 @@
 
 class EncoderModeHandlerVolume : public EncoderModeHandlerAbstract {
 public:
-    EncoderModeHandlerVolume(AppEventDispatcher* dispatcher);
+    EncoderModeHandlerVolume(AppEventDispatcher* dispatcher, BleKeyboard* bleKeyboard);
 
     void handleRotate(int delta) override;
     void handleShortClick() override;
