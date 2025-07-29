@@ -1,9 +1,9 @@
-#include "EncoderEventDispatcher.h"
+#include "EncoderInputEventDispatcher.h"
 
-EncoderEventDispatcher::EncoderEventDispatcher(QueueHandle_t queue)
+EncoderInputEventDispatcher::EncoderInputEventDispatcher(QueueHandle_t queue)
     : eventQueue(queue) {}
 
-void EncoderEventDispatcher::onEncoderValueChange(int32_t newValue) {
+void EncoderInputEventDispatcher::onEncoderValueChange(int32_t newValue) {
     int32_t delta = newValue - lastValue;
     lastValue = newValue;
 
@@ -13,14 +13,14 @@ void EncoderEventDispatcher::onEncoderValueChange(int32_t newValue) {
     }
 }
 
-void EncoderEventDispatcher::onShortClick() {
+void EncoderInputEventDispatcher::onShortClick() {
     if (eventQueue) {
         EncoderInputEvent evt{ EventEnum::EncoderInputEventTypes::SHORT_CLICK };
         xQueueSend(eventQueue, &evt, 0);
     }
 }
 
-void EncoderEventDispatcher::onLongClick() {
+void EncoderInputEventDispatcher::onLongClick() {
     if (eventQueue) {
         EncoderInputEvent evt{ EventEnum::EncoderInputEventTypes::LONG_CLICK };
         xQueueSend(eventQueue, &evt, 0);

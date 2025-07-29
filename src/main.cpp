@@ -9,14 +9,12 @@
 #include "Type/EncoderInputEvent.h"
 #include "Type/AppEvent.h"
 #include "Enum/EventEnum.h"
-#include "Event/Dispatcher/EncoderEventDispatcher.h"
-#include "Event/Handler/EncoderEventHandler.h"
+#include "Event/Dispatcher/EncoderInputEventDispatcher.h"
+#include "Event/Handler/EncoderInputEventHandler.h"
 #include "Event/Dispatcher/AppEventDispatcher.h"
 #include "Event/Handler/AppEventHandler.h"
 #include "EncoderMode/Handler/EncoderModeHandlerScroll.h"
 #include "EncoderMode/Handler/EncoderModeHandlerVolume.h"
-#include "EncoderMode/Selector/EncoderModeSelector.h"
-#include "EncoderMode/Manager/EncoderModeManager.h"
 #include "AppState.h"
 
 #define SCREEN_WIDTH 128
@@ -44,20 +42,14 @@ void setup()
     static AppEventDispatcher appDispatcher(appState.appEventQueue);
     static EncoderModeHandlerScroll encoderModeHandlerScroll(&appDispatcher);
     static EncoderModeHandlerVolume encoderModeHandlerVolume(&appDispatcher);
-    static EncoderModeSelector encoderModeSelector(&appDispatcher);
 
-    static EncoderEventHandler encoderEventHandler(appState.encoderInputEventQueue);
-    encoderEventHandler.start();
+    static EncoderInputEventHandler encoderInputEventHandler(appState.encoderInputEventQueue);
+    encoderInputEventHandler.start();
 
-    static EncoderModeManager encoderModeManager(&encoderEventHandler, &encoderModeSelector);
-    encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL, &encoderModeHandlerScroll);
-    encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME, &encoderModeHandlerVolume);
-    encoderModeManager.setMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL);
-
-    static AppEventHandler appEventHandler(appState.appEventQueue, &encoderModeManager);
+    static AppEventHandler appEventHandler(appState.appEventQueue);
     appEventHandler.start();
 
-    static EncoderEventDispatcher encoderEventDispatcher(appState.encoderInputEventQueue);
+    static EncoderInputEventDispatcher encoderInputEventDispatcher(appState.encoderInputEventQueue);
     encoderDriver = EncoderDriver::getInstance(
         ENCODER_PIN_A,
         ENCODER_PIN_B,
@@ -66,15 +58,15 @@ void setup()
         ENCODER_STEPS
     );
     encoderDriver->setOnValueChange([](int32_t newValue) {
-        encoderEventDispatcher.onEncoderValueChange(newValue);
+        encoderInputEventDispatcher.onEncoderValueChange(newValue);
     });
 
     encoderDriver->setOnShortClick([]() {
-        encoderEventDispatcher.onShortClick();
+        encoderInputEventDispatcher.onShortClick();
     });
 
     encoderDriver->setOnLongClick([]() {
-        encoderEventDispatcher.onLongClick();
+        encoderInputEventDispatcher.onLongClick();
     });
     encoderDriver->begin();
 

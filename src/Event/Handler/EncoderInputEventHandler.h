@@ -1,18 +1,15 @@
 #pragma once
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/queue.h"
 #include "Arduino.h"
-
+#include "Type/EncoderInputEvent.h"
 #include "Enum/EventEnum.h"
 #include "Helper/EnumToStringHelper.h"
-#include "Type/AppEvent.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 
-class EncoderModeManager;
-
-class AppEventHandler {
+class EncoderInputEventHandler {
 public:
-    AppEventHandler(QueueHandle_t queue);
+    EncoderInputEventHandler(QueueHandle_t queue);
 
     void start();
 

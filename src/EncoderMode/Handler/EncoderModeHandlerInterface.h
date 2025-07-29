@@ -1,8 +1,8 @@
 #pragma once
 
-#include "EncoderMode/Interface/EncoderModeBaseInterface.h"
+#include "Component/Interface/EncoderInputHandlerInterface.h"
 
-class EncoderModeHandlerInterface: public EncoderModeBaseInterface {
+class EncoderModeHandlerInterface: public EncoderInputHandlerInterface {
 public:
     virtual ~EncoderModeHandlerInterface() = default;
 
@@ -10,5 +10,5 @@ public:
     virtual void handleShortClick() override = 0;
     virtual void handleLongClick() override = 0;
 
-    virtual const char* getModeName() const override = 0;
+    virtual const char* getModeName() const;
 };

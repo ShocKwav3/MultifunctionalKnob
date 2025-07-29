@@ -14,5 +14,5 @@ void EncoderModeHandlerScroll::handleShortClick() {
 }
 
 const char* EncoderModeHandlerScroll::getModeName() const {
-    return EncoderModeHelper::toString(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL);
+    return EnumToStringHelper::toString(EventEnum::EncoderModeAppEventTypes::ENCODER_MODE_SCROLL);
 }

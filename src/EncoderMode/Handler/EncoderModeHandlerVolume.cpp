@@ -14,5 +14,5 @@ void EncoderModeHandlerVolume::handleShortClick() {
 }
 
 const char* EncoderModeHandlerVolume::getModeName() const {
-    return EncoderModeHelper::toString(EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME);
+    return EnumToStringHelper::toString(EventEnum::EncoderModeAppEventTypes::ENCODER_MODE_VOLUME);
 }

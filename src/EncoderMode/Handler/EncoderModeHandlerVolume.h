@@ -4,7 +4,7 @@
 
 #include "EncoderModeHandlerAbstract.h"
 #include "Enum/EventEnum.h"
-#include "Helper/EncoderModeHelper.h"
+#include "Helper/EnumToStringHelper.h"
 
 class EncoderModeHandlerVolume : public EncoderModeHandlerAbstract {
 public:

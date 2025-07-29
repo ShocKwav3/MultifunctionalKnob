@@ -6,13 +6,13 @@
 
 #include "Type/AppEvent.h"
 #include "Enum/EventEnum.h"
-#include "Helper/EncoderModeHelper.h"
+#include "Helper/EnumToStringHelper.h"
 
 class AppEventDispatcher {
 public:
     AppEventDispatcher(QueueHandle_t queue);
 
-    void dispatchAppEvent(EventEnum::EncoderModeEventTypes type);
+    void dispatchAppEvent(EventEnum::EncoderModeAppEventTypes type); //should also take another type in future when a new setting (like Encoder Mode) is added
 
 private:
     QueueHandle_t appEventQueue;

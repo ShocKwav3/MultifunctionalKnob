@@ -7,7 +7,7 @@ void EncoderModeHandlerAbstract::handleLongClick() {
     Serial.println("AbstractModeHandler: Long click → entering mode selection...");
 
     if (appEventDispatcher) {
-        appEventDispatcher->dispatchAppEvent(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SELECTION);
+        appEventDispatcher->dispatchAppEvent(EventEnum::EncoderModeAppEventTypes::ENCODER_MODE_SELECTION);
     }
 }
 

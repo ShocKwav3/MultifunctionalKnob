@@ -1,7 +1,7 @@
 #include "AppEventHandler.h"
 
-AppEventHandler::AppEventHandler(QueueHandle_t queue, EncoderModeManager* encoderModeManager)
-    : eventQueue(queue), encoderModeManager(encoderModeManager) {}
+AppEventHandler::AppEventHandler(QueueHandle_t queue)
+    : eventQueue(queue) {}
 
 void AppEventHandler::start() {
     xTaskCreate(taskEntry, "AppEventHandlerTask", 4096, this, 1, nullptr);
@@ -17,22 +17,21 @@ void AppEventHandler::taskLoop() {
     while (true) {
         if (xQueueReceive(eventQueue, &evt, portMAX_DELAY)) {
             Serial.print("AppEvent received: ");
-            Serial.println(EncoderModeHelper::toString(evt.type));
+            Serial.println(EnumToStringHelper::toString(evt.type));
 
-            if (evt.type == EventEnum::EncoderModeEventTypes::ENCODER_MODE_SELECTION) {
-                Serial.print("AppEvent mode selection");
-                encoderModeManager->enterModeSelection();
-                //Serial.println(static_cast<int>(evt.type));
-            }
-            else if (evt.type == EventEnum::EncoderModeEventTypes::ENCODER_MODE_SELECTION_CANCELLED) {
-                Serial.print("AppEvent mode selection cancelled");
-                encoderModeManager->cancelModeSelection();
-                //Serial.println(static_cast<int>(evt.type));
-            }
-            else if (static_cast<int>(evt.type) < static_cast<int>(EventEnum::EncoderModeEventTypes::__ENCODER_MODE_SELECTION_LIMIT)) {
-                Serial.print("AppEvent mode selection limit: ");
-                encoderModeManager->setMode(evt.type);  // e.g., SCROLL, VOLUME, etc.
-                //Serial.println(static_cast<int>(evt.type));
+            // maybe replace this block with a consumer?
+            switch (evt.type) {
+                case EventEnum::EncoderModeAppEventTypes::ENCODER_MODE_SELECTION:
+                    //enters mode selection
+                    break;
+                case EventEnum::EncoderModeAppEventTypes::ENCODER_MODE_SELECTION_CANCELLED:
+                    //cancel mode selection
+                    break;
+                default:
+                    if (static_cast<int>(evt.type) < static_cast<int>(EventEnum::EncoderModeAppEventTypes::__ENCODER_MODE_SELECTION_LIMIT)) {
+                    //set mode
+                    }
+                    break;
             }
         }
     }
