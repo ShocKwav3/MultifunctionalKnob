@@ -31,10 +31,10 @@ workflow_status:
 
   # Phase 1: Planning
   prd: docs/prd.md
-  create-ux-design: conditional
+  create-ux-design: skipped
 
   # Phase 2: Solutioning
-  create-architecture: recommended
+  create-architecture: docs/architecture.md
   create-epics-and-stories: required
   test-design: recommended
   validate-architecture: optional
