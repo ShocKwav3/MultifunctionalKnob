@@ -5,7 +5,7 @@
 
 project_name: UtilityButtonsWithKnobUSB
 user_skill_level: intermediate
-sprint_artifacts: '{project-root}/bmadocs/sprint-artifacts'
+sprint_artifacts: '{project-root}/docs/sprint-artifacts'
 tea_use_mcp_enhancements: false
 tea_use_playwright_utils: false
 

@@ -1,14 +1,20 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5, 6, 7]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 inputDocuments:
   - docs/prd.md
   - docs/index.md
-  - docs/analysis/brainstorming-session-2025-12-14.md
+  - docs/project-overview.md
+  - docs/hardware-documentation.md
+  - docs/development-guide.md
+  - docs/source-tree-analysis.md
 workflowType: 'architecture'
-lastStep: 7
+lastStep: 8
+status: 'complete'
+completedAt: '2025-12-16'
 project_name: 'UtilityButtonsWithKnobUSB'
 user_name: 'Feroj'
-date: '2025-12-14'
+date: '2025-12-15'
+hasProjectContext: false
 ---
 
 # Architecture Decision Document
@@ -20,178 +26,439 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 ### Requirements Overview
 
 **Functional Requirements:**
-The system requires a hierarchical menu system driven by a rotary encoder and buttons. Key architectural drivers include:
-- **Display-Agnostic Menu System:** The menu logic must be decoupled from the rendering implementation to support both serial output (MVP) and future OLED displays.
-- **Runtime Configuration:** Button behaviors and wheel modes must be configurable at runtime and persisted across power cycles.
-- **Dynamic Hardware Support:** The system must handle a variable number of buttons defined via configuration, requiring flexible data structures.
-- **Event-Driven Input:** All inputs (encoder, buttons) must be processed via an event queue to ensure responsiveness and non-blocking operation on the single-core ESP32-C3.
+42 requirements across 9 functional areas defining a hierarchical menu system for runtime configuration of wheel behaviors and button actions. Core capabilities include:
+- Menu navigation via two-input model (wheel rotation + button press)
+- 3 wheel modes (Scroll, Volume, Zoom) selectable at runtime
+- Dynamic button configuration with predefined behaviors (Mute, Play, Pause, Next, Previous)
+- Device status and about screens for troubleshooting
+- Configuration persistence across power cycles
 
 **Non-Functional Requirements:**
-- **Extensibility:** New wheel modes and button behaviors must be easy to add (Strategy/Command patterns).
-- **Responsiveness:** Menu navigation must be immediate (<50ms latency).
-- **Persistence:** Configuration must be saved to NVS (Non-Volatile Storage) reliably.
-- **Resource Constraints:** Must operate within ESP32-C3 memory limits (400KB SRAM), favoring efficient storage for menu structures.
+12 requirements emphasizing:
+- **Performance**: Responsive menu navigation with no perceptible lag
+- **Reliability**: Zero data loss on persistence, graceful fallback to defaults
+- **Maintainability**: Display abstraction for swappable implementations, extensible handler interfaces, documented build process
+- **Compatibility**: ESP32-C3 Super Mini as reference hardware
 
 **Scale & Complexity:**
-- Primary domain: Embedded/IoT (C++ / PlatformIO)
-- Complexity level: Low-Medium (Brownfield extension)
-- Estimated architectural components: ~5-7 core components (MenuManager, DisplayDriver, InputHandler, ConfigManager, ModeManager, EventDispatcher, StorageProvider).
+- Primary domain: IoT/Embedded (ESP32-C3 BLE HID device)
+- Complexity level: Low
+- Estimated architectural components: 6-8 new components integrating with existing event system
 
 ### Technical Constraints & Dependencies
 
-- **Hardware:** ESP32-C3 Super Mini (RISC-V).
-- **Framework:** Arduino framework via PlatformIO.
-- **Existing Codebase:** Must integrate with existing `EncoderDriver`, `EventDispatcher`, and `EncoderMode` structures.
-- **Concurrency:** Single-core architecture necessitates cooperative multitasking (FreeRTOS tasks/queues) rather than parallelism.
-- **Memory:** Limited RAM requires careful management of menu trees and display buffers.
+**Hardware Constraints:**
+- ESP32-C3 RISC-V single-core @ 160 MHz
+- 400 KB SRAM, 4 MB Flash
+- GPIO limitations (I2C on 6/7, encoder on 0/1/2, remaining pins for buttons)
+- USB powered for MVP
+
+**Existing Codebase:**
+- Event-driven architecture with FreeRTOS queues
+- Handler pattern for encoder modes
+- Working BLE HID connectivity via NimBLE
+- Mode management system (EncoderModeManager)
+
+**Integration Requirements:**
+- Must integrate with existing event dispatchers
+- Must extend handler pattern for menu system
+- Must not require refactoring of working mode handlers
 
 ### Cross-Cutting Concerns Identified
 
-1.  **Event System:** Central backbone for decoupling input, logic, and output.
-2.  **Configuration Management:** Centralized handling of NVS reading/writing for all components.
-3.  **State Management:** Tracking global device state (current mode, active menu) accessible to relevant components.
-4.  **Display Abstraction:** A unified interface for rendering that all components use, regardless of the physical output device.
+1. **Display Abstraction** - All UI output (menu, status, confirmations) must go through abstract interface that supports serial now, OLED later
+2. **Configuration Persistence** - Wheel mode and button behaviors must persist to NVS, with defaults on first boot or corruption
+3. **Input Routing** - Short press, long press, and rotation events must route correctly based on application state (menu active vs normal operation)
+4. **State Management** - Track current menu level, selected item, and application mode for proper event handling
 
 ## Starter Template Evaluation
 
 ### Primary Technology Domain
 
-Embedded/IoT Firmware using PlatformIO Arduino framework for ESP32-C3 Super Mini.
+IoT/Embedded (ESP32-C3 Arduino) - Brownfield project extending existing codebase with established patterns.
 
-### Starter Options Considered
+### Engineering Standards (Non-Negotiable)
 
-- PlatformIO standard \`pio project init --board esp32-c3-devkitm-1\`
+All implementation must adhere to:
+- **Proper Architecture** - Clean separation of concerns, single responsibility
+- **Appropriate Design Patterns** - Interface abstraction, handler pattern, state machines where applicable
+- **Good Coding Style** - Consistent naming conventions, clear intent, self-documenting code
+- **SOLID Principles** - Even in embedded C++, these apply
+- **Testability by Design** - Code structured to enable unit testing without hardware
 
-- Arduino ESP32 HID examples (custom implementation typical).
+These standards are not optional optimizations - they are baseline requirements for all new code.
 
-- No specialized CLI starter for USB HID knob/buttons; brownfield extension preferred.
+### Existing Foundation (No Changes Required)
 
-### Selected Starter: Existing PlatformIO Project (Brownfield Revamp)
+| Component | Current Implementation | Status |
+|-----------|----------------------|--------|
+| Platform/Build | PlatformIO + Arduino framework | ✅ Keep |
+| BLE Stack | NimBLE 2.2.3 | ✅ Keep |
+| HID Library | ESP32-BLE-Keyboard (ShocKwav3 fork) | ✅ Keep |
+| Display Driver | Adafruit SSD1306 2.5.15 | ✅ Keep |
+| Encoder Driver | Custom wrapper over ai-esp32-rotary-encoder 1.7 | ✅ Keep |
+| Event Architecture | FreeRTOS queues + dispatcher/handler pattern | ✅ Keep |
 
-**Rationale for Selection:**
+### New Components Required
 
-Current structure provides foundation (platformio.ini, src/, include/, lib/). Revamp needed for better architecture, code organization, naming conventions, decoupling. Focus on code as build system solid.
+**1. Configuration Persistence: Preferences Library (built-in)**
 
-**Architectural Decisions Established:**
+- Native Arduino-ESP32 library wrapping ESP32 NVS
+- No additional dependency required
+- Namespace-based key-value storage
+- Suitable for infrequent config changes (wheel mode, button behaviors)
 
-**Language & Runtime:** C++ with Arduino-ESP32 core.
+**2. Menu System: Custom Implementation**
 
-**Build Tooling:** PlatformIO.
+- Extend existing handler pattern with MenuModeHandler
+- Integrate with established event dispatcher architecture
+- **Why not ArduinoMenu?** It brings its own input polling model that conflicts with existing FreeRTOS queue architecture. Integration would require either bypassing the event queue (breaking architecture) or complex adapter code.
+- Menu state machine manages navigation hierarchy with explicit state documentation
 
-**Storage:** NVS for runtime config persistence.
+**3. Display Abstraction: Custom Interface Pattern**
 
-**Code Organization:** Revamp to strategy patterns for modes/handlers, event-driven dispatch.
+- Abstract DisplayInterface base class
+- SerialDisplay implementation for MVP (build first)
+- OLEDDisplay implementation added only when hardware is ready (YAGNI)
+- Menu logic calls interface methods, unaware of concrete display type
 
-**Development Experience:** VSCode + PlatformIO; consider unit tests.
+### Testability Design
 
-**Note:** First implementation: Refactor existing code per new architecture.
+Custom implementations enable proper unit testing:
+
+| Component | Test Strategy |
+|-----------|--------------|
+| Menu Logic | MockDisplay captures UI calls, inject events via queue |
+| Display Abstraction | Test concrete implementations independently |
+| Persistence | MockPreferences or ESP32 Preferences test partition |
+| State Machine | Direct state transition testing with mock inputs |
+
+### Architectural Decisions Established
+
+| Decision Area | Choice |
+|---------------|--------|
+| Build Tooling | PlatformIO (existing) |
+| Language | C++ with Arduino framework (existing) |
+| Runtime | FreeRTOS tasks and queues (existing) |
+| Persistence | ESP32 Preferences/NVS (new - built-in) |
+| Menu Pattern | Custom handler extending existing architecture (new) |
+| Display Pattern | Interface abstraction with pluggable implementations (new) |
+
+### Documentation Commitment
+
+The Architecture Decision Document will include:
+- Menu System Design section with state machine diagram/table
+- Event-to-action mapping for menu navigation
+- Integration points with existing handler registration
+
+**Note:** No external starter template required. New components integrate with established patterns while maintaining engineering standards.
 
 ## Core Architectural Decisions
 
 ### Decision Priority Analysis
 
 **Critical Decisions (Block Implementation):**
-- Event System: FreeRTOS queue-based EventBus (renamed from Dispatcher).
-- Config Persistence: NVS with CRC validation/serialization.
+- NVS persistence structure
+- Menu state machine pattern
+- Event routing for menu activation
+- Display update mechanism
 
 **Important Decisions (Shape Architecture):**
-- State Management: AppState singleton (thread-safe if multi-task).
-- Display Abstraction: IDisplayRenderer interface (render(MenuItem current, std::vector<MenuItem> options)).
-- Mode Extensibility: Strategy pattern (HandlerBase, ModeSelector).
+- Action execution pattern
+- Button configuration structure
+- Default values strategy
 
-**Deferred Decisions (Post-MVP):** OTA updates, advanced power mgmt, full unit test suite (>80% coverage).
+**Deferred Decisions (Post-MVP):**
+- OTA update mechanism
+- Battery power management
+- Multi-profile support
 
-### Persistence Architecture (Data)
-- NVS: Namespaces per component (config/, modes/). JSON-like serialization. CRC checksum for validation on load. Fallback to defaults on corruption.
-- Versioning: Config version in NVS for future migrations.
+### Data Architecture
 
-### Concurrency & Event Handling
-- Events: FreeRTOS queue (bounded size to prevent overflow). AppEvent/EncoderInputEvent enums.
-- Dispatch: Non-blocking in main loop(). Optional FreeRTOS tasks for peripherals.
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| NVS Namespace | Single namespace with prefixed keys | Organized without namespace-switching overhead |
+| Default Values | Defaults struct with factory reset | Minimize NVS writes, explicit reset capability |
+| Enum Storage | uint8_t with validation wrapper | Compact storage with graceful fallback on corruption |
 
-### Extensibility Patterns
-- Interfaces: IDisplayRenderer, EncoderInputHandlerInterface, EncoderModeHandlerInterface (HandlerBase).
-- Naming Revamp: EventBus, ModeSelector, HandlerBase.
-- Factories: Dynamic instantiation via config.
+**NVS Key Structure:**
+```
+Namespace: "knobkoky"
+Keys: "wheel.mode", "btn0.action", "btn1.action", "btn2.action", "btn3.action"
+```
 
-### Resource Management
-- Memory: Static arrays preferred; avoid new/delete in hot paths.
-- CPU: Debounced inputs, efficient polling.
+**Validation Pattern:**
+```cpp
+template<typename EnumT>
+EnumT readEnumConfig(const char* key, EnumT defaultVal, EnumT maxValid) {
+    uint8_t stored = preferences.getUChar(key, static_cast<uint8_t>(defaultVal));
+    return (stored <= static_cast<uint8_t>(maxValid))
+           ? static_cast<EnumT>(stored)
+           : defaultVal;
+}
+```
 
-### Testing Strategy
-- Unit: Handlers, config serializer (mock NVS).
-- Integration: Event flow (mock inputs).
-- Coverage: >80% core logic.
+### Component Architecture (Menu System)
 
-### Deployment & Infra
-- Flash: PlatformIO upload.
-- Debug: Serial output for status.
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Menu State Machine | Static tree structure with parent pointers | No dynamic allocation, compile-time menu definition |
+| Mode Transition | Event interceptor pattern | Menu intercepts events at higher level, clean separation from mode system |
+| Action Execution | Command pattern with action objects | Flexible, extensible, clean separation of concerns |
 
-### Decision Impact Analysis
-**Implementation Sequence:**
-1. EventBus revamp (rename/dispatch).
-2. ConfigManager with NVS/CRC.
-3. AppState centralization.
-4. IDisplayRenderer (serial impl).
-5. HandlerBase/ModeSelector refactor.
-6. Menu system integration.
+**Menu Tree Structure:**
+```cpp
+struct MenuItem {
+    const char* label;
+    MenuItem* parent;
+    MenuItem* const* children;
+    uint8_t childCount;
+    MenuAction* action;
+};
+```
 
-**Cross-Component Dependencies:**
-EventBus feeds all; Config loads at boot; State shared via getters.
+**Event Interceptor Pattern:**
+```cpp
+void handleEncoderEvent(EncoderInputEvent& event) {
+    if (menuController.isActive()) {
+        menuController.handleEvent(event);
+        return;  // Menu consumes event
+    }
+    currentModeHandler->handleEvent(event);
+}
+```
 
-## Implementation Patterns & Consistency Rules
+**Command Pattern for Actions:**
+```cpp
+class MenuAction {
+public:
+    virtual ~MenuAction() = default;
+    virtual void execute() = 0;
+    virtual const char* getConfirmationMessage() const { return nullptr; }
+};
 
-### Pattern Categories Defined
-
-**Critical Conflict Points:** Naming, file structure, event payloads, error handling, memory mgmt.
-
-### Naming Patterns
-
-**Classes/Structs/Interfaces:** PascalCase (e.g., EventBus, IDisplayRenderer)
-**Functions/Methods:** camelCase (e.g., dispatchEvent, renderMenu)
-**Variables/Fields:** camelCase (e.g., currentMode, eventQueue)
-**Constants:** UPPER_SNAKE_CASE (e.g., MAX_QUEUE_SIZE)
-**Files:** PascalCase.h/cpp (e.g., EventBus.h)
-**Dirs:** PascalCase (e.g., Event/, Config/)
-
-### Structure Patterns
-
-**Project Organization:**
-- include/: Public headers (classes, interfaces)
-- src/<feature>/: Feature cpp/impl (src/Event/Dispatcher/)
-- lib/: 3rd party libs
-- test/: Unit tests parallel to src
-
-**Header Guards:** INCLUDE_GUARD(FEATURE_filename_h)
-
-### Format Patterns
-
-**Event Payloads:** struct EventData { EventType type; union { ... }; }
-**Config Serialization:** JSON-like strings in NVS with CRC32.
-**Logs:** Serial.printf with levels (DEBUG, INFO, ERROR)
+class SetWheelModeAction : public MenuAction {
+    WheelMode mode;
+public:
+    SetWheelModeAction(WheelMode m) : mode(m) {}
+    void execute() override { /* save to NVS, update mode manager */ }
+    const char* getConfirmationMessage() const override { return "Mode saved"; }
+};
+```
 
 ### Communication Patterns
 
-**Event Handling:** EventBus::post(Event), non-blocking dispatch.
-**Callbacks:** std::function or interfaces.
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Menu Events | Extend existing AppEvent system | Leverages existing infrastructure, clear separation |
+| Display Updates | Observer pattern via AppEvent queue | Loose coupling, display-agnostic menu logic |
+| Button Config | Array of pin definitions with metadata | Easy to iterate, adding button = one line change |
 
-### Process Patterns
+**Extended AppEvent Types:**
+```cpp
+enum class AppEventTypes {
+    // ... existing types
+    MENU_ACTIVATED,
+    MENU_DEACTIVATED,
+    MENU_ITEM_SELECTED,
+    CONFIG_CHANGED
+};
+```
 
-**Error Handling:** Result enum (OK, ERROR_INVALID_CONFIG), no exceptions.
-**Init Sequence:** Boot -> LoadConfig -> InitPeripherals -> MainLoop
-**Validation:** CRC on load, defaults fallback.
+**Button Configuration:**
+```cpp
+struct ButtonConfig {
+    uint8_t pin;
+    const char* label;
+    bool activeLow;
+};
+
+constexpr ButtonConfig BUTTONS[] = {
+    {3, "Button 1", true},
+    {4, "Button 2", true},
+    {5, "Button 3", true},
+    {8, "Button 4", true}
+};
+constexpr size_t BUTTON_COUNT = sizeof(BUTTONS) / sizeof(BUTTONS[0]);
+```
+
+**Event Flow:**
+```
+User Input → EncoderDriver → MenuInterceptor (if active) → Menu State Change
+                                    ↓
+                            AppEventDispatcher
+                                    ↓
+                            DisplayHandler → DisplayInterface → Serial/OLED
+```
+
+### Decision Impact Analysis
+
+**Implementation Sequence:**
+1. Display abstraction (DisplayInterface + SerialDisplay)
+2. NVS persistence wrapper (ConfigManager)
+3. Button configuration and GPIO setup
+4. Menu data structures (MenuItem tree)
+5. MenuAction classes
+6. MenuController with event interception
+7. DisplayHandler event subscription
+8. Integration with existing EncoderEventHandler
+
+**Cross-Component Dependencies:**
+- MenuController depends on DisplayInterface (via events, not direct coupling)
+- MenuAction depends on ConfigManager for persistence
+- DisplayHandler depends on AppEventDispatcher subscription
+- Button configuration feeds into MenuItem generation for Button Configurator submenu
+
+## Implementation Patterns & Consistency Rules
+
+### Critical Conflict Points Addressed
+
+8 potential conflict areas identified and standardized for AI agent consistency.
+
+### Naming Patterns
+
+| Element | Convention | Example |
+|---------|------------|---------|
+| Files | PascalCase matching class | `MenuController.cpp` |
+| Classes/Structs | PascalCase | `MenuController`, `MenuItem` |
+| Functions | camelCase | `handleEvent()`, `saveConfig()` |
+| Variables | camelCase | `currentItem`, `menuActive` |
+| Constants | UPPER_SNAKE_CASE | `MAX_MENU_DEPTH`, `BUTTON_COUNT` |
+| Enums | PascalCase enum, UPPER_SNAKE values | `enum class Error { OK, NVS_WRITE_FAIL }` |
+| Interfaces | Suffix with Interface | `DisplayInterface` |
+| Macros | UPPER_SNAKE_CASE | `LOG_DEBUG`, `LOG_ERROR` |
+
+### Structure Patterns
+
+**Directory Organization:**
+```
+src/
+├── Menu/
+│   ├── Controller/
+│   │   └── MenuController.cpp/.h
+│   ├── Model/
+│   │   └── MenuItem.h
+│   └── Action/
+│       ├── MenuAction.h
+│       ├── SetWheelModeAction.cpp/.h
+│       └── SetButtonActionAction.cpp/.h
+├── Display/
+│   ├── Interface/
+│   │   └── DisplayInterface.h
+│   ├── Handler/
+│   │   └── DisplayHandler.cpp/.h
+│   └── Impl/
+│       ├── SerialDisplay.cpp/.h
+│       └── OLEDDisplay.cpp/.h
+├── Config/
+│   └── ConfigManager.cpp/.h
+├── Button/
+│   └── ButtonManager.cpp/.h
+└── (existing directories unchanged)
+
+include/Config/
+├── device_config.h      # BLE settings
+├── encoder_config.h     # Encoder GPIO
+├── button_config.h      # Button GPIO array
+├── menu_config.h        # Menu parameters
+├── display_config.h     # Display settings
+└── log_config.h         # Logging macros
+```
+
+**Header Guards:**
+All headers use `#pragma once`
+
+### Format Patterns
+
+**Event Payload Structure (Union-based):**
+```cpp
+struct AppEvent {
+    AppEventTypes type;
+    union {
+        struct { MenuItem* item; uint8_t index; } menu;
+        struct { const char* message; uint8_t value; } config;
+        struct { bool active; } state;
+    } data;
+};
+```
+
+**Error Return Pattern:**
+```cpp
+enum class Error : uint8_t {
+    OK = 0,
+    INVALID_PARAM,
+    NVS_READ_FAIL,
+    NVS_WRITE_FAIL,
+    INVALID_STATE
+};
+
+// All fallible operations return Error
+Error ConfigManager::saveWheelMode(WheelMode mode);
+```
+
+### Communication Patterns
+
+**Logging Pattern:**
+```cpp
+LOG_ERROR("Tag", "Format %d", value);  // [ERR][Tag] Format 123
+LOG_INFO("Tag", "Format %s", str);     // [Tag] Format string
+LOG_DEBUG("Tag", "Format %d", val);    // [DBG][Tag] Format 123
+```
+
+**Log levels controlled via build flag:**
+- `LOG_LEVEL_NONE` (0) - No logging
+- `LOG_LEVEL_ERROR` (1) - Errors only
+- `LOG_LEVEL_INFO` (2) - Info and errors
+- `LOG_LEVEL_DEBUG` (3) - All messages
 
 ### Enforcement Guidelines
 
 **All AI Agents MUST:**
-- Follow naming exactly
-- Use static memory where possible
-- No dynamic alloc in ISR/hot paths
-- Header doc for public APIs
+1. Follow naming conventions exactly as specified in this document
+2. Place new files in the correct directory per structure patterns
+3. Use `#pragma once` for all headers
+4. Return `Error` enum from fallible operations
+5. Use `LOG_*` macros instead of direct `Serial.print`
+6. Use union-based payload for AppEvent data
+7. Add new constants to appropriate `include/Config/*.h` file
 
-**Examples:**
-Good: class EventBus { void post(const Event& e); };
-Anti: class event_bus { void PostEvent(Event e); }
+**Pattern Verification:**
+- Code review checks naming and structure compliance
+- Build warnings for direct Serial.print in new code (future lint rule)
+- New components must follow established interface patterns
+
+### Pattern Examples
+
+**Good Example - New Action Class:**
+```cpp
+// src/Menu/Action/SetWheelModeAction.h
+#pragma once
+#include "MenuAction.h"
+#include "Config/ConfigManager.h"
+
+class SetWheelModeAction : public MenuAction {
+    WheelMode targetMode;
+public:
+    explicit SetWheelModeAction(WheelMode mode);
+    void execute() override;
+    const char* getConfirmationMessage() const override;
+};
+```
+
+**Anti-Patterns to Avoid:**
+```cpp
+// ❌ Wrong file location
+src/set_wheel_mode.cpp  // Should be src/Menu/Action/
+
+// ❌ Wrong naming
+class set_wheel_mode_action  // Should be PascalCase
+
+// ❌ Direct serial output
+Serial.println("Mode saved");  // Should use LOG_INFO
+
+// ❌ Missing error handling
+void saveMode(WheelMode m) { prefs.putUChar(...); }  // Should return Error
+```
 
 ## Project Structure & Boundaries
 
@@ -199,125 +466,471 @@ Anti: class event_bus { void PostEvent(Event e); }
 
 ```
 UtilityButtonsWithKnobUSB/
-├── platformio.ini
-├── lib/
-│   ├── EncoderDriver/
-│   └── StatsMonitor/
-├── src/
-│   ├── main.cpp
-│   ├── Helpers/
-│   │   └── utils.cpp
-│   ├── test/  # colocated
-│   ├── AppState.cpp
+├── platformio.ini                      # Build configuration (existing)
+├── README.md                           # Project readme
+│
+├── boards/                             # Custom board definitions (existing)
+│   └── nologo_esp32c3_super_mini.json
+│
+├── include/                            # Header files
+│   ├── AppState.h                      # (existing) Global state, queues
+│   ├── version.h                       # (existing) Version info
 │   ├── Config/
-│   │   └── ConfigManager.cpp
-│   ├── Event/
-│   │   └── Dispatcher/
-│   │       └── EventBus.cpp
-│   ├── Menu/
-│   │   ├── MenuManager.cpp
-│   │   └── SerialRenderer.cpp
-│   └── Mode/
-│       ├── ModeSelector.cpp
-│       └── Handlers/
-│           ├── HandlerBase.cpp
-│           ├── ScrollHandler.cpp
-│           └── VolumeHandler.cpp
-├── docs/
-│   └── api/  # interface docs
-└── include/
-    ├── AppState.h
-    ├── Helpers/
-    ├── Config/
-    ├── Event/
-    ├── Menu/
-    │   └── IDisplayRenderer.h
-    └── Mode/
-        └── Handlers/
+│   │   ├── device_config.h             # (existing) BLE name, manufacturer
+│   │   ├── encoder_config.h            # (existing) Encoder GPIO pins
+│   │   ├── button_config.h             # (new) Button GPIO array, labels
+│   │   ├── menu_config.h               # (new) Menu depth, timeout, defaults
+│   │   ├── display_config.h            # (new) Display dimensions, addresses
+│   │   └── log_config.h                # (new) Logging macros and levels
+│   ├── Enum/
+│   │   ├── EventEnum.h                 # (existing + extend) Event types
+│   │   ├── WheelModeEnum.h             # (new) Wheel mode values
+│   │   ├── ButtonActionEnum.h          # (new) Button action values
+│   │   └── ErrorEnum.h                 # (new) Error return codes
+│   └── Type/
+│       ├── AppEvent.h                  # (existing + extend) App event struct with union
+│       └── EncoderInputEvent.h         # (existing) Encoder input struct
+│
+├── lib/                                # Custom libraries (existing)
+│   ├── EncoderDriver/
+│   │   ├── EncoderDriver.h
+│   │   └── EncoderDriver.cpp
+│   └── StatsMonitor/
+│       └── StatsMonitor.h
+│
+├── src/                                # Main application source
+│   ├── main.cpp                        # (existing + modify) Entry point, initialization
+│   │
+│   ├── Component/                      # (existing) Interface definitions
+│   │   └── Interface/
+│   │       └── EncoderInputHandlerInterface.h
+│   │
+│   ├── EncoderMode/                    # (existing) Mode handlers
+│   │   ├── Handler/
+│   │   │   ├── EncoderModeHandlerAbstract.cpp/.h
+│   │   │   ├── EncoderModeHandlerInterface.h
+│   │   │   ├── EncoderModeHandlerScroll.cpp/.h
+│   │   │   ├── EncoderModeHandlerVolume.cpp/.h
+│   │   │   └── EncoderModeHandlerZoom.cpp/.h    # (new) Zoom mode
+│   │   ├── Interface/
+│   │   │   └── EncoderModeBaseInterface.h
+│   │   ├── Manager/
+│   │   │   └── EncoderModeManager.cpp/.h
+│   │   └── Selector/
+│   │       └── EncoderModeSelector.cpp/.h
+│   │
+│   ├── Event/                          # (existing) Event system
+│   │   ├── Dispatcher/
+│   │   │   ├── AppEventDispatcher.cpp/.h
+│   │   │   └── EncoderEventDispatcher.cpp/.h
+│   │   └── Handler/
+│   │       ├── AppEventHandler.cpp/.h           # (modify) Add menu event handling
+│   │       └── EncoderEventHandler.cpp/.h       # (modify) Add menu interception
+│   │
+│   ├── Helper/                         # (existing) Utilities
+│   │   └── EncoderModeHelper.cpp/.h
+│   │
+│   ├── Menu/                           # (new) Menu system
+│   │   ├── Controller/
+│   │   │   └── MenuController.cpp/.h            # Menu state machine, event interception
+│   │   ├── Model/
+│   │   │   ├── MenuItem.h                       # Menu item struct with tree pointers
+│   │   │   └── MenuTree.h                       # Static menu tree (HEADER-ONLY, constexpr)
+│   │   └── Action/
+│   │       ├── MenuAction.h                     # Abstract action base class
+│   │       ├── SetWheelModeAction.cpp/.h        # Change wheel mode
+│   │       ├── SetButtonActionAction.cpp/.h     # Change button behavior
+│   │       ├── ShowStatusAction.cpp/.h          # Display device status
+│   │       └── ShowAboutAction.cpp/.h           # Display about info
+│   │
+│   ├── Display/                        # (new) Display abstraction
+│   │   ├── Interface/
+│   │   │   └── DisplayInterface.h               # Abstract display interface
+│   │   ├── Handler/
+│   │   │   └── DisplayHandler.cpp/.h            # Event subscriber, routes to display
+│   │   └── Impl/
+│   │       ├── SerialDisplay.cpp/.h             # Serial output implementation
+│   │       └── OLEDDisplay.cpp/.h               # OLED implementation (future)
+│   │
+│   ├── Config/                         # (new) Configuration management
+│   │   ├── ConfigManager.cpp/.h                 # NVS read/write, defaults (DI-enabled)
+│   │   └── FactoryReset.cpp/.h                  # Factory reset detection and execution
+│   │
+│   └── Button/                         # (new) Button management
+│       └── ButtonManager.cpp/.h                 # GPIO setup, button event dispatch
+│
+├── test/                               # Test files
+│   ├── unit/
+│   │   ├── test_ConfigManager.cpp
+│   │   ├── test_MenuController.cpp
+│   │   └── test_MenuItem.cpp
+│   └── mocks/
+│       ├── MockDisplay.h
+│       └── MockPreferences.h
+│
+└── docs/                               # Documentation
+    ├── index.md
+    ├── architecture.md                 # This document
+    ├── prd.md
+    └── ...
 ```
 
-### Requirements Mapping
+### Design Clarifications
 
-**Menu (FR1-8):** src/Menu/
-**Wheel (FR9-14):** src/Mode/
-**Button (FR15-19):** ConfigManager + Mode Handlers
-**Status (FR20-25):** MenuManager
-**Persistence (FR26-29):** ConfigManager
-**Inputs (FR38-42):** EventBus
+**MenuTree as Header-Only (constexpr):**
+```cpp
+// src/Menu/Model/MenuTree.h
+#pragma once
+#include "MenuItem.h"
 
-### Component Boundaries
+// All menu items defined as constexpr - no runtime initialization
+constexpr MenuItem WHEEL_MODE_ITEMS[] = {
+    {"Scroll", nullptr, nullptr, 0, &setScrollModeAction},
+    {"Volume", nullptr, nullptr, 0, &setVolumeModeAction},
+    {"Zoom", nullptr, nullptr, 0, &setZoomModeAction}
+};
 
-EventBus central hub.
-ConfigManager boot-time.
-AppState read-only mostly.
-MenuManager owns renderer.
-
-**Diagram:**
-
-```mermaid
-graph TD
-    EncoderDriver --> EventBus
-    Buttons --> EventBus
-    EventBus --> MenuManager
-    EventBus --> ModeHandlers
-    ConfigManager -.-> NVS
-    MenuManager --> SerialRenderer
-    AppState <--> MenuManager
+constexpr MenuItem MAIN_MENU_ITEMS[] = {
+    {"Wheel Behavior", nullptr, WHEEL_MODE_ITEMS, 3, nullptr},
+    {"Button Config", nullptr, BUTTON_CONFIG_ITEMS, BUTTON_COUNT, nullptr},
+    {"Device Status", nullptr, nullptr, 0, &showStatusAction},
+    {"About", nullptr, nullptr, 0, &showAboutAction}
+};
 ```
+
+**ConfigManager Dependency Injection:**
+```cpp
+// src/Config/ConfigManager.h
+class ConfigManager {
+    Preferences* prefs;  // Injected, not global
+public:
+    // Production: pass &Preferences instance
+    // Testing: pass MockPreferences*
+    explicit ConfigManager(Preferences* preferences);
+
+    Error saveWheelMode(WheelMode mode);
+    WheelMode loadWheelMode();
+};
+```
+
+**Factory Reset Trigger:**
+```cpp
+// src/Config/FactoryReset.cpp/.h
+// Checked in main.cpp setup() BEFORE normal initialization
+
+class FactoryReset {
+public:
+    // Check if encoder button held during boot (5+ seconds)
+    static bool isResetRequested();
+
+    // Clear all NVS config, restore defaults
+    static void execute(ConfigManager& config, DisplayInterface& display);
+};
+```
+
+**BLE Disconnect Handling:**
+```
+Event flow for BLE disconnect during menu operation:
+
+BleKeyboard fires disconnect callback
+    ↓
+AppEventDispatcher.dispatch(BLE_DISCONNECTED)
+    ↓
+AppEventHandler receives event
+    ├── MenuController.handleBleDisconnect()
+    │   └── If in menu: exit to root, show "BLE Disconnected"
+    └── DisplayHandler.showStatus("Disconnected")
+
+Location: BLE_DISCONNECTED in EventEnum.h
+          Handle in AppEventHandler.cpp
+          MenuController.handleBleDisconnect() method
+```
+
+### Architectural Boundaries
+
+**Event System Boundaries:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Input Layer                               │
+│  EncoderDriver ──→ EncoderEventDispatcher ──→ EncoderInputQueue │
+│  ButtonManager ──→ EncoderEventDispatcher ──→ EncoderInputQueue │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                     Processing Layer                             │
+│  EncoderEventHandler                                             │
+│    ├── MenuController.isActive() ? MenuController.handleEvent() │
+│    └── else → EncoderModeManager → CurrentModeHandler            │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                      Output Layer                                │
+│  AppEventDispatcher ──→ AppEventQueue ──→ AppEventHandler       │
+│    └── DisplayHandler.handleAppEvent() → DisplayInterface       │
+│    └── ConfigManager (on CONFIG_CHANGED)                        │
+│    └── MenuController (on BLE_DISCONNECTED)                     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Component Boundaries:**
+
+| Boundary | Owner | Consumers | Communication |
+|----------|-------|-----------|---------------|
+| Display Output | DisplayInterface | MenuController, Actions | Via AppEvent queue |
+| Config Persistence | ConfigManager | MenuAction classes | Direct method calls (DI) |
+| Menu State | MenuController | EncoderEventHandler | isActive() check |
+| Button State | ButtonManager | Main init, MenuTree | GPIO config array |
+| Mode Management | EncoderModeManager | EncoderEventHandler | Handler registration |
+| Factory Reset | FactoryReset | main.cpp setup() | Static methods |
+
+### Build Order Dependencies
+
+Components must be built/implemented in this order due to compile-time dependencies:
+
+```
+Phase 1: Foundation (no dependencies on new code)
+├── include/Config/log_config.h
+├── include/Enum/ErrorEnum.h
+├── include/Enum/WheelModeEnum.h
+├── include/Enum/ButtonActionEnum.h
+└── include/Config/button_config.h
+
+Phase 2: Interfaces (depend only on Phase 1)
+├── src/Display/Interface/DisplayInterface.h
+└── src/Menu/Model/MenuItem.h
+
+Phase 3: Implementations (depend on Phase 2)
+├── src/Display/Impl/SerialDisplay.cpp/.h
+├── src/Config/ConfigManager.cpp/.h
+├── src/Button/ButtonManager.cpp/.h
+└── src/Menu/Action/MenuAction.h
+
+Phase 4: Menu System (depend on Phase 3)
+├── src/Menu/Action/*Action.cpp/.h
+├── src/Menu/Model/MenuTree.h
+└── src/Menu/Controller/MenuController.cpp/.h
+
+Phase 5: Integration (depend on Phase 4)
+├── src/Display/Handler/DisplayHandler.cpp/.h
+├── src/Config/FactoryReset.cpp/.h
+├── src/Event/Handler/EncoderEventHandler.cpp (modify)
+├── src/Event/Handler/AppEventHandler.cpp (modify)
+└── src/main.cpp (wire everything together)
+```
+
+### Requirements to Structure Mapping
+
+| FR Category | Component Location | Key Files |
+|-------------|-------------------|-----------|
+| Menu System (FR1-FR8) | src/Menu/ | MenuController, MenuItem, MenuTree |
+| Wheel Config (FR9-FR14) | src/Menu/Action/ | SetWheelModeAction |
+| Button Config (FR15-FR19) | src/Menu/Action/, src/Button/ | SetButtonActionAction, ButtonManager |
+| Device Status (FR20-FR23) | src/Menu/Action/ | ShowStatusAction |
+| About Screen (FR24-FR25) | src/Menu/Action/ | ShowAboutAction |
+| Config Persistence (FR26-FR29) | src/Config/ | ConfigManager, FactoryReset |
+| Display Interface (FR35-FR37) | src/Display/ | DisplayInterface, SerialDisplay |
+| Input Handling (FR38-FR42) | src/Button/ | ButtonManager |
+| BLE Handling (FR30-FR34) | src/Event/Handler/ | AppEventHandler (BLE_DISCONNECTED) |
+
+### File Modification Summary
+
+**Existing Files to Modify:**
+
+| File | Changes |
+|------|---------|
+| `src/main.cpp` | Add ConfigManager, ButtonManager, DisplayHandler init; factory reset check |
+| `src/Event/Handler/EncoderEventHandler.cpp` | Add MenuController interception check |
+| `src/Event/Handler/AppEventHandler.cpp` | Add DisplayHandler routing, BLE disconnect handling |
+| `include/Enum/EventEnum.h` | Add MENU_*, CONFIG_CHANGED, BLE_DISCONNECTED |
+| `include/Type/AppEvent.h` | Add union-based data payload |
+
+**New Files to Create:** 23 files across 6 new directories
 
 ## Architecture Validation Results
 
 ### Coherence Validation ✅
 
-**Decision Compatibility:** All compatible (FreeRTOS queue, NVS CRC, interfaces, patterns).
-**Pattern Consistency:** Naming/structure support decisions.
-**Structure Alignment:** Feature dirs match boundaries/mapping.
+**Decision Compatibility:**
+All technology choices verified compatible. PlatformIO + Arduino framework works seamlessly with NimBLE 2.2.3, Adafruit SSD1306, and custom event-driven architecture. No version conflicts detected.
+
+**Pattern Consistency:**
+Implementation patterns align with existing codebase conventions. Naming patterns (PascalCase files, camelCase functions, UPPER_SNAKE constants) match established code. Error handling and logging patterns standardized.
+
+**Structure Alignment:**
+New directories (Menu/, Display/, Config/, Button/) follow established subdirectory patterns (Handler/, Interface/, Impl/). All new components integrate with existing event system without architectural changes.
 
 ### Requirements Coverage Validation ✅
 
-**Functional Coverage:** FR1-42 mapped to components (MenuManager for FR1-8, ModeHandlers FR9-19, ConfigManager FR26-29, EventBus FR38-42).
-**Non-Functional:** Responsiveness (non-blocking), persistence (CRC fallback), extensibility (interfaces), resource (static mem).
+**Functional Requirements:**
+All 42 functional requirements mapped to specific architectural components:
+- FR1-FR8 (Menu): MenuController, MenuItem, MenuTree
+- FR9-FR14 (Wheel): SetWheelModeAction, ConfigManager
+- FR15-FR19 (Buttons): SetButtonActionAction, ButtonManager
+- FR20-FR29 (Status/Config): ShowStatusAction, ShowAboutAction, ConfigManager, FactoryReset
+- FR30-FR42 (BLE/Display/Input): Existing components + BLE_DISCONNECTED event
+
+**Non-Functional Requirements:**
+All 12 NFRs addressed through architectural decisions:
+- Performance: Event-driven, non-blocking, static compile-time menu
+- Reliability: NVS persistence, graceful defaults, factory reset
+- Maintainability: Interface abstraction, DI, standardized patterns
+- Compatibility: ESP32-C3 Super Mini reference hardware
 
 ### Implementation Readiness Validation ✅
 
-**Decision Completeness:** Documented with examples.
-**Structure Completeness:** Full tree, diagram.
-**Pattern Completeness:** Naming, error, memory rules.
+**Decision Completeness:**
+9 major architectural decisions documented with:
+- Code examples for each pattern
+- Rationale explaining choices
+- Verified technology versions
+
+**Structure Completeness:**
+- 23 new files defined across 6 directories
+- 5 existing files with specific modification requirements
+- 5-phase build order with dependency chain
+- FR-to-file mapping complete
+
+**Pattern Completeness:**
+- 8 naming patterns with conventions and examples
+- Good patterns and anti-patterns documented
+- Enforcement guidelines for AI agents
 
 ### Gap Analysis Results
 
-**Important Gaps:** Full test suite impl deferred (MVP).
-**Nice-to-Have:** OTA, UX polish.
+**Critical Gaps:** None identified
+
+**Important Gaps:**
+1. EncoderModeHandlerZoom implementation - follows existing Scroll/Volume handler pattern
+
+**Nice-to-Have (Future):**
+1. Sequence diagrams for complex flows
+2. Memory usage analysis
+3. Unit test implementation examples
 
 ### Architecture Completeness Checklist
 
 **✅ Requirements Analysis**
-- [x] Context analyzed
-- [x] Constraints identified
-- [x] Cross-cutting mapped
+- [x] Project context thoroughly analyzed
+- [x] Scale and complexity assessed (Low complexity, IoT/Embedded)
+- [x] Technical constraints identified (ESP32-C3, 400KB SRAM, GPIO limits)
+- [x] Cross-cutting concerns mapped (Display, Persistence, Events, State)
 
 **✅ Architectural Decisions**
-- [x] Critical documented
-- [x] Tech stack specified
+- [x] Critical decisions documented with versions
+- [x] Technology stack fully specified (PlatformIO, Arduino, NimBLE)
+- [x] Integration patterns defined (Event queues, handler pattern)
+- [x] Performance considerations addressed (static menu, no dynamic alloc)
 
 **✅ Implementation Patterns**
-- [x] Naming established
-- [x] Structure defined
+- [x] Naming conventions established (8 patterns)
+- [x] Structure patterns defined (directory organization)
+- [x] Communication patterns specified (AppEvent, DisplayHandler)
+- [x] Process patterns documented (Error enum, LOG_* macros)
 
 **✅ Project Structure**
-- [x] Tree defined
-- [x] Boundaries mapped
+- [x] Complete directory structure defined
+- [x] Component boundaries established
+- [x] Integration points mapped
+- [x] Requirements to structure mapping complete
+
+### Architecture Readiness Assessment
 
 **Overall Status:** READY FOR IMPLEMENTATION
 
-**Confidence Level:** High
+**Confidence Level:** HIGH
 
 **Key Strengths:**
-- PRD-aligned (runtime config, menu, extensibility)
-- Embedded-optimized (memory, concurrency)
-- Extensible (interfaces, strategies)
+1. Clean integration with existing event-driven architecture
+2. Display abstraction enables serial-first, OLED-later approach
+3. Static menu tree avoids dynamic allocation on constrained device
+4. DI-enabled ConfigManager supports unit testing
+5. Comprehensive pattern documentation prevents AI agent conflicts
 
-**Implementation Handoff:**
-- Follow docs/architecture.md strictly
-- Start with EventBus refactor
+**Areas for Future Enhancement:**
+1. OLEDDisplay implementation when hardware ready
+2. Multi-profile support (deferred per PRD)
+3. OTA update mechanism (post-MVP)
+
+### Implementation Handoff
+
+**AI Agent Guidelines:**
+- Follow all architectural decisions exactly as documented
+- Use implementation patterns consistently across all components
+- Respect project structure and component boundaries
+- Use LOG_* macros, not direct Serial.print
+- Return Error enum from fallible operations
+- Use DI for ConfigManager testability
+
+**First Implementation Priority (Build Phase 1):**
+1. `include/Config/log_config.h` - Logging macros
+2. `include/Enum/ErrorEnum.h` - Error codes
+3. `include/Enum/WheelModeEnum.h` - Wheel modes
+4. `include/Enum/ButtonActionEnum.h` - Button actions
+5. `include/Config/button_config.h` - Button GPIO array
+
+## Architecture Completion Summary
+
+### Workflow Completion
+
+**Architecture Decision Workflow:** COMPLETED ✅
+**Total Steps Completed:** 8
+**Date Completed:** 2025-12-16
+**Document Location:** docs/architecture.md
+
+### Final Architecture Deliverables
+
+**Complete Architecture Document**
+- All architectural decisions documented with specific versions
+- Implementation patterns ensuring AI agent consistency
+- Complete project structure with all files and directories
+- Requirements to architecture mapping
+- Validation confirming coherence and completeness
+
+**Implementation Ready Foundation**
+- 9 major architectural decisions made
+- 8 implementation patterns defined
+- 6 new component directories specified
+- 42 functional requirements + 12 NFRs fully supported
+
+**AI Agent Implementation Guide**
+- Technology stack with verified versions
+- Consistency rules that prevent implementation conflicts
+- Project structure with clear boundaries
+- Integration patterns and communication standards
+
+### Development Sequence
+
+1. **Phase 1: Foundation** - Create enums, config headers, log macros
+2. **Phase 2: Interfaces** - Define DisplayInterface, MenuItem structures
+3. **Phase 3: Implementations** - Build SerialDisplay, ConfigManager, ButtonManager
+4. **Phase 4: Menu System** - Implement MenuActions, MenuTree, MenuController
+5. **Phase 5: Integration** - Wire DisplayHandler, modify event handlers, update main.cpp
+
+### Quality Assurance Checklist
+
+**✅ Architecture Coherence**
+- [x] All decisions work together without conflicts
+- [x] Technology choices are compatible
+- [x] Patterns support the architectural decisions
+- [x] Structure aligns with all choices
+
+**✅ Requirements Coverage**
+- [x] All 42 functional requirements are supported
+- [x] All 12 non-functional requirements are addressed
+- [x] Cross-cutting concerns are handled
+- [x] Integration points are defined
+
+**✅ Implementation Readiness**
+- [x] Decisions are specific and actionable
+- [x] Patterns prevent agent conflicts
+- [x] Structure is complete and unambiguous
+- [x] Examples are provided for clarity
+
+---
+
+**Architecture Status:** READY FOR IMPLEMENTATION ✅
+
+**Next Phase:** Begin implementation using the architectural decisions and patterns documented herein.
+
+**Document Maintenance:** Update this architecture when major technical decisions are made during implementation.
 
