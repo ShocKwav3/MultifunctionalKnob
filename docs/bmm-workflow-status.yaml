@@ -35,7 +35,7 @@ workflow_status:
 
   # Phase 2: Solutioning
   create-architecture: docs/architecture.md
-  create-epics-and-stories: required
+  create-epics-and-stories: docs/epics.md
   test-design: recommended
   validate-architecture: optional
   implementation-readiness: required
