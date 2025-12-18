@@ -1,6 +1,6 @@
 # Story 1.3: Create Configuration Manager with NVS Persistence
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -30,10 +30,10 @@ so that **my configuration persists across power cycles without needing to recon
 
 ## Tasks / Subtasks
 
-- [ ] Create `src/Config/ConfigManager.h`
-- [ ] Create `src/Config/ConfigManager.cpp`
-- [ ] Implement `saveWheelMode` / `loadWheelMode`
-- [ ] Implement `saveButtonAction` / `loadButtonAction`
+- [x] Create `src/Config/ConfigManager.h`
+- [x] Create `src/Config/ConfigManager.cpp`
+- [x] Implement `saveWheelMode` / `loadWheelMode`
+- [x] Implement `saveButtonAction` / `loadButtonAction`
 
 ## Dev Notes
 
@@ -58,3 +58,33 @@ so that **my configuration persists across power cycles without needing to recon
 ### Agent Model Used
 
 - google/gemini-3-pro-preview
+- claude-opus-4-5-20251101 (implementation)
+
+### Implementation Plan
+
+1. Created ConfigManager header with DI-enabled constructor accepting `Preferences*`
+2. Implemented lazy initialization pattern via `ensureInitialized()` for NVS namespace
+3. Used architecture validation pattern: check enum values against `*_MAX` constants
+4. Applied standard key naming: `"wheel.mode"`, `"btn0.action"`, `"btn1.action"`, etc.
+5. Error handling returns `Error::OK`, `Error::INVALID_PARAM`, `Error::NVS_WRITE_FAIL`
+6. Logging via `LOG_ERROR`, `LOG_INFO`, `LOG_DEBUG` macros from `log_config.h`
+
+### Completion Notes
+
+- All acceptance criteria satisfied
+- Build passes with no errors
+- ConfigManager follows architecture patterns:
+  - DI via `Preferences*` constructor parameter
+  - Validation against `WheelMode_MAX` and `ButtonAction_MAX`
+  - Uses `BUTTON_COUNT` from `button_config.h` for index validation
+  - NVS namespace `"knobkoky"` as specified
+  - Keys: `"wheel.mode"`, `"btn0.action"` through `"btn3.action"`
+
+## File List
+
+- `src/Config/ConfigManager.h` (new)
+- `src/Config/ConfigManager.cpp` (new)
+
+## Change Log
+
+- 2025-12-18: Implemented ConfigManager with wheel mode and button action persistence (claude-opus-4-5-20251101)
