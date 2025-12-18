@@ -124,10 +124,10 @@ These standards are not optional optimizations - they are baseline requirements 
 
 ### Testability Design
 
-Custom implementations enable proper unit testing:
+**Strategic Pivot (2025-12-18):** Automated test implementation is **deferred** for the MVP phase to prioritize speed. However, the architecture **must** maintain testability to allow adding tests later.
 
-| Component | Test Strategy |
-|-----------|--------------|
+| Component | Test Strategy (Deferred) |
+|-----------|--------------------------|
 | Menu Logic | MockDisplay captures UI calls, inject events via queue |
 | Display Abstraction | Test concrete implementations independently |
 | Persistence | MockPreferences or ESP32 Preferences test partition |
@@ -559,7 +559,7 @@ UtilityButtonsWithKnobUSB/
 │   └── Button/                         # (new) Button management
 │       └── ButtonManager.cpp/.h                 # GPIO setup, button event dispatch
 │
-├── test/                               # Test files
+├── test/                               # (Deferred) Test files
 │   ├── unit/
 │   │   ├── test_ConfigManager.cpp
 │   │   ├── test_MenuController.cpp
