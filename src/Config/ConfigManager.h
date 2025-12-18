@@ -15,6 +15,12 @@ public:
     Error saveButtonAction(uint8_t index, ButtonAction action);
     ButtonAction loadButtonAction(uint8_t index);
 
+    /**
+     * @brief Clear all configuration data from NVS
+     * @return Error::OK on success, Error::NVS_WRITE_FAIL on failure
+     */
+    Error clearAll();
+
 private:
     static constexpr const char* NVS_NAMESPACE = "knobkoky";
     static constexpr const char* KEY_WHEEL_MODE = "wheel.mode";

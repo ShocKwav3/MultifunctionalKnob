@@ -45,7 +45,7 @@ development_status:
   1-1-create-foundation-enums-and-configuration-headers: done
   1-2-create-display-interface-and-serial-implementation: done
   1-3-create-configuration-manager-with-nvs-persistence: done
-  1-4-implement-boot-configuration-restore-and-factory-reset: ready-for-dev
+  1-4-implement-boot-configuration-restore-and-factory-reset: done
   epic-1-retrospective: optional
 
   epic-2: in-progress
