@@ -121,3 +121,18 @@ ButtonAction ConfigManager::loadButtonAction(uint8_t index) {
     LOG_DEBUG(TAG, "Loaded button %d action: %s", index, buttonActionToString(action));
     return action;
 }
+
+Error ConfigManager::clearAll() {
+    if (!ensureInitialized()) {
+        return Error::NVS_WRITE_FAIL;
+    }
+
+    bool cleared = prefs->clear();
+    if (!cleared) {
+        LOG_ERROR(TAG, "Failed to clear NVS namespace: %s", NVS_NAMESPACE);
+        return Error::NVS_WRITE_FAIL;
+    }
+
+    LOG_INFO(TAG, "Cleared all configuration from NVS namespace: %s", NVS_NAMESPACE);
+    return Error::OK;
+}

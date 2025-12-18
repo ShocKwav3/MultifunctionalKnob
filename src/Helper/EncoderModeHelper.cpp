@@ -10,3 +10,17 @@ const char* EncoderModeHelper::toString(EventEnum::EncoderModeEventTypes type) {
         default: return "UNKNOWN";
     }
 }
+
+EventEnum::EncoderModeEventTypes EncoderModeHelper::fromWheelMode(WheelMode mode) {
+    switch (mode) {
+        case WheelMode::SCROLL:
+            return EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL;
+        case WheelMode::VOLUME:
+            return EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME;
+        case WheelMode::ZOOM:
+            // ZOOM mode not yet implemented, fall back to SCROLL
+            return EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL;
+        default:
+            return EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL;
+    }
+}
