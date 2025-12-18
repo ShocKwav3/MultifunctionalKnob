@@ -258,6 +258,18 @@ sudo usermod -a -G dialout $USER
 
 ## Testing and Debugging
 
+### Testing Strategy
+
+**Policy:** Testable Code over Automated Tests (MVP Phase)
+
+We prioritize writing **testable code** (using dependency injection, interfaces, and modular design) but **do not require automated unit tests** (e.g., Google Test, Unity) at this stage.
+
+- **Testable Code:** Components should be designed to be testable in the future. Use interfaces (e.g., `DisplayInterface`) and dependency injection to allow mocking.
+- **Manual Testing:** Primary validation is done via:
+  - **Serial Monitor:** Verifying log output and state changes.
+  - **Hardware Testing:** Verifying physical interaction (encoder, buttons) and BLE behavior.
+- **Future Proofing:** When the project matures, we can introduce a unit testing framework and backfill tests using the testable seams we've created.
+
 ### Serial Monitor
 
 #### Open Monitor
