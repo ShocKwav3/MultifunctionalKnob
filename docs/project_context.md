@@ -70,8 +70,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ### Testing Event Architecture
 
-- **Mock Dispatchers:** Inject `MockDispatcher*` for unit tests instead of real dispatcher
-- **Direct Handler Testing:** Test handlers by calling methods directly - queues are integration-level concern
+**Strategic Pivot (2025-12-18):** Automated test implementation is **deferred** for the MVP phase.
+
+- **Mock Dispatchers:** Inject `MockDispatcher*` for unit tests instead of real dispatcher (Deferred)
+- **Direct Handler Testing:** Test handlers by calling methods directly - queues are integration-level concern (Deferred)
 - **Event Tracing:** Use `LOG_DEBUG` to trace event flow through dispatcher → queue → handler chain
 
 ### Naming Conventions
@@ -132,7 +134,9 @@ constexpr uint8_t MAX_DEPTH = 5;
 - **Format:** `LOG_ERROR("Tag", "Format %d", value)` → `[ERR][Tag] Format 123`
 - **Build control:** Log level via build flag (`LOG_LEVEL_NONE`/`ERROR`/`INFO`/`DEBUG`)
 
-### Test File Naming
+### Test File Naming (Deferred)
+
+**Strategic Pivot (2025-12-18):** Automated test implementation is **deferred** for the MVP phase.
 
 - **Test files:** `test_<ClassName>.cpp` in `test/unit/`
 - **Mock files:** `Mock<InterfaceName>.h` in `test/mocks/`
@@ -220,7 +224,7 @@ if (bleKeyboard.isConnected()) {  // Correct
 - **Avoid Arduino `String` class** - causes heap fragmentation
 - **Use char arrays** with fixed-size buffers instead
 
-### Testing Gotchas
+### Testing Gotchas (Deferred)
 
 - **Reset static/global state** in each test - embedded state persists between tests
 
