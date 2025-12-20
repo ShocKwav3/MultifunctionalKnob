@@ -537,6 +537,10 @@ So that **I can access configuration options without interrupting normal operati
 **And** normal encoder event routing resumes
 **And** current wheel mode handler receives subsequent events
 
+**Given** the event system is transitioning to a distributed architecture
+**When** `AppEventDispatcher` is no longer used for menu events
+**Then** `MenuEventDispatcher` is utilized for all menu-related event dispatches
+
 **Given** new event types are needed
 **When** I create `include/Type/MenuEvent.h`
 **Then** it defines `enum class MenuEventType` with values: `ACTIVATED`, `DEACTIVATED`, `ITEM_SELECTED`, `NAVIGATION_CHANGED`

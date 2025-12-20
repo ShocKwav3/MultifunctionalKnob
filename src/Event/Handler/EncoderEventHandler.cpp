@@ -1,17 +1,23 @@
 #include "EncoderEventHandler.h"
+#include "Menu/Controller/MenuController.h"
+#include "Config/log_config.h"
 
 EncoderEventHandler::EncoderEventHandler(QueueHandle_t queue)
     : eventQueue(queue) {}
 
 void EncoderEventHandler::setModeHandler(EncoderModeBaseInterface* handler) {
     if (!handler) {
-        Serial.println("EncoderEventHandler: Invalid mode handler");
+        LOG_ERROR("EncoderEventHandler", "Invalid mode handler");
         return;
     }
 
-    Serial.printf("EncoderEventHandler: Setting mode handler: %s\n", handler->getModeName());
+    LOG_INFO("EncoderEventHandler", "Setting mode handler: %s", handler->getModeName());
 
     currentHandler = handler;
+}
+
+void EncoderEventHandler::setMenuController(MenuController* controller) {
+    menuController = controller;
 }
 
 void EncoderEventHandler::start() {
@@ -27,6 +33,29 @@ void EncoderEventHandler::taskLoop() {
 
     while (true) {
         if (xQueueReceive(eventQueue, &evt, portMAX_DELAY)) {
+            // Menu intercepts events when active
+            if (menuController && menuController->isActive()) {
+                switch (evt.type) {
+                    case EventEnum::EncoderInputEventTypes::ROTATE:
+                        menuController->handleRotation(evt.delta);
+                        break;
+                    case EventEnum::EncoderInputEventTypes::SHORT_CLICK:
+                        menuController->handleSelect();
+                        break;
+                    case EventEnum::EncoderInputEventTypes::LONG_CLICK:
+                        menuController->handleBack();
+                        break;
+                }
+                continue;  // Event consumed by menu
+            }
+
+            // Long-press activates menu when inactive
+            if (menuController && evt.type == EventEnum::EncoderInputEventTypes::LONG_CLICK) {
+                menuController->activate();
+                continue;  // Event consumed
+            }
+
+            // Normal mode handling
             if (!currentHandler) continue;
 
             switch (evt.type) {
