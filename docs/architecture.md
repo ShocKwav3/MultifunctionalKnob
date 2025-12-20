@@ -250,19 +250,27 @@ public:
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Menu Events | Extend existing AppEvent system | Leverages existing infrastructure, clear separation |
-| Display Updates | Observer pattern via AppEvent queue | Loose coupling, display-agnostic menu logic |
+| Event Architecture | Distributed Pipelines (Option B) | Decouples domains (Menu, System), adheres to SRP |
+| Display Access | Arbitration via DisplayTask | Prevents race conditions on shared display resource |
+| Menu Events | Dedicated MenuEventQueue | Separates UI logic from system state |
 | Button Config | Array of pin definitions with metadata | Easy to iterate, adding button = one line change |
 
-**Extended AppEvent Types:**
+**Event Pipelines:**
+1. **Menu Pipeline:** `MenuController` → `MenuEventDispatcher` → `MenuEventQueue` → `MenuEventHandler`
+2. **System Pipeline:** `SystemComponents` → `SystemEventDispatcher` → `SystemEventQueue` → `SystemEventHandler`
+3. **Display Pipeline:** `*Handler` → `DisplayRequestQueue` → `DisplayTask` (Arbitrator)
+
+**Display Arbitration Pattern:**
 ```cpp
-enum class AppEventTypes {
-    // ... existing types
-    MENU_ACTIVATED,
-    MENU_DEACTIVATED,
-    MENU_ITEM_SELECTED,
-    CONFIG_CHANGED
+// All handlers must use this struct to request drawing
+struct DisplayRequest {
+    enum Type { DRAW_MENU, SHOW_STATUS, CLEAR } type;
+    union {
+        struct { const char* title; const char** items; uint8_t count; uint8_t selected; } menu;
+        struct { const char* key; const char* value; } status;
+    } data;
 };
+// Only DisplayTask consumes this queue and touches hardware
 ```
 
 **Button Configuration:**
@@ -282,32 +290,23 @@ constexpr ButtonConfig BUTTONS[] = {
 constexpr size_t BUTTON_COUNT = sizeof(BUTTONS) / sizeof(BUTTONS[0]);
 ```
 
-**Event Flow:**
-```
-User Input → EncoderDriver → MenuInterceptor (if active) → Menu State Change
-                                    ↓
-                            AppEventDispatcher
-                                    ↓
-                            DisplayHandler → DisplayInterface → Serial/OLED
-```
-
 ### Decision Impact Analysis
 
 **Implementation Sequence:**
 1. Display abstraction (DisplayInterface + SerialDisplay)
-2. NVS persistence wrapper (ConfigManager)
-3. Button configuration and GPIO setup
-4. Menu data structures (MenuItem tree)
-5. MenuAction classes
-6. MenuController with event interception
-7. DisplayHandler event subscription
-8. Integration with existing EncoderEventHandler
+2. Display Arbitration (DisplayRequestQueue + DisplayTask)
+3. NVS persistence wrapper (ConfigManager)
+4. Button configuration and GPIO setup
+5. Menu data structures (MenuItem tree)
+6. MenuAction classes
+7. MenuController with event interception
+8. MenuEventHandler and SystemEventHandler implementation
+9. Integration with existing EncoderEventHandler
 
 **Cross-Component Dependencies:**
-- MenuController depends on DisplayInterface (via events, not direct coupling)
-- MenuAction depends on ConfigManager for persistence
-- DisplayHandler depends on AppEventDispatcher subscription
-- Button configuration feeds into MenuItem generation for Button Configurator submenu
+- MenuController depends on MenuEventDispatcher
+- MenuEventHandler depends on DisplayRequestQueue
+- DisplayTask depends on DisplayInterface
 
 ## Implementation Patterns & Consistency Rules
 
@@ -345,8 +344,10 @@ src/
 ├── Display/
 │   ├── Interface/
 │   │   └── DisplayInterface.h
-│   ├── Handler/
-│   │   └── DisplayHandler.cpp/.h
+│   ├── Task/
+│   │   └── DisplayTask.cpp/.h           # NEW: Arbitration Task
+│   ├── Model/
+│   │   └── DisplayRequest.h             # NEW: Request struct
 │   └── Impl/
 │       ├── SerialDisplay.cpp/.h
 │       └── OLEDDisplay.cpp/.h
@@ -354,33 +355,16 @@ src/
 │   └── ConfigManager.cpp/.h
 ├── Button/
 │   └── ButtonManager.cpp/.h
+├── System/                              # NEW: System domain
+│   └── Handler/
+│       └── SystemEventHandler.cpp/.h
 └── (existing directories unchanged)
-
-include/Config/
-├── device_config.h      # BLE settings
-├── encoder_config.h     # Encoder GPIO
-├── button_config.h      # Button GPIO array
-├── menu_config.h        # Menu parameters
-├── display_config.h     # Display settings
-└── log_config.h         # Logging macros
 ```
 
 **Header Guards:**
 All headers use `#pragma once`
 
 ### Format Patterns
-
-**Event Payload Structure (Union-based):**
-```cpp
-struct AppEvent {
-    AppEventTypes type;
-    union {
-        struct { MenuItem* item; uint8_t index; } menu;
-        struct { const char* message; uint8_t value; } config;
-        struct { bool active; } state;
-    } data;
-};
-```
 
 **Error Return Pattern:**
 ```cpp
@@ -419,8 +403,7 @@ LOG_DEBUG("Tag", "Format %d", val);    // [DBG][Tag] Format 123
 3. Use `#pragma once` for all headers
 4. Return `Error` enum from fallible operations
 5. Use `LOG_*` macros instead of direct `Serial.print`
-6. Use union-based payload for AppEvent data
-7. Add new constants to appropriate `include/Config/*.h` file
+6. Add new constants to appropriate `include/Config/*.h` file
 
 **Pattern Verification:**
 - Code review checks naming and structure compliance
@@ -488,7 +471,8 @@ UtilityButtonsWithKnobUSB/
 │   │   ├── ButtonActionEnum.h          # (new) Button action values
 │   │   └── ErrorEnum.h                 # (new) Error return codes
 │   └── Type/
-│       ├── AppEvent.h                  # (existing + extend) App event struct with union
+│       ├── MenuEvent.h                 # (new) Menu-specific events
+│       ├── SystemEvent.h               # (new) System-specific events
 │       └── EncoderInputEvent.h         # (existing) Encoder input struct
 │
 ├── lib/                                # Custom libraries (existing)
@@ -521,10 +505,12 @@ UtilityButtonsWithKnobUSB/
 │   │
 │   ├── Event/                          # (existing) Event system
 │   │   ├── Dispatcher/
-│   │   │   ├── AppEventDispatcher.cpp/.h
+│   │   │   ├── MenuEventDispatcher.cpp/.h       # (new) Menu events
+│   │   │   ├── SystemEventDispatcher.cpp/.h     # (new) System events
 │   │   │   └── EncoderEventDispatcher.cpp/.h
 │   │   └── Handler/
-│   │       ├── AppEventHandler.cpp/.h           # (modify) Add menu event handling
+│   │       ├── MenuEventHandler.cpp/.h          # (new) Menu logic formatting
+│   │       ├── SystemEventHandler.cpp/.h        # (new) System state formatting
 │   │       └── EncoderEventHandler.cpp/.h       # (modify) Add menu interception
 │   │
 │   ├── Helper/                         # (existing) Utilities
@@ -546,8 +532,8 @@ UtilityButtonsWithKnobUSB/
 │   ├── Display/                        # (new) Display abstraction
 │   │   ├── Interface/
 │   │   │   └── DisplayInterface.h               # Abstract display interface
-│   │   ├── Handler/
-│   │   │   └── DisplayHandler.cpp/.h            # Event subscriber, routes to display
+│   │   ├── Task/
+│   │   │   └── DisplayTask.cpp/.h               # (new) Arbitration Task
 │   │   └── Impl/
 │   │       ├── SerialDisplay.cpp/.h             # Serial output implementation
 │   │       └── OLEDDisplay.cpp/.h               # OLED implementation (future)
@@ -555,6 +541,10 @@ UtilityButtonsWithKnobUSB/
 │   ├── Config/                         # (new) Configuration management
 │   │   ├── ConfigManager.cpp/.h                 # NVS read/write, defaults (DI-enabled)
 │   │   └── FactoryReset.cpp/.h                  # Factory reset detection and execution
+│   │
+│   ├── System/                         # (new) System components
+│   │   └── State/
+│   │       └── SystemState.h                    # Global system state
 │   │
 │   └── Button/                         # (new) Button management
 │       └── ButtonManager.cpp/.h                 # GPIO setup, button event dispatch
@@ -628,24 +618,6 @@ public:
 };
 ```
 
-**BLE Disconnect Handling:**
-```
-Event flow for BLE disconnect during menu operation:
-
-BleKeyboard fires disconnect callback
-    ↓
-AppEventDispatcher.dispatch(BLE_DISCONNECTED)
-    ↓
-AppEventHandler receives event
-    ├── MenuController.handleBleDisconnect()
-    │   └── If in menu: exit to root, show "BLE Disconnected"
-    └── DisplayHandler.showStatus("Disconnected")
-
-Location: BLE_DISCONNECTED in EventEnum.h
-          Handle in AppEventHandler.cpp
-          MenuController.handleBleDisconnect() method
-```
-
 ### Architectural Boundaries
 
 **Event System Boundaries:**
@@ -657,18 +629,25 @@ Location: BLE_DISCONNECTED in EventEnum.h
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Processing Layer                             │
+│                     Logic/Domain Layer                           │
 │  EncoderEventHandler                                             │
-│    ├── MenuController.isActive() ? MenuController.handleEvent() │
-│    └── else → EncoderModeManager → CurrentModeHandler            │
+│    ├── MenuController.isActive() ? Emit MenuEvent               │
+│    └── else → EncoderModeManager → Emit Mode Action             │
+│                                                                 │
+│  System Components ──→ SystemEventDispatcher ──→ SystemEventQueue│
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Output Layer                                │
-│  AppEventDispatcher ──→ AppEventQueue ──→ AppEventHandler       │
-│    └── DisplayHandler.handleAppEvent() → DisplayInterface       │
-│    └── ConfigManager (on CONFIG_CHANGED)                        │
-│    └── MenuController (on BLE_DISCONNECTED)                     │
+│                     Output Processing Layer                      │
+│  MenuEventQueue ──→ MenuEventHandler                             │
+│                      ↓ (Emits Draw Command)                     │
+│  SystemEventQueue ──→ SystemEventHandler                         │
+│                      ↓ (Emits Draw Command)                     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                     Hardware Layer                               │
+│  DisplayRequestQueue ──→ DisplayTask ──→ DisplayInterface       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -676,45 +655,48 @@ Location: BLE_DISCONNECTED in EventEnum.h
 
 | Boundary | Owner | Consumers | Communication |
 |----------|-------|-----------|---------------|
-| Display Output | DisplayInterface | MenuController, Actions | Via AppEvent queue |
+| Display Hardware | DisplayTask | Handlers (Menu/System) | Via DisplayRequestQueue |
+| Menu Logic | MenuController | EncoderEventHandler | Direct call (interception) |
+| Menu Output | MenuEventHandler | MenuController | Via MenuEventQueue |
+| System State | SystemEventHandler | Various components | Via SystemEventQueue |
 | Config Persistence | ConfigManager | MenuAction classes | Direct method calls (DI) |
-| Menu State | MenuController | EncoderEventHandler | isActive() check |
-| Button State | ButtonManager | Main init, MenuTree | GPIO config array |
-| Mode Management | EncoderModeManager | EncoderEventHandler | Handler registration |
-| Factory Reset | FactoryReset | main.cpp setup() | Static methods |
 
 ### Build Order Dependencies
 
 Components must be built/implemented in this order due to compile-time dependencies:
 
 ```
-Phase 1: Foundation (no dependencies on new code)
+Phase 1: Foundation
 ├── include/Config/log_config.h
 ├── include/Enum/ErrorEnum.h
 ├── include/Enum/WheelModeEnum.h
 ├── include/Enum/ButtonActionEnum.h
 └── include/Config/button_config.h
 
-Phase 2: Interfaces (depend only on Phase 1)
+Phase 2: Interfaces
 ├── src/Display/Interface/DisplayInterface.h
 └── src/Menu/Model/MenuItem.h
 
-Phase 3: Implementations (depend on Phase 2)
+Phase 3: Core Implementations
 ├── src/Display/Impl/SerialDisplay.cpp/.h
 ├── src/Config/ConfigManager.cpp/.h
 ├── src/Button/ButtonManager.cpp/.h
-└── src/Menu/Action/MenuAction.h
+├── src/Menu/Action/MenuAction.h
 
-Phase 4: Menu System (depend on Phase 3)
+Phase 4: Display Arbitration (NEW)
+├── src/Display/Model/DisplayRequest.h
+└── src/Display/Task/DisplayTask.cpp/.h
+
+Phase 5: Menu System
 ├── src/Menu/Action/*Action.cpp/.h
 ├── src/Menu/Model/MenuTree.h
-└── src/Menu/Controller/MenuController.cpp/.h
+├── src/Menu/Controller/MenuController.cpp/.h
 
-Phase 5: Integration (depend on Phase 4)
-├── src/Display/Handler/DisplayHandler.cpp/.h
-├── src/Config/FactoryReset.cpp/.h
-├── src/Event/Handler/EncoderEventHandler.cpp (modify)
-├── src/Event/Handler/AppEventHandler.cpp (modify)
+Phase 6: Integration (Distributed Events)
+├── src/Event/Dispatcher/MenuEventDispatcher.cpp/.h
+├── src/Event/Handler/MenuEventHandler.cpp/.h
+├── src/Event/Dispatcher/SystemEventDispatcher.cpp/.h
+├── src/Event/Handler/SystemEventHandler.cpp/.h
 └── src/main.cpp (wire everything together)
 ```
 
