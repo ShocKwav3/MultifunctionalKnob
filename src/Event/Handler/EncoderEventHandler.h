@@ -7,16 +7,20 @@
 #include "EncoderMode/Handler/EncoderModeHandlerInterface.h"
 #include "EncoderMode/Interface/EncoderModeBaseInterface.h"
 
+class MenuController;
+
 class EncoderEventHandler {
 public:
     EncoderEventHandler(QueueHandle_t queue);
 
     void setModeHandler(EncoderModeBaseInterface* handler);
+    void setMenuController(MenuController* controller);
     void start();
 
 private:
     QueueHandle_t eventQueue;
     EncoderModeBaseInterface* currentHandler = nullptr;
+    MenuController* menuController = nullptr;
 
     static void taskEntry(void* param);
     void taskLoop();
