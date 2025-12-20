@@ -1,6 +1,6 @@
 # Story 2.1: Create Menu Item Data Structure and Static Menu Tree
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -30,9 +30,14 @@ so that **menu navigation can traverse hierarchically without dynamic memory all
 
 ## Tasks / Subtasks
 
-- [ ] Create `src/Menu/Action/MenuAction.h`
-- [ ] Create `src/Menu/Model/MenuItem.h`
-- [ ] Create `src/Menu/Model/MenuTree.h`
+- [x] Create `src/Menu/Action/MenuAction.h`
+- [x] Create `src/Menu/Model/MenuItem.h`
+- [x] Create `src/Menu/Model/MenuTree.h`
+
+### Review Follow-ups (AI)
+- [x] [AI-Review][HIGH] `MenuTree.h` initializes leaf `action` pointers to `nullptr`, contradicting AC #5. This requires runtime injection and compromises the static nature of the tree. [src/Menu/Model/MenuTree.h]
+- [x] [AI-Review][HIGH] `MenuTree.h` defines "Button Config" as a leaf node, contradicting AC #3, which states it should have children. The tree is incomplete. [src/Menu/Model/MenuTree.h]
+- [x] [AI-Review][MEDIUM] `MenuTree.h` uses `inline MenuItem[]` instead of `constexpr` arrays, deviating from AC #3. [src/Menu/Model/MenuTree.h]
 
 ## Dev Notes
 
@@ -53,7 +58,62 @@ so that **menu navigation can traverse hierarchically without dynamic memory all
 
 - `docs/architecture.md`
 - `docs/epics.md`
+- `docs/project_context.md`
 
 ### Agent Model Used
 
-- google/gemini-3-pro-preview
+- claude-opus-4-5-20251101
+
+### Completion Notes
+
+**Implementation Summary:**
+
+1. **MenuAction.h**: Created abstract interface with:
+   - Virtual destructor (per project standards)
+   - Pure virtual `execute()` method
+   - Virtual `getConfirmationMessage()` with default nullptr return
+
+2. **MenuItem.h**: Created struct with:
+   - Forward declaration of MenuAction class
+   - All required members: `label`, `parent`, `children`, `childCount`, `action`
+   - Proper const qualifiers for navigation pointers
+
+3. **MenuTree.h**: Created header-only namespace with:
+   - Static menu arrays using `inline` for header-only linkage
+   - Complete menu structure with all 4 main items and both submenus
+   - `initMenuTree()` function to set parent pointers at runtime
+   - Action setter functions: `setWheelBehaviorAction()`, `setButtonConfigAction()`, `setDeviceStatusAction()`, `setAboutAction()`
+   - Helper functions: `getRoot()`, `getMainMenu()`, `getMainMenuCount()`
+   - Index namespace for safe menu item references
+
+**Review Follow-up Resolutions:**
+
+1. **[HIGH] Action pointers nullptr** - RESOLVED
+   - Per AC note: "MenuAction instances may require runtime dependencies (DI), MenuTree might need to be initialized at runtime"
+   - Added explicit action setter functions for runtime DI injection
+   - Documentation clarifies initialization sequence: `initMenuTree()` then action setters
+
+2. **[HIGH] Button Config as leaf** - RESOLVED
+   - Added `buttonConfigSubmenu[]` with 4 placeholder button items
+   - Button Config is now a branch node with `childCount=4`
+   - Placeholder children will be wired to actual actions in Story 4.3
+
+3. **[MEDIUM] inline vs constexpr** - RESOLVED (Technical Limitation)
+   - C++ constexpr cannot support circular references (parent pointers)
+   - C++ constexpr cannot support runtime DI objects (action pointers)
+   - `inline` is the correct C++ mechanism for header-only static data
+   - Constants (counts, indices) use `constexpr` where possible
+   - Documentation explains technical rationale
+
+**Build Verification:** Full project build succeeded with no warnings.
+
+## File List
+
+- `src/Menu/Action/MenuAction.h` (new)
+- `src/Menu/Model/MenuItem.h` (new)
+- `src/Menu/Model/MenuTree.h` (new, updated)
+
+## Change Log
+
+- 2025-12-20: Addressed code review findings - added Button Config submenu, action setter functions, documentation
+- 2025-12-20: Implemented menu item data structure and static menu tree (Story 2.1)
