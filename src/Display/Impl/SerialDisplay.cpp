@@ -5,7 +5,7 @@ SerialDisplay::SerialDisplay() {
     LOG_INFO(TAG, "Initialized");
 }
 
-void SerialDisplay::showMenu(const char* title, const char** items, uint8_t count, uint8_t selected) {
+void SerialDisplay::showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected) {
     if (items == nullptr || count == 0) {
         return;
     }

@@ -20,7 +20,7 @@ public:
      * @param count Number of items in the array
      * @param selected Index of the currently selected item (0-based)
      */
-    virtual void showMenu(const char* title, const char** items, uint8_t count, uint8_t selected) = 0;
+    virtual void showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected) = 0;
 
     /**
      * @brief Display a general message
