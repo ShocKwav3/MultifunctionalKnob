@@ -52,7 +52,7 @@ development_status:
   2-1-create-menu-item-data-structure-and-static-menu-tree: done
   2-2-create-menu-controller-state-machine: ready-for-dev
   2-3-integrate-menu-with-encoder-event-system: ready-for-dev
-  2-4-create-display-handler-for-menu-events: ready-for-dev
+  2-4-create-display-handler-for-menu-events: done
   epic-2-retrospective: optional
 
   epic-3: in-progress

@@ -457,25 +457,25 @@ So that **I can browse options and make selections intuitively**.
 **Given** the menu is active and user rotates encoder clockwise
 **When** `handleRotation(int delta)` is called with positive delta
 **Then** `selectedIndex` increments (wraps at `currentMenu->childCount`)
-**And** display update event is dispatched via AppEventDispatcher
+**And** `MENU_NAVIGATION_CHANGED` event is dispatched via `MenuEventDispatcher`
 **And** `LOG_DEBUG` reports new selection index
 
 **Given** the menu is active and user rotates encoder counter-clockwise
 **When** `handleRotation(int delta)` is called with negative delta
 **Then** `selectedIndex` decrements (wraps at 0 to `childCount - 1`)
-**And** display update event is dispatched
+**And** `MENU_NAVIGATION_CHANGED` event is dispatched
 
 **Given** the menu is active and user short-presses on a branch item
 **When** `handleSelect()` is called and selected item has children
 **Then** `currentMenu` changes to the selected child's children array
 **And** `selectedIndex` resets to 0
-**And** display update event is dispatched
+**And** `MENU_NAVIGATION_CHANGED` event is dispatched
 **And** `LOG_INFO` reports "Entered submenu: {label}"
 
 **Given** the menu is active and user short-presses on a leaf item
 **When** `handleSelect()` is called and selected item has an action
 **Then** `action->execute()` is called
-**And** confirmation message is dispatched if `getConfirmationMessage()` returns non-null
+**And** confirmation event is dispatched if `getConfirmationMessage()` returns non-null
 **And** menu exits automatically (FR8)
 **And** `LOG_INFO` reports "Executed: {label}"
 
@@ -483,13 +483,13 @@ So that **I can browse options and make selections intuitively**.
 **When** `handleBack()` is called and `currentMenu->parent != nullptr`
 **Then** `currentMenu` changes to parent menu
 **And** `selectedIndex` resets to 0
-**And** display update event is dispatched
+**And** `MENU_NAVIGATION_CHANGED` event is dispatched
 **And** `LOG_DEBUG` reports "Back to: {parent label}"
 
 **Given** the menu is active at main menu level and user long-presses
 **When** `handleBack()` is called and `currentMenu->parent == nullptr`
 **Then** `menuActive` is set to `false`
-**And** menu deactivation event is dispatched
+**And** `MENU_DEACTIVATED` event is dispatched
 **And** `LOG_INFO` reports "Menu closed"
 
 ---
@@ -513,7 +513,7 @@ So that **I can access configuration options without interrupting normal operati
 **And** `menuActive` is set to `true`
 **And** `currentMenu` is set to main menu root
 **And** `selectedIndex` is set to 0
-**And** `MENU_ACTIVATED` event is dispatched via AppEventDispatcher
+**And** `MENU_ACTIVATED` event is dispatched via `MenuEventDispatcher`
 **And** `LOG_INFO` reports "Menu activated"
 
 **Given** the menu is active
@@ -538,65 +538,57 @@ So that **I can access configuration options without interrupting normal operati
 **And** current wheel mode handler receives subsequent events
 
 **Given** new event types are needed
-**When** I modify `include/Enum/EventEnum.h`
-**Then** it includes: `MENU_ACTIVATED`, `MENU_DEACTIVATED`, `MENU_ITEM_SELECTED`, `MENU_NAVIGATION_CHANGED`
+**When** I create `include/Type/MenuEvent.h`
+**Then** it defines `enum class MenuEventType` with values: `ACTIVATED`, `DEACTIVATED`, `ITEM_SELECTED`, `NAVIGATION_CHANGED`
+**And** defines `struct MenuEvent` payload
 
 ---
 
-### Story 2.4: Create Display Handler for Menu Events
+### Story 2.4: Create Menu Event Handler and Display Arbitrator
 
 As a **user**,
-I want **to see the current menu state and confirmation messages on the display**,
-So that **I know which option is selected and when my actions are confirmed**.
+I want **to see the current menu state and confirmation messages on the display without corruption**,
+So that **I can clearly read the screen even if other system events occur**.
 
 **Acceptance Criteria:**
 
-**Given** the project needs to route display events
-**When** I create `src/Display/Handler/DisplayHandler.cpp` and `DisplayHandler.h`
-**Then** `DisplayHandler` class:
-- Holds reference to `DisplayInterface*`
-- Subscribes to AppEvent queue
-- Routes events to appropriate display methods
-**And** uses `#pragma once` header guard
+**Given** the project needs display arbitration
+**When** I create `src/Display/Task/DisplayTask.cpp` and `DisplayTask.h`
+**Then** `DisplayTask` is the ONLY component that holds a `DisplayInterface*`
+**And** it consumes a `DisplayRequestQueue`
+**And** it processes one `DisplayRequest` at a time to prevent hardware conflicts
+
+**Given** the project needs to format menu events for display
+**When** I create `src/Event/Handler/MenuEventHandler.cpp` and `MenuEventHandler.h`
+**Then** `MenuEventHandler` subscribes to `MenuEventDispatcher`
+**And** for each `MenuEvent`, it formats a `DisplayRequest` (type `DRAW_MENU` or `SHOW_CONFIRMATION`)
+**And** sends the request to `DisplayRequestQueue`
 
 **Given** menu is activated
-**When** `MENU_ACTIVATED` event is received
-**Then** `DisplayHandler` calls `display->clear()`
-**And** calls `display->showMenu()` with main menu items and selection index 0
-**And** `LOG_DEBUG` reports "Display: Menu activated"
+**When** `MENU_ACTIVATED` event is received by Handler
+**Then** Handler creates `DisplayRequest` with main menu items
+**And** sends to queue
+**And** `DisplayTask` pops request and calls `display->showMenu()`
 
 **Given** user navigates within menu
 **When** `MENU_NAVIGATION_CHANGED` event is received
-**Then** event payload contains: `MenuItem* currentMenu`, `uint8_t selectedIndex`
-**And** `DisplayHandler` calls `display->showMenu()` with current items and selection
-**And** display updates to show new selection indicator
+**Then** Handler formats new `DisplayRequest` with updated selection
+**And** `DisplayTask` updates the screen
 
 **Given** user selects an action item
 **When** `MENU_ITEM_SELECTED` event is received with confirmation message
-**Then** event payload contains: `const char* confirmationMessage`
-**And** `DisplayHandler` calls `display->showConfirmation(message)`
-**And** confirmation is visible for user feedback (FR7)
+**Then** Handler formats `DisplayRequest` (type `SHOW_CONFIRMATION`)
+**And** `DisplayTask` calls `display->showConfirmation()`
 
 **Given** menu is deactivated
 **When** `MENU_DEACTIVATED` event is received
-**Then** `DisplayHandler` calls `display->clear()`
-**And** `display->showMessage("Ready")` indicates return to normal mode
-**And** `LOG_DEBUG` reports "Display: Menu closed"
+**Then** Handler formats `DisplayRequest` (type `CLEAR` or `SHOW_STATUS`)
+**And** `DisplayTask` clears the screen
 
-**Given** AppEvent needs to carry menu data
-**When** I modify `include/Type/AppEvent.h`
-**Then** it includes union-based payload:
-```cpp
-union {
-    struct { MenuItem* menu; uint8_t index; } navigation;
-    struct { const char* message; } confirmation;
-} data;
-```
-
-**Given** DisplayHandler needs initialization
-**When** `DisplayHandler` is constructed in `main.cpp`
-**Then** it receives `DisplayInterface*` and `AppEventDispatcher*` references
-**And** registers itself as event listener for menu-related events
+**Given** DisplayTask needs initialization
+**When** `main.cpp` runs setup
+**Then** `DisplayTask` is created as a FreeRTOS task
+**And** `DisplayRequestQueue` is initialized
 
 ---
 
@@ -941,7 +933,7 @@ So that **I can troubleshoot issues and verify my settings are correct**.
 
 **Given** user selects "Device Status" from menu
 **When** `execute()` is called
-**Then** display shows multiple status lines via `DisplayInterface::showStatus()`
+**Then** display shows multiple status lines via `SystemEventDispatcher`
 
 **Given** status needs to show current wheel mode (FR20)
 **When** status is displayed
@@ -979,7 +971,7 @@ So that **I can troubleshoot issues and verify my settings are correct**.
 
 As a **user**,
 I want **to view device information and firmware version**,
-So that **I know what version I'm running and can reference it for support**.
+So that **I can customize what each button does**.
 
 **Acceptance Criteria:**
 
@@ -990,7 +982,7 @@ So that **I know what version I'm running and can reference it for support**.
 
 **Given** user selects "About" from menu
 **When** `execute()` is called
-**Then** display shows device information via `DisplayInterface::showStatus()`
+**Then** display shows device information via `SystemEventDispatcher`
 
 **Given** about screen needs device name and version (FR24)
 **When** about is displayed

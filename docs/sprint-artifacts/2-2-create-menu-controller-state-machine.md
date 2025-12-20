@@ -1,60 +1,54 @@
-# Story 2.2: Create Menu Controller State Machine
+# Sprint Artifact: Create Menu Controller & Distributed Event Architecture
 
-Status: ready-for-dev
+**Story:** 2.2
+**Epic:** 2 - Menu Navigation System
+**Status:** ready-for-dev
 
-## Story
+## Description
+Implement the core Menu Controller state machine logic AND the foundational distributed event architecture required for it to function. This includes the Menu Event Pipeline and the Display Arbitration system.
 
-As a **user**,
-I want **to navigate through menu levels using wheel rotation and button presses**,
-so that **I can browse options and make selections intuitively**.
+This story consolidates the Logic (Controller) and the Output Infrastructure (Event+Display) to ensure a complete, testable vertical slice.
+
+## Goals
+1.  **Menu Logic:** Implement `MenuController` state machine (Navigation, Selection, Back).
+2.  **Event Pipeline:** Implement `MenuEvent`, `MenuEventDispatcher`.
+3.  **Display Arbitration:** Implement `DisplayRequest`, `DisplayRequestQueue`, and `DisplayTask`.
+4.  **Menu Output:** Implement `MenuEventHandler` to translate Events → DisplayRequests.
 
 ## Acceptance Criteria
 
-1. **MenuController Class:**
-   - Create `src/Menu/Controller/MenuController.cpp` and `MenuController.h`
-   - Track state: `menuActive`, `currentMenu` (MenuItem*), `selectedIndex`
+### 1. Menu Controller (Logic)
+- [ ] `MenuController` tracks active state, current menu item, and selection index.
+- [ ] `handleRotation()` updates index and emits `MENU_NAVIGATION_CHANGED`.
+- [ ] `handleSelect()` enters submenu or executes action (emitting `MENU_ITEM_SELECTED`).
+- [ ] `handleBack()` traverses up tree or exits (emitting `MENU_DEACTIVATED`).
+- [ ] `activate()` resets state and emits `MENU_ACTIVATED`.
 
-2. **Navigation Logic:**
-   - `handleRotation(int delta)`: Increment/decrement `selectedIndex`, wrap around `childCount`
-   - `handleSelect()`:
-     - If branch: Enter submenu (update `currentMenu`, reset index)
-     - If leaf: Execute action (`action->execute()`), exit menu
-   - `handleBack()`:
-     - If submenu: Go to parent (update `currentMenu`, reset index)
-     - If root: Exit menu (`menuActive = false`)
+### 2. Distributed Event Infrastructure
+- [ ] Define `MenuEventType` enum and `MenuEvent` struct (No `AppEvent`).
+- [ ] Implement `MenuEventDispatcher` (Singleton/Static).
+- [ ] Implement `DisplayRequest` struct (Union of Menu/Status data).
+- [ ] Implement `DisplayTask` that consumes `DisplayRequestQueue` and owns `DisplayInterface`.
 
-3. **Event Dispatch:**
-   - Dispatch `MENU_NAVIGATION_CHANGED` on move/enter/back
-   - Dispatch `MENU_DEACTIVATED` on exit
-   - Dispatch `MENU_ITEM_SELECTED` on action execution
+### 3. Menu Event Handling
+- [ ] `MenuEventHandler` subscribes to `MenuEventDispatcher`.
+- [ ] On `MENU_NAVIGATION_CHANGED`: Formats menu items and pushes `DRAW_MENU` request to DisplayQueue.
+- [ ] On `MENU_ACTIVATED`: Pushes `DRAW_MENU` request.
+- [ ] On `MENU_DEACTIVATED`: Pushes `CLEAR` request.
 
-## Tasks / Subtasks
+## Technical Implementation Notes
+- **Files:**
+    - `src/Menu/Controller/MenuController.cpp/.h`
+    - `src/Display/Task/DisplayTask.cpp/.h`
+    - `src/Event/Dispatcher/MenuEventDispatcher.cpp/.h`
+    - `src/Event/Handler/MenuEventHandler.cpp/.h`
+    - `include/Type/MenuEvent.h`
+    - `src/Display/Model/DisplayRequest.h`
+- **Dependencies:**
+    - `MenuController` uses `MenuEventDispatcher`.
+    - `MenuEventHandler` uses `DisplayRequestQueue`.
+    - `DisplayTask` uses `DisplayInterface` (from Story 1.2).
 
-- [ ] Create `src/Menu/Controller/MenuController.h`
-- [ ] Create `src/Menu/Controller/MenuController.cpp`
-- [ ] Implement navigation logic
-- [ ] Implement event dispatching
-
-## Dev Notes
-
-### Architecture Compliance
-
-- **State Machine:** Explicit state tracking.
-- **Event System:** Use `AppEventDispatcher` to notify display.
-- **Logging:** Log transitions (`LOG_INFO` for enter/exit, `LOG_DEBUG` for nav).
-
-### References
-
-- [Architecture: Component Architecture (Menu System)](docs/architecture.md#component-architecture-menu-system)
-- [Epics: Story 2.2](docs/epics.md#story-22-create-menu-controller-state-machine)
-
-## Dev Agent Record
-
-### Context Reference
-
-- `docs/architecture.md`
-- `docs/epics.md`
-
-### Agent Model Used
-
-- google/gemini-3-pro-preview
+## References
+- **Architecture:** Distributed Event Architecture (Option B)
+- **Epics:** Story 2.2, 2.4 (Merged)
