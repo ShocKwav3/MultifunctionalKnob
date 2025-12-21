@@ -10,7 +10,8 @@ namespace EventEnum {
     enum class EncoderModeEventTypes {
         ENCODER_MODE_SCROLL,
         ENCODER_MODE_VOLUME,
-        __ENCODER_MODE_SELECTION_LIMIT, // acts as the upper bound so we don’t loop into meta events accidentally
+        ENCODER_MODE_ZOOM,
+        __ENCODER_MODE_SELECTION_LIMIT, // acts as the upper bound so we don't loop into meta events accidentally
         ENCODER_MODE_SELECTION,
         ENCODER_MODE_SELECTED,
         ENCODER_MODE_SELECTION_CANCELLED
