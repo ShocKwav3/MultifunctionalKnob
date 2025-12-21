@@ -21,8 +21,11 @@
 #include "Event/Handler/AppEventHandler.h"
 #include "EncoderMode/Handler/EncoderModeHandlerScroll.h"
 #include "EncoderMode/Handler/EncoderModeHandlerVolume.h"
+#include "EncoderMode/Handler/EncoderModeHandlerZoom.h"
 #include "EncoderMode/Selector/EncoderModeSelector.h"
 #include "EncoderMode/Manager/EncoderModeManager.h"
+#include "Menu/Controller/MenuController.h"
+#include "Menu/Model/MenuTree.h"
 #include "AppState.h"
 
 #define SCREEN_WIDTH 128
@@ -60,6 +63,7 @@ void setup()
     static AppEventDispatcher appDispatcher(appState.appEventQueue);
     static EncoderModeHandlerScroll encoderModeHandlerScroll(&appDispatcher, &bleKeyboard);
     static EncoderModeHandlerVolume encoderModeHandlerVolume(&appDispatcher, &bleKeyboard);
+    static EncoderModeHandlerZoom encoderModeHandlerZoom(&appDispatcher, &bleKeyboard);
     static EncoderModeSelector encoderModeSelector(&appDispatcher);
 
     static EncoderEventHandler encoderEventHandler(appState.encoderInputEventQueue);
@@ -68,11 +72,18 @@ void setup()
     static EncoderModeManager encoderModeManager(&encoderEventHandler, &encoderModeSelector);
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL, &encoderModeHandlerScroll);
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME, &encoderModeHandlerVolume);
+    encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_ZOOM, &encoderModeHandlerZoom);
 
     // Load saved wheel mode from NVS and apply (defaults to SCROLL if no config exists)
     WheelMode savedWheelMode = configManager.loadWheelMode();
     EventEnum::EncoderModeEventTypes initialMode = EncoderModeHelper::fromWheelMode(savedWheelMode);
     encoderModeManager.setMode(initialMode);
+
+    // Initialize menu system
+    static MenuController menuController;
+    MenuTree::initMenuTree();
+    MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager);
+    encoderEventHandler.setMenuController(&menuController);
 
     static AppEventHandler appEventHandler(appState.appEventQueue, &encoderModeManager);
     appEventHandler.start();
