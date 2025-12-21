@@ -13,9 +13,9 @@ so that **I can easily change how my wheel operates at runtime**.
 1. **Menu Tree Update:**
    - Update `src/Menu/Model/MenuTree.h`
    - "Wheel Behavior" submenu children:
-     - "Scroll" -> `SetWheelModeAction(SCROLL)`
-     - "Volume" -> `SetWheelModeAction(VOLUME)`
-     - "Zoom" -> `SetWheelModeAction(ZOOM)`
+     - "Scroll" -> `SelectWheelModeAction(SCROLL)`
+     - "Volume" -> `SelectWheelModeAction(VOLUME)`
+     - "Zoom" -> `SelectWheelModeAction(ZOOM)`
 
 2. **Mode Manager Update:**
    - Update `src/EncoderMode/Manager/EncoderModeManager.cpp`
