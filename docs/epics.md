@@ -613,8 +613,8 @@ So that **my wheel behavior changes without needing to restart the device**.
 **Acceptance Criteria:**
 
 **Given** the project needs wheel mode actions
-**When** I create `src/Menu/Action/SetWheelModeAction.cpp` and `SetWheelModeAction.h`
-**Then** `SetWheelModeAction` extends `MenuAction`
+**When** I create `src/Menu/Action/SelectWheelModeAction.cpp` and `SelectWheelModeAction.h`
+**Then** `SelectWheelModeAction` extends `MenuAction`
 **And** constructor accepts `WheelMode targetMode` and `ConfigManager*` and `EncoderModeManager*`
 **And** uses `#pragma once` header guard
 
@@ -640,9 +640,9 @@ So that **my wheel behavior changes without needing to restart the device**.
 **Given** three action instances are needed for the menu
 **When** MenuTree.h defines wheel behavior submenu
 **Then** it creates:
-- `SetWheelModeAction scrollAction(WheelMode::SCROLL, ...)`
-- `SetWheelModeAction volumeAction(WheelMode::VOLUME, ...)`
-- `SetWheelModeAction zoomAction(WheelMode::ZOOM, ...)`
+- `SelectWheelModeAction scrollAction(WheelMode::SCROLL, ...)`
+- `SelectWheelModeAction volumeAction(WheelMode::VOLUME, ...)`
+- `SelectWheelModeAction zoomAction(WheelMode::ZOOM, ...)`
 
 ---
 
@@ -694,9 +694,9 @@ So that **I can easily change how my wheel operates at runtime**.
 **Given** the menu system needs wheel behavior options
 **When** MenuTree.h is updated
 **Then** "Wheel Behavior" main menu item has 3 children:
-- "Scroll" with `SetWheelModeAction(SCROLL)`
-- "Volume" with `SetWheelModeAction(VOLUME)`
-- "Zoom" with `SetWheelModeAction(ZOOM)`
+- "Scroll" with `SelectWheelModeAction(SCROLL)`
+- "Volume" with `SelectWheelModeAction(VOLUME)`
+- "Zoom" with `SelectWheelModeAction(ZOOM)`
 
 **Given** EncoderModeManager needs zoom mode registration
 **When** I modify `EncoderModeManager` initialization
@@ -710,7 +710,7 @@ So that **I can easily change how my wheel operates at runtime**.
 
 **Given** user selects a wheel mode
 **When** short-press on mode option
-**Then** `SetWheelModeAction::execute()` runs (FR10)
+**Then** `SelectWheelModeAction::execute()` runs (FR10)
 **And** mode changes immediately without restart (FR11)
 **And** confirmation message displays
 **And** menu exits automatically

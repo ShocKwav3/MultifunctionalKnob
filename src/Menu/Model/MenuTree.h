@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MenuItem.h"
+#include "Menu/Action/SelectWheelModeAction.h"
 
 /**
  * @brief Static menu tree structure
@@ -16,9 +17,9 @@
  *
  * Menu Structure:
  * - Wheel Behavior (branch)
- *   - Scroll (leaf - SetWheelModeAction)
- *   - Volume (leaf - SetWheelModeAction)
- *   - Zoom (leaf - SetWheelModeAction)
+ *   - Scroll (leaf - SelectWheelModeAction)
+ *   - Volume (leaf - SelectWheelModeAction)
+ *   - Zoom (leaf - SelectWheelModeAction)
  * - Button Config (branch - children set in Story 4.3)
  * - Device Status (leaf - ShowStatusAction)
  * - About (leaf - ShowAboutAction)
@@ -154,6 +155,27 @@ inline const MenuItem* getMainMenu() {
  */
 inline constexpr uint8_t getMainMenuCount() {
     return MAIN_MENU_COUNT;
+}
+
+/**
+ * @brief Initialize wheel behavior menu actions
+ *
+ * Creates SelectWheelModeAction instances for Scroll, Volume, and Zoom modes.
+ * Must be called after DI objects (ConfigManager, EncoderModeManager) are created.
+ *
+ * @param config ConfigManager instance for NVS persistence
+ * @param modeMgr EncoderModeManager instance for runtime mode switching
+ */
+inline void initWheelBehaviorActions(ConfigManager* config, EncoderModeManager* modeMgr) {
+    // Create static action instances (must outlive menu)
+    static SelectWheelModeAction scrollAction(WheelMode::SCROLL, config, modeMgr);
+    static SelectWheelModeAction volumeAction(WheelMode::VOLUME, config, modeMgr);
+    static SelectWheelModeAction zoomAction(WheelMode::ZOOM, config, modeMgr);
+
+    // Assign actions to menu items
+    setWheelBehaviorAction(0, &scrollAction);   // Scroll
+    setWheelBehaviorAction(1, &volumeAction);   // Volume
+    setWheelBehaviorAction(2, &zoomAction);     // Zoom
 }
 
 } // namespace MenuTree

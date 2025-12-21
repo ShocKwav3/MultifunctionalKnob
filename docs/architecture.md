@@ -237,10 +237,10 @@ public:
     virtual const char* getConfirmationMessage() const { return nullptr; }
 };
 
-class SetWheelModeAction : public MenuAction {
+class SelectWheelModeAction : public MenuAction {
     WheelMode mode;
 public:
-    SetWheelModeAction(WheelMode m) : mode(m) {}
+    SelectWheelModeAction(WheelMode m) : mode(m) {}
     void execute() override { /* save to NVS, update mode manager */ }
     const char* getConfirmationMessage() const override { return "Mode saved"; }
 };
@@ -339,7 +339,7 @@ src/
 │   │   └── MenuItem.h
 │   └── Action/
 │       ├── MenuAction.h
-│       ├── SetWheelModeAction.cpp/.h
+│       ├── SelectWheelModeAction.cpp/.h
 │       └── SetButtonActionAction.cpp/.h
 ├── Display/
 │   ├── Interface/
@@ -414,15 +414,15 @@ LOG_DEBUG("Tag", "Format %d", val);    // [DBG][Tag] Format 123
 
 **Good Example - New Action Class:**
 ```cpp
-// src/Menu/Action/SetWheelModeAction.h
+// src/Menu/Action/SelectWheelModeAction.h
 #pragma once
 #include "MenuAction.h"
 #include "Config/ConfigManager.h"
 
-class SetWheelModeAction : public MenuAction {
+class SelectWheelModeAction : public MenuAction {
     WheelMode targetMode;
 public:
-    explicit SetWheelModeAction(WheelMode mode);
+    explicit SelectWheelModeAction(WheelMode mode);
     void execute() override;
     const char* getConfirmationMessage() const override;
 };
@@ -524,7 +524,7 @@ UtilityButtonsWithKnobUSB/
 │   │   │   └── MenuTree.h                       # Static menu tree (HEADER-ONLY, constexpr)
 │   │   └── Action/
 │   │       ├── MenuAction.h                     # Abstract action base class
-│   │       ├── SetWheelModeAction.cpp/.h        # Change wheel mode
+│   │       ├── SelectWheelModeAction.cpp/.h     # Select wheel mode
 │   │       ├── SetButtonActionAction.cpp/.h     # Change button behavior
 │   │       ├── ShowStatusAction.cpp/.h          # Display device status
 │   │       └── ShowAboutAction.cpp/.h           # Display about info
@@ -705,7 +705,7 @@ Phase 6: Integration (Distributed Events)
 | FR Category | Component Location | Key Files |
 |-------------|-------------------|-----------|
 | Menu System (FR1-FR8) | src/Menu/ | MenuController, MenuItem, MenuTree |
-| Wheel Config (FR9-FR14) | src/Menu/Action/ | SetWheelModeAction |
+| Wheel Config (FR9-FR14) | src/Menu/Action/ | SelectWheelModeAction |
 | Button Config (FR15-FR19) | src/Menu/Action/, src/Button/ | SetButtonActionAction, ButtonManager |
 | Device Status (FR20-FR23) | src/Menu/Action/ | ShowStatusAction |
 | About Screen (FR24-FR25) | src/Menu/Action/ | ShowAboutAction |
@@ -746,7 +746,7 @@ New directories (Menu/, Display/, Config/, Button/) follow established subdirect
 **Functional Requirements:**
 All 42 functional requirements mapped to specific architectural components:
 - FR1-FR8 (Menu): MenuController, MenuItem, MenuTree
-- FR9-FR14 (Wheel): SetWheelModeAction, ConfigManager
+- FR9-FR14 (Wheel): SelectWheelModeAction, ConfigManager
 - FR15-FR19 (Buttons): SetButtonActionAction, ButtonManager
 - FR20-FR29 (Status/Config): ShowStatusAction, ShowAboutAction, ConfigManager, FactoryReset
 - FR30-FR42 (BLE/Display/Input): Existing components + BLE_DISCONNECTED event

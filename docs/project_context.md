@@ -98,8 +98,8 @@ void HandleEvent()             // Should be camelCase
 #define maxDepth 5             // Should be UPPER_SNAKE_CASE
 
 // ✅ CORRECT
-class SetWheelModeAction
-src/Menu/Action/SetWheelModeAction.cpp
+class SelectWheelModeAction
+src/Menu/Action/SelectWheelModeAction.cpp
 void handleEvent()
 constexpr uint8_t MAX_DEPTH = 5;
 ```
