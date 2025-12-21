@@ -58,8 +58,8 @@ void setup()
     appState.appEventQueue = xQueueCreate(10, sizeof(AppEvent));
 
     static AppEventDispatcher appDispatcher(appState.appEventQueue);
-    static EncoderModeHandlerScroll encoderModeHandlerScroll(&appDispatcher);
-    static EncoderModeHandlerVolume encoderModeHandlerVolume(&appDispatcher);
+    static EncoderModeHandlerScroll encoderModeHandlerScroll(&appDispatcher, &bleKeyboard);
+    static EncoderModeHandlerVolume encoderModeHandlerVolume(&appDispatcher, &bleKeyboard);
     static EncoderModeSelector encoderModeSelector(&appDispatcher);
 
     static EncoderEventHandler encoderEventHandler(appState.encoderInputEventQueue);
@@ -102,40 +102,17 @@ void setup()
     display.setTextSize(1);
     display.setTextColor(WHITE);
     display.setCursor(5, 5);
-    display.println("Knob firmware!");
+    display.println("Knob firmware! - Concrete implementation");
     display.display();
 }
 
 void loop()
 {
-    //rotaryEncoderDriver->runLoop();
+    Serial.println("Knob firmware running...");
 
-    if (bleKeyboard.isConnected())
-    {
-        delay(1000);
-
-        // Serial.println("Sending Play/Pause media key...");
-        // bleKeyboard.write(KEY_MEDIA_PLAY_PAUSE);
-
-        Serial.println("Scrolling left...");
-        bleKeyboard.mouseMove(0, 0, 0, -3); // horizontal scrool
-
-        delay(1000);
-
-        Serial.println("Scrolling right...");
-        bleKeyboard.mouseMove(0, 0, 0, 3); // horizontal scrool
-
-        delay(1000);
-
-        Serial.println("Scrolling down...");
-        bleKeyboard.mouseMove(0, 0, -3, 0); // vertical scrool down
-
-        delay(1000);
-
-        Serial.println("Scrolling up...");
-        bleKeyboard.mouseMove(0, 0, 3, 0); // vertical scrool up
+    if (bleKeyboard.isConnected()) {
+        Serial.println("BLE connected!");
     }
 
-    Serial.println("Waiting 5 seconds...");
     delay(5000);
 }

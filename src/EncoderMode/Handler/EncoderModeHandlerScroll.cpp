@@ -1,16 +1,24 @@
 #include "EncoderModeHandlerScroll.h"
 
-EncoderModeHandlerScroll::EncoderModeHandlerScroll(AppEventDispatcher* dispatcher)
-    : EncoderModeHandlerAbstract(dispatcher) {}
+EncoderModeHandlerScroll::EncoderModeHandlerScroll(AppEventDispatcher* dispatcher, BleKeyboard* bleKeyboard)
+    : EncoderModeHandlerAbstract(dispatcher, bleKeyboard){}
 
 void EncoderModeHandlerScroll::handleRotate(int delta) {
     Serial.printf("EncoderModeHandlerScroll: Rotating by %d\n", delta);
-    // TODO: Send BLE horizontal scroll event via bleKeyboard.mouseMove(...)
+
+    if (isVerticalScroll) {
+        bleKeyboard->mouseMove(0, 0, delta, 0);
+
+        return;
+    }
+
+    bleKeyboard->mouseMove(0, 0, 0, delta);
 }
 
 void EncoderModeHandlerScroll::handleShortClick() {
     Serial.println("EncoderModeHandlerScroll: Short click detected.");
-    // TODO: Maybe toggle scroll direction or switch sub-mode
+
+    isVerticalScroll = !isVerticalScroll;
 }
 
 const char* EncoderModeHandlerScroll::getModeName() const {
