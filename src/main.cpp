@@ -3,9 +3,15 @@
 #include "Adafruit_SSD1306.h"
 #include "EncoderDriver.h"
 #include "BleKeyboard.h"
+#include <Preferences.h>
 
 #include "Config/device_config.h"
 #include "Config/encoder_config.h"
+#include "Config/FactoryReset.h"
+#include "Config/ConfigManager.h"
+#include "Display/DisplayFactory.h"
+#include "Helper/EncoderModeHelper.h"
+#include "Enum/WheelModeEnum.h"
 #include "Type/EncoderInputEvent.h"
 #include "Type/AppEvent.h"
 #include "Enum/EventEnum.h"
@@ -31,9 +37,19 @@ BleKeyboard bleKeyboard(BLUETOOTH_DEVICE_NAME, BLUETOOTH_DEVICE_MANUFACTURER, BL
 EncoderDriver* encoderDriver;
 AppState appState;
 
+// Configuration management
+Preferences preferences;
+ConfigManager configManager(&preferences);
+
 void setup()
 {
     Serial.begin(460800);
+
+    // Check for factory reset request (button held for 5+ seconds at boot)
+    if (FactoryReset::isResetRequested(ENCODER_PIN_BUTTON)) {
+        FactoryReset::execute(configManager, DisplayFactory::getDisplay());
+    }
+
     Wire.begin(SDA_PIN, SCL_PIN);
     display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
     bleKeyboard.begin();
@@ -52,7 +68,11 @@ void setup()
     static EncoderModeManager encoderModeManager(&encoderEventHandler, &encoderModeSelector);
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL, &encoderModeHandlerScroll);
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME, &encoderModeHandlerVolume);
-    encoderModeManager.setMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL);
+
+    // Load saved wheel mode from NVS and apply (defaults to SCROLL if no config exists)
+    WheelMode savedWheelMode = configManager.loadWheelMode();
+    EventEnum::EncoderModeEventTypes initialMode = EncoderModeHelper::fromWheelMode(savedWheelMode);
+    encoderModeManager.setMode(initialMode);
 
     static AppEventHandler appEventHandler(appState.appEventQueue, &encoderModeManager);
     appEventHandler.start();

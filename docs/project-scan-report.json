@@ -1,0 +1,28 @@
+{
+  "workflow_version": "1.2.0",
+  "timestamps": {
+    "started": "2025-12-14T01:49:11.993Z",
+    "last_updated": "2025-12-14T01:49:11.993Z"
+  },
+  "mode": "initial_scan",
+  "scan_level": "deep",
+  "project_root": "/Users/ferojahmod/Documents/Hobby/IOT/PlatformIO/Esp32/UtilityButtonsWithKnobUSB",
+  "output_folder": "docs",
+  "completed_steps": [],
+  "current_step": "step_1",
+  "project_classification": {
+    "repository_type": "monolith",
+    "parts_count": 1,
+    "primary_tech": "ESP32-C3 Arduino Framework"
+  },
+  "project_types": [
+    {
+      "part_id": "main",
+      "project_type_id": "embedded",
+      "display_name": "ESP32-C3 Bluetooth HID Rotary Encoder"
+    }
+  ],
+  "findings": {},
+  "outputs_generated": ["project-scan-report.json"],
+  "resume_instructions": "Starting from step 1"
+}
