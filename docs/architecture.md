@@ -412,6 +412,24 @@ LOG_DEBUG("Tag", "Format %d", val);    // [DBG][Tag] Format 123
 
 ### Pattern Examples
 
+**Good Example - EncoderModeHandler with DI:**
+```cpp
+// src/EncoderMode/Handler/EncoderModeHandlerZoom.h (Example for all mode handlers)
+#pragma once
+#include "EncoderModeHandlerAbstract.h"
+#include "BleKeyboard.h" // Assuming BleKeyboard is available via #include
+
+class EncoderModeHandlerZoom : public EncoderModeHandlerAbstract {
+public:
+    // All EncoderModeHandlers MUST accept BleKeyboard* via constructor DI
+    EncoderModeHandlerZoom(AppEventDispatcher* dispatcher, BleKeyboard* bleKeyboard);
+
+    void handleRotate(int delta) override;
+    void handleShortClick() override;
+    const char* getModeName() const override;
+};
+```
+
 **Good Example - New Action Class:**
 ```cpp
 // src/Menu/Action/SelectWheelModeAction.h
@@ -492,7 +510,7 @@ UtilityButtonsWithKnobUSB/
 │   ├── EncoderMode/                    # (existing) Mode handlers
 │   │   ├── Handler/
 │   │   │   ├── EncoderModeHandlerAbstract.cpp/.h
-│   │   │   ├── EncoderModeHandlerInterface.h
+│   │   │   ├── EncoderModeHandlerAbstract.h
 │   │   │   ├── EncoderModeHandlerScroll.cpp/.h
 │   │   │   ├── EncoderModeHandlerVolume.cpp/.h
 │   │   │   └── EncoderModeHandlerZoom.cpp/.h    # (new) Zoom mode

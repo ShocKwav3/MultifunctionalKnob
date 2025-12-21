@@ -264,7 +264,7 @@ sudo usermod -a -G dialout $USER
 
 We prioritize writing **testable code** (using dependency injection, interfaces, and modular design) but **do not require automated unit tests** (e.g., Google Test, Unity) at this stage.
 
-- **Testable Code:** Components should be designed to be testable in the future. Use interfaces (e.g., `DisplayInterface`) and dependency injection to allow mocking.
+- **Testable Code:** Components should be designed to be testable in the future. Use interfaces (e.g., `DisplayInterface`) and dependency injection to allow mocking. *Specifically, mode handlers (e.g., `EncoderModeHandlerScroll`, `EncoderModeHandlerZoom`) must accept `BleKeyboard*` via constructor dependency injection to ensure testability of BLE interactions.*
 - **Manual Testing:** Primary validation is done via:
   - **Serial Monitor:** Verifying log output and state changes.
   - **Hardware Testing:** Verifying physical interaction (encoder, buttons) and BLE behavior.
@@ -452,10 +452,11 @@ pio run -t clean && pio run -t upload
    // src/EncoderMode/Handler/EncoderModeHandlerCustom.h
    #pragma once
    #include "EncoderModeHandlerAbstract.h"
+   #include "BleKeyboard.h" // Include for BleKeyboard type
 
    class EncoderModeHandlerCustom : public EncoderModeHandlerAbstract {
    public:
-       EncoderModeHandlerCustom(AppEventDispatcher* dispatcher);
+       EncoderModeHandlerCustom(AppEventDispatcher* dispatcher, BleKeyboard* bleKeyboard); // Updated constructor
        void handleRotate(int delta) override;
        void handleShortClick() override;
        const char* getModeName() const override;
@@ -467,11 +468,11 @@ pio run -t clean && pio run -t upload
    // src/EncoderMode/Handler/EncoderModeHandlerCustom.cpp
    #include "EncoderModeHandlerCustom.h"
 
-   EncoderModeHandlerCustom::EncoderModeHandlerCustom(AppEventDispatcher* dispatcher)
-       : EncoderModeHandlerAbstract(dispatcher) {}
+   EncoderModeHandlerCustom::EncoderModeHandlerCustom(AppEventDispatcher* dispatcher, BleKeyboard* bleKeyboard) // Updated constructor
+       : EncoderModeHandlerAbstract(dispatcher), _bleKeyboard(bleKeyboard) {} // Initialize BleKeyboard
 
    void EncoderModeHandlerCustom::handleRotate(int delta) {
-       // Custom rotation logic
+       // Custom rotation logic, using _bleKeyboard for BLE operations
    }
 
    void EncoderModeHandlerCustom::handleShortClick() {
@@ -482,6 +483,7 @@ pio run -t clean && pio run -t upload
        return "Custom Mode";
    }
    ```
+   *Note: Add `BleKeyboard* _bleKeyboard;` to `EncoderModeHandlerCustom.h` as a private member to store the injected instance.*
 
 3. **Add Mode to Enum:**
    ```cpp
