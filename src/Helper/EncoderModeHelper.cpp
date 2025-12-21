@@ -7,6 +7,7 @@ const char* EncoderModeHelper::toString(EventEnum::EncoderModeEventTypes type) {
         case EventEnum::EncoderModeEventTypes::ENCODER_MODE_SELECTION_CANCELLED: return "Encoder mode: Selection cancelled";
         case EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL: return "Encoder mode: Scroll";
         case EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME: return "Encoder mode: Volume";
+        case EventEnum::EncoderModeEventTypes::ENCODER_MODE_ZOOM: return "Encoder mode: Zoom";
         default: return "UNKNOWN";
     }
 }
@@ -18,8 +19,7 @@ EventEnum::EncoderModeEventTypes EncoderModeHelper::fromWheelMode(WheelMode mode
         case WheelMode::VOLUME:
             return EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME;
         case WheelMode::ZOOM:
-            // ZOOM mode not yet implemented, fall back to SCROLL
-            return EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL;
+            return EventEnum::EncoderModeEventTypes::ENCODER_MODE_ZOOM;
         default:
             return EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL;
     }
