@@ -10,5 +10,5 @@ public:
     virtual void handleShortClick() override = 0;
     virtual void handleLongClick() override = 0;
 
-    virtual const char* getModeName() const;
+    virtual const char* getModeName() const = 0;
 };
