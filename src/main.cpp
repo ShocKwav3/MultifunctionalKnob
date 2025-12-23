@@ -13,12 +13,15 @@
 #include "Helper/EncoderModeHelper.h"
 #include "Enum/WheelModeEnum.h"
 #include "Type/EncoderInputEvent.h"
+#include "Type/ButtonEvent.h"
 #include "Type/AppEvent.h"
 #include "Enum/EventEnum.h"
 #include "Event/Dispatcher/EncoderEventDispatcher.h"
 #include "Event/Handler/EncoderEventHandler.h"
 #include "Event/Dispatcher/AppEventDispatcher.h"
 #include "Event/Handler/AppEventHandler.h"
+#include "Event/Dispatcher/ButtonEventDispatcher.h"
+#include "Event/Handler/ButtonEventHandler.h"
 #include "EncoderMode/Handler/EncoderModeHandlerScroll.h"
 #include "EncoderMode/Handler/EncoderModeHandlerVolume.h"
 #include "EncoderMode/Handler/EncoderModeHandlerZoom.h"
@@ -26,6 +29,7 @@
 #include "EncoderMode/Manager/EncoderModeManager.h"
 #include "Menu/Controller/MenuController.h"
 #include "Menu/Model/MenuTree.h"
+#include "Button/ButtonManager.h"
 #include "AppState.h"
 
 #define SCREEN_WIDTH 128
@@ -38,6 +42,7 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 BleKeyboard bleKeyboard(BLUETOOTH_DEVICE_NAME, BLUETOOTH_DEVICE_MANUFACTURER, BLUETOOTH_DEVICE_BATTERY_LEVEL_DEFAULT);
 EncoderDriver* encoderDriver;
+ButtonManager* buttonManager = nullptr;  // Pointer to static instance
 AppState appState;
 
 // Configuration management
@@ -58,6 +63,7 @@ void setup()
     bleKeyboard.begin();
 
     appState.encoderInputEventQueue = xQueueCreate(10, sizeof(EncoderInputEvent));
+    appState.buttonEventQueue = xQueueCreate(10, sizeof(ButtonEvent));
     appState.appEventQueue = xQueueCreate(10, sizeof(AppEvent));
 
     static AppEventDispatcher appDispatcher(appState.appEventQueue);
@@ -87,6 +93,15 @@ void setup()
 
     static AppEventHandler appEventHandler(appState.appEventQueue, &encoderModeManager);
     appEventHandler.start();
+
+    // Initialize button event system
+    static ButtonEventDispatcher buttonEventDispatcher(appState.buttonEventQueue);
+    static ButtonEventHandler buttonEventHandler(appState.buttonEventQueue);
+    buttonEventHandler.start();
+
+    static ButtonManager buttonManagerInstance(&buttonEventDispatcher);
+    buttonManager = &buttonManagerInstance;
+    buttonManager->init();
 
     static EncoderEventDispatcher encoderEventDispatcher(appState.encoderInputEventQueue);
     encoderDriver = EncoderDriver::getInstance(
@@ -119,11 +134,8 @@ void setup()
 
 void loop()
 {
-    Serial.println("Knob firmware running...");
-
-    if (bleKeyboard.isConnected()) {
-        Serial.println("BLE connected!");
+    // Poll buttons for state changes
+    if (buttonManager) {
+        buttonManager->poll();
     }
-
-    delay(5000);
 }

@@ -225,8 +225,9 @@ So that **all subsequent components have consistent foundations to build upon**.
 **Given** the project needs button GPIO configuration
 **When** I create `include/Config/button_config.h`
 **Then** it defines `struct ButtonConfig { uint8_t pin; const char* label; bool activeLow; }`
-**And** defines `constexpr ButtonConfig BUTTONS[]` array with 4 default buttons
-**And** defines `constexpr size_t BUTTON_COUNT`
+**And** defines `inline constexpr ButtonConfig BUTTONS[]` array with 4 default buttons
+**And** defines `inline constexpr size_t BUTTON_COUNT`
+**And** defines `inline constexpr uint32_t DEBOUNCE_MS = 50`
 
 ---
 
@@ -760,20 +761,20 @@ So that **I can trigger actions with physical button presses**.
 **And** `LOG_INFO` reports "ButtonManager: {BUTTON_COUNT} buttons initialized"
 
 **Given** a button is pressed
-**When** `ButtonManager::update()` detects state change from released to pressed
-**Then** a `BUTTON_PRESSED` event is dispatched via EncoderEventDispatcher
+**When** `ButtonManager::poll()` detects state change from released to pressed
+**Then** a `BUTTON_PRESSED` event is dispatched via ButtonEventDispatcher
 **And** event payload includes `buttonIndex` (0 to BUTTON_COUNT-1)
-**And** debounce logic prevents duplicate events (50ms minimum between events)
+**And** debounce logic prevents duplicate events (DEBOUNCE_MS from button_config.h)
 **And** `LOG_DEBUG` reports "Button {index} pressed"
 
 **Given** a button is released
-**When** `ButtonManager::update()` detects state change from pressed to released
+**When** `ButtonManager::poll()` detects state change from pressed to released
 **Then** a `BUTTON_RELEASED` event is dispatched (optional, for future use)
 **And** debounce timer resets
 
 **Given** ButtonManager needs regular polling
 **When** main loop runs
-**Then** `ButtonManager::update()` is called each iteration
+**Then** `ButtonManager::poll()` is called each iteration
 **And** polling is non-blocking (no delays)
 
 **Given** new event types are needed
