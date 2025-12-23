@@ -7,6 +7,11 @@ namespace EventEnum {
         LONG_CLICK
     };
 
+    enum class ButtonEventTypes {
+        BUTTON_PRESSED,
+        BUTTON_RELEASED
+    };
+
     enum class EncoderModeEventTypes {
         ENCODER_MODE_SCROLL,
         ENCODER_MODE_VOLUME,
