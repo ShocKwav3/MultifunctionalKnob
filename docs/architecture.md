@@ -275,19 +275,22 @@ struct DisplayRequest {
 
 **Button Configuration:**
 ```cpp
+// include/Config/button_config.h (✅ IMPLEMENTED)
 struct ButtonConfig {
     uint8_t pin;
     const char* label;
     bool activeLow;
 };
 
-constexpr ButtonConfig BUTTONS[] = {
+inline constexpr ButtonConfig BUTTONS[] = {
     {3, "Button 1", true},
     {4, "Button 2", true},
     {5, "Button 3", true},
-    {8, "Button 4", true}
+    {9, "Button 4", true}  // GPIO 8 is strapping pin, using GPIO 9
 };
-constexpr size_t BUTTON_COUNT = sizeof(BUTTONS) / sizeof(BUTTONS[0]);
+
+inline constexpr size_t BUTTON_COUNT = sizeof(BUTTONS) / sizeof(BUTTONS[0]);
+inline constexpr uint32_t DEBOUNCE_MS = 50;
 ```
 
 ### Decision Impact Analysis
@@ -479,7 +482,7 @@ UtilityButtonsWithKnobUSB/
 │   ├── Config/
 │   │   ├── device_config.h             # (existing) BLE name, manufacturer
 │   │   ├── encoder_config.h            # (existing) Encoder GPIO pins
-│   │   ├── button_config.h             # (new) Button GPIO array, labels
+│   │   ├── button_config.h              # (implemented) Button GPIO array, labels, debounce config
 │   │   ├── menu_config.h               # (new) Menu depth, timeout, defaults
 │   │   ├── display_config.h            # (new) Display dimensions, addresses
 │   │   └── log_config.h                # (new) Logging macros and levels
@@ -643,7 +646,7 @@ public:
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Input Layer                               │
 │  EncoderDriver ──→ EncoderEventDispatcher ──→ EncoderInputQueue │
-│  ButtonManager ──→ EncoderEventDispatcher ──→ EncoderInputQueue │
+│  ButtonManager ──→ ButtonEventDispatcher ──→ buttonEventQueue   │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
@@ -651,6 +654,8 @@ public:
 │  EncoderEventHandler                                             │
 │    ├── MenuController.isActive() ? Emit MenuEvent               │
 │    └── else → EncoderModeManager → Emit Mode Action             │
+│                                                                 │
+│  ButtonEventHandler (logs button events for MVP)                │
 │                                                                 │
 │  System Components ──→ SystemEventDispatcher ──→ SystemEventQueue│
 └─────────────────────────────────────────────────────────────────┘
@@ -866,7 +871,7 @@ All 12 NFRs addressed through architectural decisions:
 2. `include/Enum/ErrorEnum.h` - Error codes
 3. `include/Enum/WheelModeEnum.h` - Wheel modes
 4. `include/Enum/ButtonActionEnum.h` - Button actions
-5. `include/Config/button_config.h` - Button GPIO array
+5. `include/Config/button_config.h` - Button GPIO array, debounce config (✅ IMPLEMENTED)
 
 ## Architecture Completion Summary
 
