@@ -11,11 +11,9 @@ so that **I can control media playback and volume with physical buttons**.
 ## Acceptance Criteria
 
 1. **Event Handling:**
-   - Modify `src/Event/Handler/EncoderEventHandler.cpp` (or create `ButtonEventHandler`?)
-   - Architecture suggests `EncoderEventHandler` handles input, or maybe `AppEventHandler`?
-   - Actually, `ButtonManager` dispatches `BUTTON_PRESSED`. We need a handler for this.
-   - Let's use `AppEventHandler` or a dedicated `ButtonEventHandler`. Architecture mentions `EncoderEventHandler` for input routing. Let's stick to `EncoderEventHandler` or add logic to `AppEventHandler` if it's application logic.
-   - Wait, `ButtonManager` dispatches to `EncoderEventDispatcher`. So `EncoderEventHandler` receives it.
+   - **Current Implementation:** `ButtonManager` uses `ButtonEventDispatcher` → `buttonEventQueue` → `ButtonEventHandler` (currently logs only)
+   - **This Story:** Modify `src/Event/Handler/ButtonEventHandler.cpp` to execute HID commands instead of just logging
+   - Architecture is decoupled: Button events are separate from encoder events
 
 2. **Command Execution:**
    - In handler:
@@ -33,14 +31,14 @@ so that **I can control media playback and volume with physical buttons**.
 
 ## Tasks / Subtasks
 
-- [ ] Modify `src/Event/Handler/EncoderEventHandler.cpp` to handle `BUTTON_PRESSED`
+- [ ] Modify `src/Event/Handler/ButtonEventHandler.cpp` to execute HID commands based on button actions
 
 ## Dev Notes
 
 ### Architecture Compliance
 
-- **Event Flow:** `ButtonManager` -> `EncoderEventDispatcher` -> `EncoderEventHandler`.
-- **Logic:** Keep it simple.
+- **Event Flow:** `ButtonManager` -> `ButtonEventDispatcher` -> `buttonEventQueue` -> `ButtonEventHandler`
+- **Logic:** Keep it simple - map button index to action, execute HID command
 
 ### References
 
