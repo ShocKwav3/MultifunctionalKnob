@@ -36,10 +36,11 @@ so that **all subsequent components have consistent foundations to build upon**.
    - Log level controllable via build flag `LOG_LEVEL` (0=NONE, 1=ERROR, 2=INFO, 3=DEBUG)
 
 5. **Button Configuration:**
-   - Create `include/Config/button_config.h`
+   - Create `include/Config/ButtonConfig.h`
    - Define `struct ButtonConfig { uint8_t pin; const char* label; bool activeLow; }`
-   - Define `constexpr ButtonConfig BUTTONS[]` array with 4 default buttons (Pins 3, 4, 5, 8 as per architecture)
-   - Define `constexpr size_t BUTTON_COUNT`
+   - Define `inline constexpr ButtonConfig BUTTONS[]` array with 4 default buttons (Pins 3, 4, 5, 9 - GPIO 8 avoided due to strapping pin)
+   - Define `inline constexpr size_t BUTTON_COUNT`
+   - Define `inline constexpr uint32_t DEBOUNCE_MS = 50`
 
 ## Tasks / Subtasks
 
@@ -47,13 +48,13 @@ so that **all subsequent components have consistent foundations to build upon**.
 - [x] Create `include/Enum/WheelModeEnum.h`
 - [x] Create `include/Enum/ButtonActionEnum.h`
 - [x] Create `include/Config/log_config.h`
-- [x] Create `include/Config/button_config.h`
+- [x] Create `include/Config/ButtonConfig.h`
 
 ### Review Follow-ups (AI)
 
-- [x] [AI-Review][HIGH] Hardware Risk: GPIO 8 is a strapping pin (Download Mode). Change Button 4 pin. [include/Config/button_config.h]
+- [x] [AI-Review][HIGH] Hardware Risk: GPIO 8 is a strapping pin (Download Mode). Change Button 4 pin. [include/Config/ButtonConfig.h] - Changed to GPIO 9
 - [~] [AI-Review][MEDIUM] Code Quality: LOG_ macros restrict format strings. [include/Config/log_config.h] - Won't fix (intentional for safety)
-- [~] [AI-Review][MEDIUM] Code Size: BUTTONS array duplication in header. [include/Config/button_config.h] - Won't fix (acceptable)
+- [x] [AI-Review][MEDIUM] Code Size: BUTTONS array duplication in header. [include/Config/ButtonConfig.h] - Fixed with inline constexpr (C++17)
 - [x] [AI-Review][LOW] Consistency: Missing Error_MAX. [include/Enum/ErrorEnum.h]
 - [~] [AI-Review][LOW] Best Practice: LOG_ macros lack do-while(0). [include/Config/log_config.h] - Won't fix (single statements)
 
@@ -126,9 +127,10 @@ so that **all subsequent components have consistent foundations to build upon**.
 - `include/Enum/WheelModeEnum.h` (new)
 - `include/Enum/ButtonActionEnum.h` (new)
 - `include/Config/log_config.h` (new)
-- `include/Config/button_config.h` (new)
+- `include/Config/ButtonConfig.h` (new)
 
 ## Change Log
 
-- 2025-12-16: Created foundation enums (Error, WheelMode, ButtonAction) and configuration headers (log_config, button_config) per Story 1.1 acceptance criteria
+- 2025-12-16: Created foundation enums (Error, WheelMode, ButtonAction) and configuration headers (log_config, ButtonConfig) per Story 1.1 acceptance criteria
 - 2025-12-17: Addressed code review findings - changed Button 4 from GPIO 8 (strapping pin) to GPIO 9, added Error_MAX constant for consistency
+- 2025-12-23: Refactored button_config.h, added DEBOUNCE_MS constant, used inline constexpr to eliminate ODR violations
