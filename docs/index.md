@@ -71,7 +71,7 @@
 
 ---
 
-#### 3. [Architecture Documentation](./architecture.md)
+#### 3. [Architecture Documentation](./architecture/index.md)
 **Purpose:** Software architecture, design patterns, and system design
 **Contains:** _(To be generated)_
 - System architecture overview
@@ -86,7 +86,7 @@
 
 ---
 
-#### 4. [Hardware Documentation](./hardware-documentation.md)
+#### 4. [Hardware Documentation](./hardware-documentation/index.md)
 **Purpose:** Hardware specifications, wiring, and physical setup
 **Contains:**
 - ESP32-C3 specifications
@@ -102,7 +102,7 @@
 
 ---
 
-#### 5. [Development Guide](./development-guide.md)
+#### 5. [Development Guide](./development-guide/index.md)
 **Purpose:** Developer setup, build instructions, and workflow
 **Contains:**
 - Environment setup (PlatformIO installation)
@@ -157,29 +157,29 @@
 **Recommended Reading Order:**
 
 1. **[Project Overview](./project-overview.md)** - Start here for project introduction
-2. **[Hardware Documentation](./hardware-documentation.md)** - Understand the hardware
-3. **[Development Guide](./development-guide.md)** - Set up your environment
+2. **[Hardware Documentation](./hardware-documentation/index.md)** - Understand the hardware
+3. **[Development Guide](./development-guide/index.md)** - Set up your environment
 4. **[Source Tree Analysis](./source-tree-analysis.md)** - Navigate the codebase
-5. **[Architecture Documentation](./architecture.md)** - Understand the design _(To be generated)_
+5. **[Architecture Documentation](./architecture/index.md)** - Understand the design _(To be generated)_
 
 ### For Quick Hardware Setup
 
-1. **[Hardware Documentation](./hardware-documentation.md)** → Wiring Instructions
-2. **[Development Guide](./development-guide.md)** → Upload Firmware
-3. **[Hardware Documentation](./hardware-documentation.md)** → Testing Hardware
+1. **[Hardware Documentation](./hardware-documentation/build-and-assembly.md)** → Wiring Instructions
+2. **[Development Guide](./development-guide/uploading-firmware.md)** → Upload Firmware
+3. **[Hardware Documentation](./hardware-documentation/troubleshooting.md)** → Testing Hardware
 
 ### For Feature Development
 
-1. **[Architecture Documentation](./architecture.md)** → Understand current design _(To be generated)_
+1. **[Architecture Documentation](./architecture/index.md)** → Understand current design _(To be generated)_
 2. **[Component Inventory](./component-inventory.md)** → Find relevant components _(To be generated)_
-3. **[Development Guide](./development-guide.md)** → Adding New Features
+3. **[Development Guide](./development-guide/common-development-tasks.md)** → Adding New Features
 4. **[Source Tree Analysis](./source-tree-analysis.md)** → Locate files
 
 ### For Troubleshooting
 
-1. **[Development Guide](./development-guide.md)** → Troubleshooting sections
-2. **[Hardware Documentation](./hardware-documentation.md)** → Hardware issues
-3. **[Architecture Documentation](./architecture.md)** → System behavior _(To be generated)_
+1. **[Development Guide](./development-guide/troubleshooting-development-issues.md)** → Troubleshooting sections
+2. **[Hardware Documentation](./hardware-documentation/troubleshooting.md)** → Hardware issues
+3. **[Architecture Documentation](./architecture/index.md)** → System behavior _(To be generated)_
 
 ---
 
@@ -371,18 +371,18 @@ This documentation follows [BMAD Documentation Standards](../.bmad/bmm/data/docu
 
 ### Most Frequently Accessed
 
-- [Hardware Setup](./hardware-documentation.md#build-and-assembly)
-- [Upload Firmware](./development-guide.md#uploading-firmware)
-- [Troubleshooting](./development-guide.md#troubleshooting-development-issues)
-- [Add New Mode](./development-guide.md#example-add-new-encoder-mode)
-- [GPIO Configuration](./hardware-documentation.md#pin-configuration)
+- [Hardware Setup](./hardware-documentation/build-and-assembly.md)
+- [Upload Firmware](./development-guide/uploading-firmware.md)
+- [Troubleshooting](./development-guide/troubleshooting-development-issues.md)
+- [Add New Mode](./development-guide/common-development-tasks.md)
+- [GPIO Configuration](./hardware-documentation/pin-configuration.md)
 
 ### Configuration References
 
-- [Bluetooth Settings](./hardware-documentation.md#ble-profile)
-- [Button Timings](./hardware-documentation.md#pin-electrical-characteristics)
-- [Display Settings](./hardware-documentation.md#oled-display)
-- [Build Environments](./development-guide.md#build-environments)
+- [Bluetooth Settings](./hardware-documentation/peripheral-hardware.md)
+- [Button Timings](./hardware-documentation/pin-configuration.md)
+- [Display Settings](./hardware-documentation/peripheral-hardware.md)
+- [Build Environments](./development-guide/building-the-project.md)
 
 ---
 
