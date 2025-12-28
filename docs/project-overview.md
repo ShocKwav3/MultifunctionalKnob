@@ -133,12 +133,12 @@ UtilityButtonsWithKnobUSB/
 2. **Clone and Build**
    ```bash
    cd UtilityButtonsWithKnobUSB
-   pio run
+   ./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run
    ```
 
 3. **Upload to Device**
    ```bash
-   pio run --target upload
+   ./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run --target upload
    ```
 
 4. **Monitor Serial Output**

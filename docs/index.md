@@ -228,19 +228,19 @@ BleKeyboard HID Output
 
 ```bash
 # Build firmware
-pio run
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run
 
 # Upload to device
-pio run --target upload
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run --target upload
 
 # Open serial monitor
 pio device monitor --baud 460800
 
 # All-in-one (build + upload + monitor)
-pio run -t upload && pio device monitor
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -t upload && pio device monitor
 
 # Clean build
-pio run -t clean && pio run
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -t clean && ./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run
 ```
 
 ### Configuration Files

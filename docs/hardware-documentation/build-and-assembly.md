@@ -52,7 +52,7 @@
 
 1. **Upload Firmware:**
    ```bash
-   pio run --target upload
+   ./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run --target upload
    ```
 
 2. **Open Serial Monitor:**

@@ -9,7 +9,7 @@
 
 **Rebuild and upload:**
 ```bash
-pio run -t upload
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -t upload
 ```
 
 **Note:** May need to unpair and re-pair device

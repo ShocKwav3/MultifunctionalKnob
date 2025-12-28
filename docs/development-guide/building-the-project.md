@@ -1,10 +1,12 @@
 # Building the Project
 
+> **For AI Tools:** Use the pio-wrapper skill for all `pio run` commands. Load [`.claude/skills/pio-wrapper/SKILL.md`](../../.claude/skills/pio-wrapper/SKILL.md) for context.
+
 ## Basic Build Commands
 
 ### Compile
 ```bash
-pio run
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run
 ```
 
 **Output:**
@@ -14,13 +16,13 @@ pio run
 
 ### Clean Build
 ```bash
-pio run --target clean
-pio run
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run --target clean
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run
 ```
 
 ### Verbose Build
 ```bash
-pio run --verbose
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run --verbose
 ```
 
 ## Build Flags

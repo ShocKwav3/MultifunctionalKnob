@@ -13,22 +13,24 @@ pio device list
 
 ### 2. Upload Firmware
 
+> **For AI Tools:** Use the pio-wrapper skill for all `pio run` commands. Load [`.claude/skills/pio-wrapper/SKILL.md`](../../.claude/skills/pio-wrapper/SKILL.md) for context.
+
 **Auto-detect port:**
 ```bash
-pio run --target upload
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run --target upload
 ```
 
 **Specific port:**
 ```bash
-pio run --target upload --upload-port /dev/ttyACM0    # Linux/Mac
-pio run --target upload --upload-port COM3            # Windows
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run --target upload --upload-port /dev/ttyACM0    # Linux/Mac
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run --target upload --upload-port COM3            # Windows
 ```
 
 ### 3. Monitor Output
 
 **Upload and Monitor (combined):**
 ```bash
-pio run --target upload --target monitor
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run --target upload && pio device monitor
 ```
 
 ## Troubleshooting Upload
