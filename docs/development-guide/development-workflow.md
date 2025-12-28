@@ -2,18 +2,20 @@
 
 ## Typical Development Cycle
 
+> **For AI Tools:** Use the pio-wrapper skill for all `pio run` commands. Load [`.claude/skills/pio-wrapper/SKILL.md`](../../.claude/skills/pio-wrapper/SKILL.md) for context.
+
 1. **Edit Code**
    - Modify source files in `src/` or `lib/`
    - Update configuration in `include/Config/`
 
 2. **Build**
    ```bash
-   pio run
+   ./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run
    ```
 
 3. **Upload**
    ```bash
-   pio run --target upload
+   ./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run --target upload
    ```
 
 4. **Test**
@@ -27,14 +29,14 @@
 
 ## Quick Development Commands
 
-**Build + Upload + Monitor (all-in-one):**
+**Build + Upload + Monitor:**
 ```bash
-pio run -t upload && pio device monitor
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -t upload && pio device monitor
 ```
 
 **Clean + Build + Upload:**
 ```bash
-pio run -t clean && pio run -t upload
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -t clean && ./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -t upload
 ```
 
 ## Code Organization Best Practices
@@ -136,5 +138,5 @@ pio run -t clean && pio run -t upload
 
 5. **Build and Test:**
    ```bash
-   pio run -t upload && pio device monitor
+   ./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -t upload && pio device monitor
    ```

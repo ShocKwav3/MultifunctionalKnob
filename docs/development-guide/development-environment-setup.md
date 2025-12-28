@@ -63,7 +63,7 @@ cd UtilityButtonsWithKnobUSB
 PlatformIO will automatically install dependencies on first build:
 
 ```bash
-pio run
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run
 ```
 
 This downloads:
@@ -97,13 +97,13 @@ This downloads:
 
 **Default Build:**
 ```bash
-pio run
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run
 # Builds default environment (env)
 ```
 
 **Specific Environment:**
 ```bash
-pio run -e use_nimble
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -e use_nimble
 ```
 
 ### Configuration Files

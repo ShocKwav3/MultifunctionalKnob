@@ -9,7 +9,7 @@
 **Solution:**
 1. Verify file exists in `include/` or `lib/`
 2. Check include path in `#include` statement
-3. Rebuild from clean: `pio run -t clean && pio run`
+3. Rebuild from clean: `./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -t clean && ./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run`
 
 ### Error: "Multiple definition of..."
 

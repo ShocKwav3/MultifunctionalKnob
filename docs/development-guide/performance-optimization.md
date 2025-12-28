@@ -4,7 +4,7 @@
 
 **Check Memory Usage:**
 ```bash
-pio run --verbose
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run --verbose
 ```
 
 Look for output:
