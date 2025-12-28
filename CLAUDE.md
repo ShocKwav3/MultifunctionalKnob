@@ -8,18 +8,24 @@ ESP32-C3 Bluetooth HID device (BLE keyboard) with rotary encoder and OLED displa
 
 ## Build Commands
 
+**Important:** Use the `pio-wrapper` skill to run PlatformIO commands. This reduces token usage by filtering verbose build output and returning only error lines on failures.
+
+See `.claude/skills/pio-wrapper/SKILL.md` for full details.
+
+Command examples (using the wrapper):
+
 ```bash
 # Build (default NimBLE env)
-pio run -e use_nimble
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -e use_nimble
 
 # Build + upload + monitor
-pio run -e use_nimble -t upload && pio device monitor
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -e use_nimble -t upload && pio device monitor
 
 # Clean build
-pio run -t clean
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -t clean
 
 # Debug build
-pio run -e use_nimble_debug
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -e use_nimble_debug
 ```
 
 Monitor baud rate: 460800
