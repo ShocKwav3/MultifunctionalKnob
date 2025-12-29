@@ -111,7 +111,7 @@ UtilityButtonsWithKnobUSB/
 ├── boards/                # Custom board definitions
 │   └── nologo_esp32c3_super_mini.json
 ├── platformio.ini         # PlatformIO configuration
-└── docs/                  # Generated documentation
+└── _bmad-output/          # Generated documentation
 ```
 
 ## Getting Started

@@ -50,15 +50,15 @@ so that **I can zoom in applications like browsers, image editors, and IDEs**.
 
 ### References
 
-- [Architecture: Gap Analysis](docs/architecture/index.md#gap-analysis-results)
-- [Epics: Story 3.2](docs/epics/index.md#story-32-create-zoom-mode-handler)
+- [Architecture: Gap Analysis](_bmad-output/architecture/index.md#gap-analysis-results)
+- [Epics: Story 3.2](_bmad-output/epics/index.md#story-32-create-zoom-mode-handler)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture/index.md`
-- `docs/epics/index.md`
+- `_bmad-output/architecture/index.md`
+- `_bmad-output/epics/index.md`
 
 ### Agent Model Used
 

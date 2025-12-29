@@ -37,7 +37,7 @@ so that **I can access configuration options without interrupting normal operati
 - [x] [AI-Review][CRITICAL] Task `[x] Update include/Enum/EventEnum.h` marked complete but not implemented as specified.
 - [x] [AI-Review][HIGH] AC #4 (Event Enums) not implemented as written (specified `EventEnum.h`, implemented `MenuEvent.h`).
 - [x] [AI-Review][MEDIUM] Logging pattern violation in `src/Event/Handler/EncoderEventHandler.cpp` (lines 11, 14).
-- [x] [AI-Review][MEDIUM] Git Discrepancy: `docs/sprint-artifacts/sprint-status.yaml` modified but not in story's File List.
+- [x] [AI-Review][MEDIUM] Git Discrepancy: `_bmad-output/sprint-artifacts/sprint-status.yaml` modified but not in story's File List.
 
 ## Dev Notes
 
@@ -48,15 +48,15 @@ so that **I can access configuration options without interrupting normal operati
 
 ### References
 
-- [Architecture: Event Interceptor Pattern](docs/architecture/index.md#event-interceptor-pattern)
-- [Epics: Story 2.3](docs/epics/index.md#story-23-integrate-menu-with-encoder-event-system)
+- [Architecture: Event Interceptor Pattern](_bmad-output/architecture/index.md#event-interceptor-pattern)
+- [Epics: Story 2.3](_bmad-output/epics/index.md#story-23-integrate-menu-with-encoder-event-system)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture/index.md`
-- `docs/epics/index.md`
+- `_bmad-output/architecture/index.md`
+- `_bmad-output/epics/index.md`
 
 ### Agent Model Used
 
@@ -92,7 +92,7 @@ so that **I can access configuration options without interrupting normal operati
 
 - `src/Event/Handler/EncoderEventHandler.h` (modified)
 - `src/Event/Handler/EncoderEventHandler.cpp` (modified)
-- `docs/sprint-artifacts/sprint-status.yaml` (modified)
+- `_bmad-output/sprint-artifacts/sprint-status.yaml` (modified)
 
 ## Change Log
 

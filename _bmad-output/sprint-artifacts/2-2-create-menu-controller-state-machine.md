@@ -87,11 +87,11 @@ So that **I can interact with various settings and see immediate feedback throug
 ## Dev Agent Record
 
 ### Context Reference
-- `docs/project_context.md`
-- `docs/architecture/index.md`
-- `docs/epics/index.md`
-- `docs/source-tree-analysis.md`
-- `docs/development-guide.md`
+- `_bmad-output/project_context.md`
+- `_bmad-output/architecture/index.md`
+- `_bmad-output/epics/index.md`
+- `_bmad-output/source-tree-analysis.md`
+- `_bmad-output/development-guide.md`
 
 ### Agent Model Used
 - google/gemini-pro

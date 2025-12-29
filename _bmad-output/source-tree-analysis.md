@@ -15,7 +15,7 @@ UtilityButtonsWithKnobUSB/
 ├── boards/                        # Custom board definitions
 │   └── nologo_esp32c3_super_mini.json  # ESP32-C3 Super Mini board config
 │
-├── bmadocs/                       # BMAD documentation artifacts
+├── _bmad-output/                  # BMAD documentation artifacts
 │   └── sprint-artifacts/          # Sprint planning documents
 │
 ├── include/                       # 🔑 Header files and configuration
@@ -267,7 +267,7 @@ Defined in [`platformio.ini`](../platformio.ini:19):
 - `.git/`: Version control
 - `.bmad/`, `.claude/`, `.roo/`: Development tools
 - `.vscode/`: IDE configuration
-- `bmadocs/`: Documentation artifacts (separate from code)
+- `_bmad-output/`: Documentation artifacts (separate from code)
 
 ---
 

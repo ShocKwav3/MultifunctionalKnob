@@ -113,7 +113,7 @@ UtilityButtonsWithKnobUSB/
 │       ├── MockDisplay.h
 │       └── MockPreferences.h
 │
-└── docs/                               # Documentation
+└── _bmad-output/                       # Documentation
     ├── index.md
     ├── architecture.md                 # This document
     ├── prd.md

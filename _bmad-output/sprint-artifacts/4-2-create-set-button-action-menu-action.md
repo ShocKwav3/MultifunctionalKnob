@@ -40,16 +40,16 @@ so that **I can customize what each button does**.
 
 ### References
 
-- [Architecture: Command Pattern](docs/architecture/index.md#command-pattern-for-actions)
-- [Epics: Story 4.2](docs/epics/index.md#story-42-create-set-button-action-menu-action)
-- [Strategic Pivot](docs/epics/strategic-pivot-speed-to-market-2025-12-18.md)
+- [Architecture: Command Pattern](_bmad-output/architecture/index.md#command-pattern-for-actions)
+- [Epics: Story 4.2](_bmad-output/epics/index.md#story-42-create-set-button-action-menu-action)
+- [Strategic Pivot](_bmad-output/epics/strategic-pivot-speed-to-market-2025-12-18.md)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture/index.md`
-- `docs/epics/index.md`
+- `_bmad-output/architecture/index.md`
+- `_bmad-output/epics/index.md`
 
 ### Agent Model Used
 

@@ -42,15 +42,15 @@ so that **I can control media playback and volume with physical buttons**.
 
 ### References
 
-- [Architecture: Event Flow](docs/architecture/index.md#event-flow)
-- [Epics: Story 4.4](docs/epics/index.md#story-44-implement-button-hid-command-execution)
+- [Architecture: Event Flow](_bmad-output/architecture/index.md#event-flow)
+- [Epics: Story 4.4](_bmad-output/epics/index.md#story-44-implement-button-hid-command-execution)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture/index.md`
-- `docs/epics/index.md`
+- `_bmad-output/architecture/index.md`
+- `_bmad-output/epics/index.md`
 
 ### Agent Model Used
 

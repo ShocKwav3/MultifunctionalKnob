@@ -59,15 +59,15 @@ so that **I can observe menu navigation, status messages, and configuration feed
 
 ### References
 
-- [Architecture: Component Architecture](docs/architecture/index.md#component-architecture-menu-system)
-- [Epics: Story 1.2](docs/epics/index.md#story-12-create-display-interface-and-serial-implementation)
+- [Architecture: Component Architecture](_bmad-output/architecture/index.md#component-architecture-menu-system)
+- [Epics: Story 1.2](_bmad-output/epics/index.md#story-12-create-display-interface-and-serial-implementation)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture/index.md`
-- `docs/epics/index.md`
+- `_bmad-output/architecture/index.md`
+- `_bmad-output/epics/index.md`
 
 ### Agent Model Used
 

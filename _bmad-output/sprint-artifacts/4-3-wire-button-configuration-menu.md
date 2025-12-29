@@ -41,15 +41,15 @@ so that **I can see and change button configurations easily**.
 
 ### References
 
-- [Architecture: Component Architecture](docs/architecture/index.md#component-architecture-menu-system)
-- [Epics: Story 4.3](docs/epics/index.md#story-43-wire-button-configuration-menu)
+- [Architecture: Component Architecture](_bmad-output/architecture/index.md#component-architecture-menu-system)
+- [Epics: Story 4.3](_bmad-output/epics/index.md#story-43-wire-button-configuration-menu)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture/index.md`
-- `docs/epics/index.md`
+- `_bmad-output/architecture/index.md`
+- `_bmad-output/epics/index.md`
 
 ### Agent Model Used
 

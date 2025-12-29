@@ -56,15 +56,15 @@ so that **I can trigger actions with physical button presses**.
 
 ### References
 
-- [Architecture: Component Architecture](docs/architecture/index.md#component-architecture-menu-system)
-- [Epics: Story 4.1](docs/epics/index.md#story-41-create-button-manager-for-gpio-input)
+- [Architecture: Component Architecture](_bmad-output/architecture/index.md#component-architecture-menu-system)
+- [Epics: Story 4.1](_bmad-output/epics/index.md#story-41-create-button-manager-for-gpio-input)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture/index.md`
-- `docs/epics/index.md`
+- `_bmad-output/architecture/index.md`
+- `_bmad-output/epics/index.md`
 
 ### Agent Model Used
 

@@ -351,7 +351,7 @@ lib/
 - When updating dependencies
 
 **How to Update:**
-1. Modify relevant markdown files in `docs/`
+1. Modify relevant markdown files in `_bmad-output/`
 2. Update version and date in file headers
 3. Update this index if new documents added
 4. Regenerate with `*document-project` if major changes
