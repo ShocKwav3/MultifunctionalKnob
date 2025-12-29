@@ -6,6 +6,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ESP32-C3 Bluetooth HID device (BLE keyboard) with rotary encoder and OLED display. Sends keystrokes/media controls to paired devices via BLE. Built with PlatformIO and Arduino framework.
 
+## Coding Standards for Implementation
+
+**CRITICAL - For AI Agents implementing code:**
+
+Before implementing ANY code (classes, functions, refactoring, bug fixes), you MUST:
+
+1. **Load the coding-standard skill** - Use the Claude Code skill system to access `.claude/skills/coding-standard/SKILL.md`
+2. **Review applicable principles** - Identify which SOLID/Clean Code/Design Pattern rules apply to your task
+3. **Follow the skill's token management guidance** - Only load detailed references when actively implementing a specific pattern
+
+### Embedded Systems Constraint Warning
+
+**This is a resource-constrained ESP32-C3 embedded device (400KB SRAM, single-core RISC-V).**
+
+**Before applying design patterns or abstractions:**
+- **Evaluate resource impact** - Virtual functions, dependency injection, and abstractions add memory/CPU overhead
+- **Prioritize existing patterns** - The project uses event-driven architecture with static allocation - respect this
+- **Simple > Clean in embedded** - Sometimes procedural code is better than abstracted OOP
+- **Ask before heavyweight patterns** - If applying Decorator, Observer, Repository, or other patterns that add indirection layers, **STOP and ask the user for approval** explaining the tradeoff
+
+**Examples requiring user approval:**
+- Adding virtual function tables where function pointers suffice
+- Creating dependency injection containers when direct instantiation works
+- Introducing repository pattern for simple NVS access
+- Applying strategy pattern when compile-time selection is sufficient
+
 ## Build Commands
 
 **Important:** Use the `pio-wrapper` skill to run PlatformIO commands. This reduces token usage by filtering verbose build output and returning only error lines on failures.
