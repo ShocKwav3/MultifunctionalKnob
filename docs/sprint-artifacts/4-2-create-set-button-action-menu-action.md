@@ -1,6 +1,6 @@
 # Story 4.2: Create Set Button Action Menu Action
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -10,10 +10,10 @@ so that **I can customize what each button does**.
 
 ## Acceptance Criteria
 
-1. **SetButtonActionAction Class:**
-   - Create `src/Menu/Action/SetButtonActionAction.cpp` and `SetButtonActionAction.h`
+1. **SetButtonBehaviorAction Class:**
+   - Create `src/Menu/Action/SetButtonBehaviorAction.cpp` and `SetButtonBehaviorAction.h`
    - Inherit from `MenuAction`
-   - Constructor: `SetButtonActionAction(uint8_t buttonIndex, ButtonAction action)`
+   - Constructor: `SetButtonBehaviorAction(uint8_t buttonIndex, ButtonAction action)`
 
 2. **Execution Logic:**
    - `execute()`:
@@ -26,8 +26,8 @@ so that **I can customize what each button does**.
 
 ## Tasks / Subtasks
 
-- [ ] Create `src/Menu/Action/SetButtonActionAction.h`
-- [ ] Create `src/Menu/Action/SetButtonActionAction.cpp`
+- [x] Create `src/Menu/Action/SetButtonBehaviorAction.h`
+- [x] Create `src/Menu/Action/SetButtonBehaviorAction.cpp`
 
 ## Dev Notes
 
@@ -38,16 +38,46 @@ so that **I can customize what each button does**.
 
 ### References
 
-- [Architecture: Command Pattern](docs/architecture.md#command-pattern-for-actions)
-- [Epics: Story 4.2](docs/epics.md#story-42-create-set-button-action-menu-action)
+- [Architecture: Command Pattern](docs/architecture/index.md#command-pattern-for-actions)
+- [Epics: Story 4.2](docs/epics/index.md#story-42-create-set-button-action-menu-action)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture.md`
-- `docs/epics.md`
+- `docs/architecture/index.md`
+- `docs/epics/index.md`
 
 ### Agent Model Used
 
 - google/gemini-3-pro-preview
+- claude-sonnet-4-5 (implementation)
+
+### Implementation Plan
+
+Created SetButtonBehaviorAction following Command Pattern:
+- Extends MenuAction base class
+- Constructor accepts buttonIndex, action, ConfigManager*
+- execute() persists via ConfigManager::saveButtonAction()
+- getConfirmationMessage() returns action-specific strings
+- Follows existing SelectWheelModeAction pattern
+
+### Completion Notes
+
+✅ Implemented SetButtonBehaviorAction class per AC 1-3
+- src/Menu/Action/SetButtonBehaviorAction.h: Header with MenuAction inheritance
+- src/Menu/Action/SetButtonBehaviorAction.cpp: Implementation with NVS persistence
+- Constructor signature matches AC (buttonIndex, action, ConfigManager*)
+- execute() calls ConfigManager::saveButtonAction() and logs action
+- getConfirmationMessage() returns all required messages (Mute/Play/Pause/Next/Previous/None)
+- Build validated successfully (use_nimble env)
+
+## File List
+
+- src/Menu/Action/SetButtonBehaviorAction.h (new)
+- src/Menu/Action/SetButtonBehaviorAction.cpp (new)
+
+## Change Log
+
+- 2025-12-29: Created SetButtonBehaviorAction class for button action assignment via menu
+- 2025-12-29: Renamed from SetButtonActionAction to SetButtonBehaviorAction (removed redundant "Action")
