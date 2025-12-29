@@ -60,8 +60,8 @@ So that **I can customize what each button does**.
 **Acceptance Criteria:**
 
 **Given** the project needs button action assignment
-**When** I create `src/Menu/Action/SetButtonActionAction.cpp` and `SetButtonActionAction.h`
-**Then** `SetButtonActionAction` extends `MenuAction`
+**When** I create `src/Menu/Action/SetButtonBehaviorAction.cpp` and `SetButtonBehaviorAction.h`
+**Then** `SetButtonBehaviorAction` extends `MenuAction`
 **And** constructor accepts `uint8_t buttonIndex`, `ButtonAction action`, `ConfigManager*`
 **And** uses `#pragma once` header guard
 
@@ -115,7 +115,7 @@ So that **I can see and change button configurations easily**.
 
 **Given** user selects a behavior for the button
 **When** short-press on behavior option
-**Then** `SetButtonActionAction::execute()` runs (FR17)
+**Then** `SetButtonBehaviorAction::execute()` runs (FR17)
 **And** behavior is applied immediately (FR18)
 **And** confirmation message displays
 **And** menu exits automatically
@@ -127,7 +127,7 @@ So that **I can see and change button configurations easily**.
 
 **Given** the menu needs action instances for each button-behavior combination
 **When** MenuTree.h is constructed
-**Then** it creates `SetButtonActionAction` instances for each button × behavior pair
+**Then** it creates `SetButtonBehaviorAction` instances for each button × behavior pair
 **And** action instances are organized in behavior submenus per button
 
 ---

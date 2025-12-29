@@ -45,15 +45,15 @@ so that **my configuration persists across power cycles without needing to recon
 
 ### References
 
-- [Architecture: Data Architecture](docs/architecture.md#data-architecture)
-- [Epics: Story 1.3](docs/epics.md#story-13-create-configuration-manager-with-nvs-persistence)
+- [Architecture: Data Architecture](docs/architecture/index.md#data-architecture)
+- [Epics: Story 1.3](docs/epics/index.md#story-13-create-configuration-manager-with-nvs-persistence)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture.md`
-- `docs/epics.md`
+- `docs/architecture/index.md`
+- `docs/epics/index.md`
 
 ### Agent Model Used
 

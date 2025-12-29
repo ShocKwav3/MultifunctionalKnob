@@ -88,8 +88,8 @@ So that **I can interact with various settings and see immediate feedback throug
 
 ### Context Reference
 - `docs/project_context.md`
-- `docs/architecture.md`
-- `docs/epics.md`
+- `docs/architecture/index.md`
+- `docs/epics/index.md`
 - `docs/source-tree-analysis.md`
 - `docs/development-guide.md`
 

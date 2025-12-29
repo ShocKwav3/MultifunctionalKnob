@@ -30,7 +30,7 @@ src/
 │   └── Action/
 │       ├── MenuAction.h
 │       ├── SelectWheelModeAction.cpp/.h
-│       └── SetButtonActionAction.cpp/.h
+│       └── SetButtonBehaviorAction.cpp/.h
 ├── Display/
 │   ├── Interface/
 │   │   └── DisplayInterface.h

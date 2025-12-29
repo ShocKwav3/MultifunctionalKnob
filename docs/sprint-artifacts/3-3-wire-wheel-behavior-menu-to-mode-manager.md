@@ -40,15 +40,15 @@ so that **I can easily change how my wheel operates at runtime**.
 
 ### References
 
-- [Architecture: Component Architecture](docs/architecture.md#component-architecture-menu-system)
-- [Epics: Story 3.3](docs/epics.md#story-33-wire-wheel-behavior-menu-to-mode-manager)
+- [Architecture: Component Architecture](docs/architecture/index.md#component-architecture-menu-system)
+- [Epics: Story 3.3](docs/epics/index.md#story-33-wire-wheel-behavior-menu-to-mode-manager)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture.md`
-- `docs/epics.md`
+- `docs/architecture/index.md`
+- `docs/epics/index.md`
 - Story 3.1: SelectWheelModeAction implementation
 - Story 3.2: EncoderModeHandlerZoom implementation
 - Story 2.3: Menu integration with encoder event system

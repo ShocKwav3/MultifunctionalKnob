@@ -80,7 +80,7 @@ UtilityButtonsWithKnobUSB/
 │   │   └── Action/
 │   │       ├── MenuAction.h                     # Abstract action base class
 │   │       ├── SelectWheelModeAction.cpp/.h     # Select wheel mode
-│   │       ├── SetButtonActionAction.cpp/.h     # Change button behavior
+│   │       ├── SetButtonBehaviorAction.cpp/.h   # Change button behavior
 │   │       ├── ShowStatusAction.cpp/.h          # Display device status
 │   │       └── ShowAboutAction.cpp/.h           # Display about info
 │   │
@@ -263,7 +263,7 @@ Phase 6: Integration (Distributed Events)
 |-------------|-------------------|-----------|
 | Menu System (FR1-FR8) | src/Menu/ | MenuController, MenuItem, MenuTree |
 | Wheel Config (FR9-FR14) | src/Menu/Action/ | SelectWheelModeAction |
-| Button Config (FR15-FR19) | src/Menu/Action/, src/Button/ | SetButtonActionAction, ButtonManager |
+| Button Config (FR15-FR19) | src/Menu/Action/, src/Button/ | SetButtonBehaviorAction, ButtonManager |
 | Device Status (FR20-FR23) | src/Menu/Action/ | ShowStatusAction |
 | About Screen (FR24-FR25) | src/Menu/Action/ | ShowAboutAction |
 | Config Persistence (FR26-FR29) | src/Config/ | ConfigManager, FactoryReset |

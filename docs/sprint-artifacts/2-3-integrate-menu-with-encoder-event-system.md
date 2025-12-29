@@ -48,15 +48,15 @@ so that **I can access configuration options without interrupting normal operati
 
 ### References
 
-- [Architecture: Event Interceptor Pattern](docs/architecture.md#event-interceptor-pattern)
-- [Epics: Story 2.3](docs/epics.md#story-23-integrate-menu-with-encoder-event-system)
+- [Architecture: Event Interceptor Pattern](docs/architecture/index.md#event-interceptor-pattern)
+- [Epics: Story 2.3](docs/epics/index.md#story-23-integrate-menu-with-encoder-event-system)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture.md`
-- `docs/epics.md`
+- `docs/architecture/index.md`
+- `docs/epics/index.md`
 
 ### Agent Model Used
 

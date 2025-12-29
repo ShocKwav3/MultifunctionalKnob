@@ -68,8 +68,8 @@ We will pivot from a **Centralized** event architecture to a **Distributed** one
 **Classification:** **Major Scope** (Architectural Pivot)
 
 **Deliverables:**
-1.  Updated `docs/architecture.md` (COMPLETE)
-2.  Updated `docs/epics.md` (COMPLETE)
+1.  Updated `docs/architecture/index.md` (COMPLETE)
+2.  Updated `docs/epics/index.md` (COMPLETE)
 3.  Implementation of `DisplayTask` and specialized Dispatchers (PENDING - To be done by Dev Agent).
 
 **Success Criteria:**

@@ -17,7 +17,7 @@ New directories (Menu/, Display/, Config/, Button/) follow established subdirect
 All 42 functional requirements mapped to specific architectural components:
 - FR1-FR8 (Menu): MenuController, MenuItem, MenuTree
 - FR9-FR14 (Wheel): SelectWheelModeAction, ConfigManager
-- FR15-FR19 (Buttons): SetButtonActionAction, ButtonManager
+- FR15-FR19 (Buttons): SetButtonBehaviorAction, ButtonManager
 - FR20-FR29 (Status/Config): ShowStatusAction, ShowAboutAction, ConfigManager, FactoryReset
 - FR30-FR42 (BLE/Display/Input): Existing components + BLE_DISCONNECTED event
 

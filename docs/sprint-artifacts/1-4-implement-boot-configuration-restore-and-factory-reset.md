@@ -40,15 +40,15 @@ so that **I can immediately use my configured wheel mode and button behaviors wi
 
 ### References
 
-- [Architecture: Factory Reset Trigger](docs/architecture.md#factory-reset-trigger)
-- [Epics: Story 1.4](docs/epics.md#story-14-implement-boot-configuration-restore-and-factory-reset)
+- [Architecture: Factory Reset Trigger](docs/architecture/index.md#factory-reset-trigger)
+- [Epics: Story 1.4](docs/epics/index.md#story-14-implement-boot-configuration-restore-and-factory-reset)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture.md`
-- `docs/epics.md`
+- `docs/architecture/index.md`
+- `docs/epics/index.md`
 
 ### Agent Model Used
 
