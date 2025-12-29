@@ -13,7 +13,7 @@ so that **I can customize what each button does**.
 1. **SetButtonBehaviorAction Class:**
    - Create `src/Menu/Action/SetButtonBehaviorAction.cpp` and `SetButtonBehaviorAction.h`
    - Inherit from `MenuAction`
-   - Constructor: `SetButtonBehaviorAction(uint8_t buttonIndex, ButtonAction action)`
+   - Constructor: `SetButtonBehaviorAction(uint8_t buttonIndex, ButtonAction action, ConfigManager* config)`
 
 2. **Execution Logic:**
    - `execute()`:
@@ -28,6 +28,7 @@ so that **I can customize what each button does**.
 
 - [x] Create `src/Menu/Action/SetButtonBehaviorAction.h`
 - [x] Create `src/Menu/Action/SetButtonBehaviorAction.cpp`
+- [x] Verify build success (Tests deferred per Strategic Pivot)
 
 ## Dev Notes
 
@@ -35,11 +36,13 @@ so that **I can customize what each button does**.
 
 - **Command Pattern:** Encapsulate action logic.
 - **Persistence:** Use `ConfigManager`.
+- **Testability:** Injected `ConfigManager` dependency ensures future testability (tests deferred per Strategic Pivot).
 
 ### References
 
 - [Architecture: Command Pattern](docs/architecture/index.md#command-pattern-for-actions)
 - [Epics: Story 4.2](docs/epics/index.md#story-42-create-set-button-action-menu-action)
+- [Strategic Pivot](docs/epics/strategic-pivot-speed-to-market-2025-12-18.md)
 
 ## Dev Agent Record
 
