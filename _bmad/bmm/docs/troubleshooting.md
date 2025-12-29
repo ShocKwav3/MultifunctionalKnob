@@ -390,8 +390,8 @@ For most brownfield projects, **Deep scan is sufficient**.
 Check `bmad/bmm/config.yaml` for configured paths:
 
 ```yaml
-output_folder: '{project-root}/docs'
-dev_story_location: '{project-root}/docs/stories'
+output_folder: '{project-root}/_bmad-output'
+dev_story_location: '{project-root}/_bmad-output/stories'
 ```
 
 Default locations:
