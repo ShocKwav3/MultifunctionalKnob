@@ -19,12 +19,12 @@ so that **I can see and change button configurations easily**.
 
 2. **Behavior Submenus:**
    - Each button submenu has:
-     - "None" -> `SetButtonActionAction(i, NONE)`
-     - "Mute" -> `SetButtonActionAction(i, MUTE)`
-     - "Play" -> `SetButtonActionAction(i, PLAY)`
-     - "Pause" -> `SetButtonActionAction(i, PAUSE)`
-     - "Next" -> `SetButtonActionAction(i, NEXT)`
-     - "Previous" -> `SetButtonActionAction(i, PREVIOUS)`
+     - "None" -> `SetButtonBehaviorAction(i, NONE)`
+     - "Mute" -> `SetButtonBehaviorAction(i, MUTE)`
+     - "Play" -> `SetButtonBehaviorAction(i, PLAY)`
+     - "Pause" -> `SetButtonBehaviorAction(i, PAUSE)`
+     - "Next" -> `SetButtonBehaviorAction(i, NEXT)`
+     - "Previous" -> `SetButtonBehaviorAction(i, PREVIOUS)`
 
 3. **Dynamic/Static Generation:**
    - Since `MenuTree` is static/constexpr, we must define these structures explicitly or use macros/templates if possible. Given `BUTTON_COUNT` is small (4), explicit definition is acceptable and preferred for simplicity.
@@ -41,15 +41,15 @@ so that **I can see and change button configurations easily**.
 
 ### References
 
-- [Architecture: Component Architecture](docs/architecture.md#component-architecture-menu-system)
-- [Epics: Story 4.3](docs/epics.md#story-43-wire-button-configuration-menu)
+- [Architecture: Component Architecture](docs/architecture/index.md#component-architecture-menu-system)
+- [Epics: Story 4.3](docs/epics/index.md#story-43-wire-button-configuration-menu)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture.md`
-- `docs/epics.md`
+- `docs/architecture/index.md`
+- `docs/epics/index.md`
 
 ### Agent Model Used
 
