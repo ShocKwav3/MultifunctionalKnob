@@ -7,9 +7,9 @@ stepsCompleted:
   - step-05-epic-quality-review
   - step-06-final-assessment
 filesIncluded:
-  prd: docs/prd.md
-  architecture: docs/architecture.md
-  epics: docs/epics.md
+  prd: docs/prd/index.md
+  architecture: docs/architecture/index.md
+  epics: docs/epics/index.md
   ux: null
 ---
 # Implementation Readiness Assessment Report
@@ -19,9 +19,9 @@ filesIncluded:
 
 ## Document Inventory
 
-- **PRD**: docs/prd.md
-- **Architecture**: docs/architecture.md
-- **Epics**: docs/epics.md
+- **PRD**: docs/prd/index.md
+- **Architecture**: docs/architecture/index.md
+- **Epics**: docs/epics/index.md
 - **UX**: Not included (User confirmed)
 
 ## PRD Analysis

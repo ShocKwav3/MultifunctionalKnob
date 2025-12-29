@@ -49,15 +49,15 @@ so that **menu navigation can traverse hierarchically without dynamic memory all
 
 ### References
 
-- [Architecture: Component Architecture (Menu System)](docs/architecture.md#component-architecture-menu-system)
-- [Epics: Story 2.1](docs/epics.md#story-21-create-menu-item-data-structure-and-static-menu-tree)
+- [Architecture: Component Architecture (Menu System)](docs/architecture/index.md#component-architecture-menu-system)
+- [Epics: Story 2.1](docs/epics/index.md#story-21-create-menu-item-data-structure-and-static-menu-tree)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture.md`
-- `docs/epics.md`
+- `docs/architecture/index.md`
+- `docs/epics/index.md`
 - `docs/project_context.md`
 
 ### Agent Model Used

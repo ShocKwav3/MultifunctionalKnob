@@ -38,15 +38,15 @@ so that **I know what version I'm running and can reference it for support**.
 
 ### References
 
-- [Architecture: Component Architecture](docs/architecture.md#component-architecture-menu-system)
-- [Epics: Story 5.2](docs/epics.md#story-52-create-show-about-action)
+- [Architecture: Component Architecture](docs/architecture/index.md#component-architecture-menu-system)
+- [Epics: Story 5.2](docs/epics/index.md#story-52-create-show-about-action)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture.md`
-- `docs/epics.md`
+- `docs/architecture/index.md`
+- `docs/epics/index.md`
 
 ### Agent Model Used
 

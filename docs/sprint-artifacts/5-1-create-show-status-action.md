@@ -40,15 +40,15 @@ so that **I can troubleshoot issues and verify my settings are correct**.
 
 ### References
 
-- [Architecture: Component Architecture](docs/architecture.md#component-architecture-menu-system)
-- [Epics: Story 5.1](docs/epics.md#story-51-create-show-status-action)
+- [Architecture: Component Architecture](docs/architecture/index.md#component-architecture-menu-system)
+- [Epics: Story 5.1](docs/epics/index.md#story-51-create-show-status-action)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture.md`
-- `docs/epics.md`
+- `docs/architecture/index.md`
+- `docs/epics/index.md`
 
 ### Agent Model Used
 

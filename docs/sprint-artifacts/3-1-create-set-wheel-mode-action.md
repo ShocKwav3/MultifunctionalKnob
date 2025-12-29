@@ -42,15 +42,15 @@ so that **my wheel behavior changes without needing to restart the device**.
 
 ### References
 
-- [Architecture: Command Pattern for Actions](docs/architecture.md#command-pattern-for-actions)
-- [Epics: Story 3.1](docs/epics.md#story-31-create-set-wheel-mode-action)
+- [Architecture: Command Pattern for Actions](docs/architecture/index.md#command-pattern-for-actions)
+- [Epics: Story 3.1](docs/epics/index.md#story-31-create-set-wheel-mode-action)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture.md`
-- `docs/epics.md`
+- `docs/architecture/index.md`
+- `docs/epics/index.md`
 
 ### Agent Model Used
 
@@ -103,8 +103,8 @@ so that **my wheel behavior changes without needing to restart the device**.
 - `src/Menu/Action/SelectWheelModeAction.h` (new)
 - `src/Menu/Action/SelectWheelModeAction.cpp` (new)
 - `src/Menu/Model/MenuTree.h` (modified - added initWheelBehaviorActions())
-- `docs/architecture.md` (modified - updated Command Pattern examples)
-- `docs/epics.md` (modified - updated Story 3.1 ACs with correct class name)
+- `docs/architecture/index.md` (modified - updated Command Pattern examples)
+- `docs/epics/index.md` (modified - updated Story 3.1 ACs with correct class name)
 
 ## Change Log
 

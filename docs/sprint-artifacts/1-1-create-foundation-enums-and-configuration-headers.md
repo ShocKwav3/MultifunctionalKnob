@@ -92,16 +92,16 @@ so that **all subsequent components have consistent foundations to build upon**.
 
 ### References
 
-- [Architecture: Implementation Patterns](docs/architecture.md#implementation-patterns--consistency-rules)
-- [Architecture: Build Order Dependencies](docs/architecture.md#build-order-dependencies)
-- [Epics: Story 1.1](docs/epics.md#story-11-create-foundation-enums-and-configuration-headers)
+- [Architecture: Implementation Patterns](docs/architecture/index.md#implementation-patterns--consistency-rules)
+- [Architecture: Build Order Dependencies](docs/architecture/index.md#build-order-dependencies)
+- [Epics: Story 1.1](docs/epics/index.md#story-11-create-foundation-enums-and-configuration-headers)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture.md`
-- `docs/epics.md`
+- `docs/architecture/index.md`
+- `docs/epics/index.md`
 
 ### Agent Model Used
 

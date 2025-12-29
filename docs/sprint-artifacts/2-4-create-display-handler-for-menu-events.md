@@ -42,15 +42,15 @@ so that **I know which option is selected and when my actions are confirmed**.
 
 ### References
 
-- [Architecture: Communication Patterns](docs/architecture.md#communication-patterns)
-- [Epics: Story 2.4](docs/epics.md#story-24-create-display-handler-for-menu-events)
+- [Architecture: Communication Patterns](docs/architecture/index.md#communication-patterns)
+- [Epics: Story 2.4](docs/epics/index.md#story-24-create-display-handler-for-menu-events)
 
 ## Dev Agent Record
 
 ### Context Reference
 
-- `docs/architecture.md`
-- `docs/epics.md`
+- `docs/architecture/index.md`
+- `docs/epics/index.md`
 
 ### Agent Model Used
 

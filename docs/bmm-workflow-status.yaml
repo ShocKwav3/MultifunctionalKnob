@@ -30,12 +30,12 @@ workflow_status:
   brainstorm-project: docs/analysis/brainstorming-session-2025-12-14.md
 
   # Phase 1: Planning
-  prd: docs/prd.md
+  prd: docs/prd/index.md
   create-ux-design: skipped
 
   # Phase 2: Solutioning
-  create-architecture: docs/architecture.md
-  create-epics-and-stories: docs/epics.md
+  create-architecture: docs/architecture/index.md
+  create-epics-and-stories: docs/epics/index.md
   test-design: skipped
   validate-architecture: skipped
   implementation-readiness: docs/implementation-readiness-report-2025-12-16.md
