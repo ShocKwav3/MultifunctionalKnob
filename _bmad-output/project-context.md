@@ -14,6 +14,28 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ---
 
+## Build Commands
+
+**Important:** Use the `pio-wrapper` skill to run PlatformIO commands. This reduces token usage by filtering verbose build output and returning only error lines on failures.
+
+See `.claude/skills/pio-wrapper/SKILL.md` for full details.
+
+Command examples (using the wrapper):
+
+```bash
+# Build (default NimBLE env)
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -e use_nimble
+
+# Build + upload + monitor
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -e use_nimble -t upload && pio device monitor
+
+# Clean build
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -t clean
+
+# Debug build
+./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -e use_nimble_debug
+```
+
 ## Technology Stack & Versions
 
 **Platform:** PlatformIO with espressif32 platform, Arduino framework
