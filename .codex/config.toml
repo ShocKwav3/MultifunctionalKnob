@@ -1,4 +1,0 @@
-model = "gpt-5.2"
-model_reasoning_effort = "medium"
-[projects."/Users/ferojahmod/Documents/Hobby/IOT/PlatformIO/Esp32/UtilityButtonsWithKnobUSB"]
-trust_level = "untrusted"
