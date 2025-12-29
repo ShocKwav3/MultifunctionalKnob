@@ -63,7 +63,7 @@ development_status:
 
   epic-4: in-progress
   4-1-create-button-manager-for-gpio-input: done
-  4-2-create-set-button-action-menu-action: review
+  4-2-create-set-button-action-menu-action: done
   4-3-wire-button-configuration-menu: ready-for-dev
   4-4-implement-button-hid-command-execution: ready-for-dev
   epic-4-retrospective: optional
