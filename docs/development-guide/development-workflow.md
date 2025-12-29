@@ -4,6 +4,12 @@
 
 > **For AI Tools:** Use the pio-wrapper skill for all `pio run` commands. Load [`.claude/skills/pio-wrapper/SKILL.md`](../../.claude/skills/pio-wrapper/SKILL.md) for context.
 
+> **For AI Tools - Code Implementation:** Before writing ANY code (new features, refactoring, bug fixes):
+> 1. Load the **coding-standard skill** from `.claude/skills/coding-standard/SKILL.md`
+> 2. Review applicable SOLID, Clean Code, and Design Pattern principles
+> 3. **CRITICAL - Embedded Constraint Check:** This is a resource-limited ESP32-C3 (400KB SRAM). Before applying heavyweight design patterns (Observer, Decorator, Repository, Dependency Injection containers), **STOP and ask the user** - explain the memory/CPU tradeoff and propose simpler alternatives. Simple principles (KISS, YAGNI, SRP, pure functions) are encouraged. Complex abstractions require approval.
+> 4. Follow token-efficient loading - only read detailed rule references when actively implementing a pattern
+
 1. **Edit Code**
    - Modify source files in `src/` or `lib/`
    - Update configuration in `include/Config/`

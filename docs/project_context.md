@@ -233,9 +233,39 @@ if (bleKeyboard.isConnected()) {  // Correct
 ## Usage Guidelines
 
 **For AI Agents:**
+
+### Step 1: Load Coding Standards
+Before implementing ANY code, use the coding-standard skill:
+- Load `.claude/skills/coding-standard/SKILL.md`
+- Review applicable SOLID/Clean Code/Design Pattern principles
+- Follow token-efficient loading (read detailed rules only when implementing)
+
+### Step 2: Evaluate Embedded Context
+**CRITICAL - Embedded Resource Constraints:**
+
+This ESP32-C3 has **400KB SRAM, single-core RISC-V @ 160MHz**. Design patterns have costs:
+- **Virtual functions** → vtable overhead, increased binary size
+- **Dependency injection** → more objects, complex initialization
+- **Repository/Factory patterns** → additional indirection layers
+- **Strategy/Decorator patterns** → runtime overhead, memory for polymorphism
+
+**Decision Framework:**
+1. **Check existing patterns first** - Follow event-driven, static allocation patterns already in this file
+2. **Simple patterns OK** - Single Responsibility, KISS, YAGNI, pure functions, early returns
+3. **Heavyweight patterns require approval** - Observer, Decorator, Repository, DI containers, Factory hierarchies
+   - **STOP and ask user** if applying these
+   - Explain memory/CPU tradeoff
+   - Propose simpler embedded-friendly alternative
+
+**When in doubt:**
+- Procedural code with clear functions > Over-abstracted OOP
+- Compile-time selection > Runtime polymorphism
+- Static allocation > Dynamic allocation (already a hard rule)
+
+### Step 3: Follow ALL Rules
 - Read this file before implementing any code
 - Follow ALL rules exactly as documented
-- When in doubt, prefer the more restrictive option
+- When principles conflict with embedded constraints, **ask the user**
 - Reference architecture.md for detailed design decisions
 
 **For Humans:**
