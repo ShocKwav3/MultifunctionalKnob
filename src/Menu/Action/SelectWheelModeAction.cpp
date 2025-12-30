@@ -8,7 +8,8 @@ SelectWheelModeAction::SelectWheelModeAction(WheelMode mode, ConfigManager* conf
     : targetMode(mode), configManager(config), modeManager(modeMgr) {
 }
 
-void SelectWheelModeAction::execute() {
+void SelectWheelModeAction::execute(const MenuItem* context) {
+    // Context unused - wheel mode is fixed at construction time
     // Persist mode to NVS
     Error saveResult = configManager->saveWheelMode(targetMode);
     if (saveResult != Error::OK) {

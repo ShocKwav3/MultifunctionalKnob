@@ -2,6 +2,10 @@
 
 #include "MenuItem.h"
 #include "Menu/Action/SelectWheelModeAction.h"
+#include "Menu/Action/SetButtonBehaviorAction.h"
+
+// Forward declaration
+class ButtonEventHandler;
 
 /**
  * @brief Static menu tree structure
@@ -13,14 +17,23 @@
  *
  * Initialization sequence:
  * 1. Call initMenuTree() to set parent pointers
- * 2. Call initMenuActions() to set action pointers (after DI objects created)
+ * 2. Call initWheelBehaviorActions() to set wheel mode action pointers
+ * 3. Call initButtonBehaviorActions() to set button action pointers
  *
  * Menu Structure:
  * - Wheel Behavior (branch)
  *   - Scroll (leaf - SelectWheelModeAction)
  *   - Volume (leaf - SelectWheelModeAction)
  *   - Zoom (leaf - SelectWheelModeAction)
- * - Button Config (branch - children set in Story 4.3)
+ * - Button Config (branch)
+ *   - Button 1 (branch)
+ *     - None, Mute, Play, Pause, Next, Previous (leaf - SetButtonBehaviorAction)
+ *   - Button 2 (branch)
+ *     - None, Mute, Play, Pause, Next, Previous (leaf - SetButtonBehaviorAction)
+ *   - Button 3 (branch)
+ *     - None, Mute, Play, Pause, Next, Previous (leaf - SetButtonBehaviorAction)
+ *   - Button 4 (branch)
+ *     - None, Mute, Play, Pause, Next, Previous (leaf - SetButtonBehaviorAction)
  * - Device Status (leaf - ShowStatusAction)
  * - About (leaf - ShowAboutAction)
  */
@@ -30,6 +43,7 @@ namespace MenuTree {
 extern MenuItem mainMenu[];
 extern MenuItem wheelBehaviorSubmenu[];
 extern MenuItem buttonConfigSubmenu[];
+extern MenuItem buttonBehaviorItems[];
 
 // Wheel Behavior submenu items (leaf nodes with actions set at runtime)
 inline MenuItem wheelBehaviorSubmenu[] = {
@@ -40,13 +54,25 @@ inline MenuItem wheelBehaviorSubmenu[] = {
 
 inline constexpr uint8_t WHEEL_BEHAVIOR_COUNT = 3;
 
-// Button Config submenu placeholder (populated in Story 4.3)
-// Branch node - children will be dynamically set based on BUTTONS[] array
+// Shared button behavior items - all buttons have the same 6 options
+// Parent pointers set at runtime in initMenuTree() based on which button submenu references this
+inline MenuItem buttonBehaviorItems[] = {
+    { "None",     nullptr, nullptr, 0, nullptr },
+    { "Mute",     nullptr, nullptr, 0, nullptr },
+    { "Play",     nullptr, nullptr, 0, nullptr },
+    { "Pause",    nullptr, nullptr, 0, nullptr },
+    { "Next",     nullptr, nullptr, 0, nullptr },
+    { "Previous", nullptr, nullptr, 0, nullptr }
+};
+
+inline constexpr uint8_t BUTTON_BEHAVIOR_COUNT = 6;
+
+// Button Config submenu (branch nodes - all reference the same shared buttonBehaviorItems)
 inline MenuItem buttonConfigSubmenu[] = {
-    { "Button 1", nullptr, nullptr, 0, nullptr },
-    { "Button 2", nullptr, nullptr, 0, nullptr },
-    { "Button 3", nullptr, nullptr, 0, nullptr },
-    { "Button 4", nullptr, nullptr, 0, nullptr }
+    { "Button 1", nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr },
+    { "Button 2", nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr },
+    { "Button 3", nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr },
+    { "Button 4", nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr }
 };
 
 inline constexpr uint8_t BUTTON_CONFIG_COUNT = 4;
@@ -89,9 +115,17 @@ inline void initMenuTree() {
         wheelBehaviorSubmenu[i].parent = &mainMenu[Index::WHEEL_BEHAVIOR];
     }
 
-    // Set parent for button config submenu items
+    // Set parent for button config submenu items (Button 1-4)
     for (uint8_t i = 0; i < BUTTON_CONFIG_COUNT; i++) {
         buttonConfigSubmenu[i].parent = &mainMenu[Index::BUTTON_CONFIG];
+    }
+
+    // Set parent for shared button behavior items
+    // Note: Parent is set to buttonConfigSubmenu[0] (Button 1) as default
+    // This will be dynamically overridden during navigation in MenuController
+    // to reflect which button submenu is currently active
+    for (uint8_t i = 0; i < BUTTON_BEHAVIOR_COUNT; i++) {
+        buttonBehaviorItems[i].parent = &buttonConfigSubmenu[0];
     }
 }
 
@@ -106,16 +140,7 @@ inline void setWheelBehaviorAction(uint8_t index, MenuAction* action) {
     }
 }
 
-/**
- * @brief Set action for a button config submenu item
- * @param index Button index (0-3)
- * @param action Pointer to MenuAction instance (must outlive menu)
- */
-inline void setButtonConfigAction(uint8_t index, MenuAction* action) {
-    if (index < BUTTON_CONFIG_COUNT) {
-        buttonConfigSubmenu[index].action = action;
-    }
-}
+
 
 /**
  * @brief Set action for Device Status menu item
@@ -176,6 +201,48 @@ inline void initWheelBehaviorActions(ConfigManager* config, EncoderModeManager* 
     setWheelBehaviorAction(0, &scrollAction);   // Scroll
     setWheelBehaviorAction(1, &volumeAction);   // Volume
     setWheelBehaviorAction(2, &zoomAction);     // Zoom
+}
+
+/**
+ * @brief Initialize button behavior menu actions
+ *
+ * Creates context-aware SetButtonBehaviorAction instances for shared button behavior menu items.
+ * All buttons share the same behavior items array (None, Mute, Play, Pause, Next, Previous).
+ * The button index is determined dynamically at runtime by analyzing the menu navigation context
+ * (which button submenu the user navigated through).
+ * 
+ * Must be called after DI objects (ConfigManager, ButtonEventHandler) are created.
+ *
+ * @param config ConfigManager instance for NVS persistence
+ * @param buttonHandler ButtonEventHandler instance for cache invalidation
+ */
+inline void initButtonBehaviorActions(ConfigManager* config, ButtonEventHandler* buttonHandler) {
+    // Button action types in order matching menu items
+    static constexpr ButtonAction actions[] = {
+        ButtonAction::NONE,
+        ButtonAction::MUTE,
+        ButtonAction::PLAY,
+        ButtonAction::PAUSE,
+        ButtonAction::NEXT,
+        ButtonAction::PREVIOUS
+    };
+
+    // Create static context-aware action instances for the shared button behavior items
+    // Button index is extracted from menu context at runtime (no hard-coded button index)
+    // buttonHandler enables cache invalidation when config changes
+    static SetButtonBehaviorAction buttonActions[BUTTON_BEHAVIOR_COUNT] = {
+        SetButtonBehaviorAction(actions[0], config, buttonHandler),
+        SetButtonBehaviorAction(actions[1], config, buttonHandler),
+        SetButtonBehaviorAction(actions[2], config, buttonHandler),
+        SetButtonBehaviorAction(actions[3], config, buttonHandler),
+        SetButtonBehaviorAction(actions[4], config, buttonHandler),
+        SetButtonBehaviorAction(actions[5], config, buttonHandler)
+    };
+
+    // Assign actions to shared button behavior items
+    for (uint8_t i = 0; i < BUTTON_BEHAVIOR_COUNT; i++) {
+        buttonBehaviorItems[i].action = &buttonActions[i];
+    }
 }
 
 } // namespace MenuTree
