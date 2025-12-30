@@ -65,10 +65,10 @@ development_status:
   4-1-create-button-manager-for-gpio-input: done
   4-2-create-set-button-action-menu-action: done
   4-3-wire-button-configuration-menu: done
-  4-4-implement-button-hid-command-execution: ready-for-dev
+  4-4-implement-button-hid-command-execution: in-review
   epic-4-retrospective: optional
 
   epic-5: in-progress
-  5-1-create-show-status-action: ready-for-dev
+  5-1-create-show-status-action: done
   5-2-create-show-about-action: ready-for-dev
   epic-5-retrospective: optional
