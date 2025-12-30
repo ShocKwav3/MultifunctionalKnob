@@ -1,5 +1,8 @@
 #pragma once
 
+// Forward declaration
+struct MenuItem;
+
 /**
  * @brief Abstract interface for menu actions
  *
@@ -16,8 +19,10 @@ public:
      *
      * Called when the user selects a menu item with this action.
      * Implementations should perform the action's specific behavior.
+     *
+     * @param context The MenuItem that was selected (provides navigation context)
      */
-    virtual void execute() = 0;
+    virtual void execute(const MenuItem* context) = 0;
 
     /**
      * @brief Get optional confirmation message before execution

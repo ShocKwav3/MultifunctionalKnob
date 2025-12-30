@@ -4,9 +4,6 @@
 
 static const char* TAG = "ConfigManager";
 
-// Static buffer for button key generation
-static char buttonKeyBuffer[16];
-
 ConfigManager::ConfigManager(Preferences* preferences)
     : prefs(preferences)
     , initialized(false) {
@@ -29,9 +26,8 @@ bool ConfigManager::ensureInitialized() {
     return initialized;
 }
 
-const char* ConfigManager::getButtonKey(uint8_t index) {
-    snprintf(buttonKeyBuffer, sizeof(buttonKeyBuffer), "btn%d.action", index);
-    return buttonKeyBuffer;
+void ConfigManager::getButtonKey(uint8_t index, char* buffer, size_t bufferSize) const {
+    snprintf(buffer, bufferSize, "btn%d.action", index);
 }
 
 Error ConfigManager::saveWheelMode(WheelMode mode) {
@@ -87,7 +83,8 @@ Error ConfigManager::saveButtonAction(uint8_t index, ButtonAction action) {
         return Error::NVS_WRITE_FAIL;
     }
 
-    const char* key = getButtonKey(index);
+    char key[BUTTON_KEY_BUFFER_SIZE];
+    getButtonKey(index, key, sizeof(key));
     size_t written = prefs->putUChar(key, static_cast<uint8_t>(action));
     if (written == 0) {
         LOG_ERROR(TAG, "Failed to write button action to NVS for key: %s", key);
@@ -109,7 +106,8 @@ ButtonAction ConfigManager::loadButtonAction(uint8_t index) {
         return ButtonAction::NONE;
     }
 
-    const char* key = getButtonKey(index);
+    char key[BUTTON_KEY_BUFFER_SIZE];
+    getButtonKey(index, key, sizeof(key));
     uint8_t stored = prefs->getUChar(key, static_cast<uint8_t>(ButtonAction::NONE));
 
     if (stored > ButtonAction_MAX) {

@@ -85,19 +85,20 @@ void setup()
     EventEnum::EncoderModeEventTypes initialMode = EncoderModeHelper::fromWheelMode(savedWheelMode);
     encoderModeManager.setMode(initialMode);
 
+    // Initialize button event system
+    static ButtonEventDispatcher buttonEventDispatcher(appState.buttonEventQueue);
+    static ButtonEventHandler buttonEventHandler(appState.buttonEventQueue, &configManager, &bleKeyboard);
+    buttonEventHandler.start();
+
     // Initialize menu system
     static MenuController menuController;
     MenuTree::initMenuTree();
     MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager);
+    MenuTree::initButtonBehaviorActions(&configManager, &buttonEventHandler);
     encoderEventHandler.setMenuController(&menuController);
 
     static AppEventHandler appEventHandler(appState.appEventQueue, &encoderModeManager);
     appEventHandler.start();
-
-    // Initialize button event system
-    static ButtonEventDispatcher buttonEventDispatcher(appState.buttonEventQueue);
-    static ButtonEventHandler buttonEventHandler(appState.buttonEventQueue);
-    buttonEventHandler.start();
 
     static ButtonManager buttonManagerInstance(&buttonEventDispatcher);
     buttonManager = &buttonManagerInstance;

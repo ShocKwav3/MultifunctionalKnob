@@ -32,8 +32,10 @@ public:
      *
      * Saves the mode to NVS and applies it to the mode manager immediately.
      * Mode change takes effect without restart.
+     *
+     * @param context The MenuItem that was selected (unused for wheel mode - mode is fixed at construction)
      */
-    void execute() override;
+    void execute(const MenuItem* context) override;
 
     /**
      * @brief Get confirmation message for the mode change

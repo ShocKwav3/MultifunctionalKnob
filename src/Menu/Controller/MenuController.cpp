@@ -65,6 +65,27 @@ void MenuController::handleSelect() {
 
     if (selected->childCount > 0) {
         // Branch node: enter submenu
+        
+        // DESIGN PATTERN: Shared Menu Items with Dynamic Parent Pointers
+        // ============================================================
+        // All 4 buttons share the same buttonBehaviorItems array (DRY principle).
+        // Static initialization sets parent = Button 1 (default), which would cause
+        // navigation bugs (Button 3 → Mute → Back would return to Button 1).
+        // 
+        // Solution: Update parent pointers dynamically when entering a button submenu.
+        // This ensures Back button correctly returns to the button the user came from.
+        // 
+        // Why not fix in initMenuTree()? Because there's only ONE shared array but
+        // FOUR different button contexts - parent pointer must be context-specific.
+        // This is the correct embedded-friendly solution (no duplication, minimal RAM).
+        if (selected->children == MenuTree::buttonBehaviorItems) {
+            for (uint8_t i = 0; i < MenuTree::BUTTON_BEHAVIOR_COUNT; i++) {
+                // Cast away const to update parent pointer (safe: navigation state is mutable)
+                const_cast<MenuItem*>(&MenuTree::buttonBehaviorItems[i])->parent = selected;
+            }
+            LOG_DEBUG(TAG, "Updated shared button behavior parent pointers to: %s", selected->label);
+        }
+        
         currentItem = selected;
         selectedIndex = 0;
         LOG_DEBUG(TAG, "Entered submenu: %s", selected->label);
@@ -73,7 +94,8 @@ void MenuController::handleSelect() {
         // Leaf node with action: execute
         LOG_INFO(TAG, "Executing action: %s", selected->label);
         MenuEventDispatcher::dispatchItemSelected(selected);
-        selected->action->execute();
+        // Pass currentItem (parent branch) as context for context-aware actions
+        selected->action->execute(currentItem);
     }
 }
 

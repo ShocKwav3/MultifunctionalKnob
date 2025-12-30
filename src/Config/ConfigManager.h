@@ -24,10 +24,11 @@ public:
 private:
     static constexpr const char* NVS_NAMESPACE = "knobkoky";
     static constexpr const char* KEY_WHEEL_MODE = "wheel.mode";
+    static constexpr uint8_t BUTTON_KEY_BUFFER_SIZE = 16;
 
     Preferences* prefs;
     bool initialized;
 
     bool ensureInitialized();
-    const char* getButtonKey(uint8_t index);
+    void getButtonKey(uint8_t index, char* buffer, size_t bufferSize) const;
 };
