@@ -69,6 +69,6 @@ development_status:
   epic-4-retrospective: optional
 
   epic-5: in-progress
-  5-1-create-show-status-action: ready-for-dev
+  5-1-create-show-status-action: done
   5-2-create-show-about-action: ready-for-dev
   epic-5-retrospective: optional

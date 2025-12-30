@@ -1,6 +1,6 @@
 # Story 5.1: Create Show Status Action
 
-Status: in-review
+Status: done
 
 ## Story
 
@@ -13,11 +13,11 @@ so that **I can troubleshoot issues and verify my settings are correct**.
 1. **ShowStatusAction Class:**
    - Create `src/Menu/Action/ShowStatusAction.cpp` and `ShowStatusAction.h`
    - Inherit from `MenuAction`
-   - Constructor accepts `ConfigManager*`, `EncoderModeManager*`, `BleKeyboard*`, `DisplayInterface*`
+   - Constructor accepts `ConfigManager*`, `BleKeyboard*`, `DisplayInterface*`
 
 2. **Execution Logic:**
    - `execute()`:
-     - Call `DisplayInterface::showStatus("Wheel Mode", currentModeName)`
+     - Call `DisplayInterface::showStatus("Wheel Mode", currentModeName)` (read from ConfigManager)
      - Call `DisplayInterface::showStatus("BLE", isConnected ? "Connected" : "Disconnected")`
      - Loop buttons and show assignments
      - (Optional) Show RSSI if available
@@ -36,7 +36,7 @@ so that **I can troubleshoot issues and verify my settings are correct**.
 ### Architecture Compliance
 
 - **Display Interface:** Use `showStatus` method.
-- **Dependencies:** Needs access to managers to read state.
+- **Dependencies:** Uses ConfigManager for persisted state (aligned with distributed state architecture).
 
 ### References
 
