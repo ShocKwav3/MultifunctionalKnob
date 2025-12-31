@@ -29,7 +29,14 @@
 #include "EncoderMode/Manager/EncoderModeManager.h"
 #include "Menu/Controller/MenuController.h"
 #include "Menu/Model/MenuTree.h"
+#include "Menu/Action/ShowStatusAction.h"
+#include "Menu/Action/ShowAboutAction.h"
 #include "Button/ButtonManager.h"
+#include "Display/Task/DisplayTask.h"
+#include "Display/Model/DisplayRequest.h"
+#include "Event/Handler/MenuEventHandler.h"
+#include "Event/Dispatcher/MenuEventDispatcher.h"
+#include "Type/MenuEvent.h"
 #include "AppState.h"
 
 #define SCREEN_WIDTH 128
@@ -65,6 +72,8 @@ void setup()
     appState.encoderInputEventQueue = xQueueCreate(10, sizeof(EncoderInputEvent));
     appState.buttonEventQueue = xQueueCreate(10, sizeof(ButtonEvent));
     appState.appEventQueue = xQueueCreate(10, sizeof(AppEvent));
+    appState.menuEventQueue = xQueueCreate(10, sizeof(MenuEvent));
+    appState.displayRequestQueue = xQueueCreate(10, sizeof(DisplayRequest));
 
     static AppEventDispatcher appDispatcher(appState.appEventQueue);
     static EncoderModeHandlerScroll encoderModeHandlerScroll(&appDispatcher, &bleKeyboard);
@@ -90,11 +99,28 @@ void setup()
     static ButtonEventHandler buttonEventHandler(appState.buttonEventQueue, &configManager, &bleKeyboard);
     buttonEventHandler.start();
 
+    // Initialize display pipeline
+    static DisplayTask displayTask(&DisplayFactory::getDisplay());
+    appState.displayRequestQueue = displayTask.init(10);
+    displayTask.start(2048, 1);
+
+    // Initialize menu event pipeline
+    MenuEventDispatcher::init(appState.menuEventQueue);
+    static MenuEventHandler menuEventHandler(appState.menuEventQueue, appState.displayRequestQueue);
+    menuEventHandler.start(2048, 1);
+
     // Initialize menu system
     static MenuController menuController;
     MenuTree::initMenuTree();
     MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager);
     MenuTree::initButtonBehaviorActions(&configManager, &buttonEventHandler);
+    
+    // Initialize Device Status and About actions
+    static ShowStatusAction showStatusAction(&configManager, &bleKeyboard, &DisplayFactory::getDisplay());
+    static ShowAboutAction showAboutAction(&DisplayFactory::getDisplay());
+    MenuTree::setDeviceStatusAction(&showStatusAction);
+    MenuTree::setAboutAction(&showAboutAction);
+    
     encoderEventHandler.setMenuController(&menuController);
 
     static AppEventHandler appEventHandler(appState.appEventQueue, &encoderModeManager);
