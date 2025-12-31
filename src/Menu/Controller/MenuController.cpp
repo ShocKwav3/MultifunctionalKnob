@@ -8,6 +8,7 @@ static constexpr const char* TAG = "MenuController";
 
 MenuController::MenuController()
     : active(false)
+    , viewing(false)
     , currentItem(nullptr)
     , selectedIndex(0) {
 }
@@ -16,8 +17,17 @@ bool MenuController::isActive() const {
     return active;
 }
 
+bool MenuController::canNavigate() const {
+    return active && !viewing && currentItem != nullptr && currentItem->childCount > 0;
+}
+
+bool MenuController::canSelect() const {
+    return active && !viewing && currentItem != nullptr && currentItem->childCount > 0;
+}
+
 void MenuController::activate() {
     active = true;
+    viewing = false;
     currentItem = MenuTree::getRoot();
     selectedIndex = 0;
 
@@ -27,6 +37,7 @@ void MenuController::activate() {
 
 void MenuController::deactivate() {
     active = false;
+    viewing = false;
     currentItem = nullptr;
     selectedIndex = 0;
 
@@ -35,7 +46,7 @@ void MenuController::deactivate() {
 }
 
 void MenuController::handleRotation(int8_t delta) {
-    if (!active || currentItem == nullptr || currentItem->childCount == 0) {
+    if (!canNavigate()) {
         return;
     }
 
@@ -57,7 +68,7 @@ void MenuController::handleRotation(int8_t delta) {
 }
 
 void MenuController::handleSelect() {
-    if (!active || currentItem == nullptr || currentItem->childCount == 0) {
+    if (!canSelect()) {
         return;
     }
 
@@ -96,11 +107,27 @@ void MenuController::handleSelect() {
         MenuEventDispatcher::dispatchItemSelected(selected);
         // Pass currentItem (parent branch) as context for context-aware actions
         selected->action->execute(currentItem);
+        
+        // If action returns nullptr for confirmation (Device Status, About),
+        // enter viewing mode to prevent rotation from overwriting the display
+        const char* confirmation = selected->action->getConfirmationMessage();
+        if (confirmation == nullptr) {
+            viewing = true;
+            LOG_DEBUG(TAG, "Entered viewing mode");
+        }
     }
 }
 
 void MenuController::handleBack() {
     if (!active) {
+        return;
+    }
+
+    // If in viewing mode, exit viewing mode and redisplay menu
+    if (viewing) {
+        viewing = false;
+        LOG_DEBUG(TAG, "Exited viewing mode");
+        emitNavigationChanged();
         return;
     }
 
