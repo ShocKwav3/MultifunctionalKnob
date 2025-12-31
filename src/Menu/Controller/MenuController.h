@@ -74,8 +74,21 @@ public:
 
 private:
     bool active;
+    bool viewing;                 ///< True when viewing a leaf screen (Device Status, About)
     const MenuItem* currentItem;  ///< Current menu branch (parent of visible items)
     uint8_t selectedIndex;        ///< Index of selected child
+
+    /**
+     * @brief Check if menu can respond to navigation (rotation)
+     * @return true if active, not viewing, and has navigable items
+     */
+    bool canNavigate() const;
+
+    /**
+     * @brief Check if menu can respond to selection (short click)
+     * @return true if active, not viewing, and has selectable items
+     */
+    bool canSelect() const;
 
     void emitNavigationChanged();
     void emitActivated();
