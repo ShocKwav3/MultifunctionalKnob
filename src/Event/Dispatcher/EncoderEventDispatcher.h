@@ -14,5 +14,5 @@ public:
 
 private:
     QueueHandle_t eventQueue;
-    int32_t lastValue = 0;
+    int32_t lastValue = 500;  // Match encoder initial value from EncoderDriver::begin()
 };

@@ -31,8 +31,9 @@ void EncoderDriver::begin() {
 
     encoderInstance->begin();
     encoderInstance->setup(readEncoderISR);
-    encoderInstance->setBoundaries(0, 1000, false);
+    encoderInstance->setBoundaries(0, 1000, true);  // Enable circular mode for infinite rotation
     encoderInstance->setAcceleration(250);
+    encoderInstance->reset(500);  // Initialize to middle of range so both directions work
 
     xTaskCreate(encoderTask, "EncoderDriverTask", 4096, nullptr, 1, nullptr);
 }
@@ -53,7 +54,7 @@ void EncoderDriver::encoderTask(void* pvParameters) {
 }
 
 void EncoderDriver::runLoop() {
-    static int32_t lastValue = 0;
+    static int32_t lastValue = 500;  // Match initial encoder position
     int32_t current = encoderInstance->readEncoder();
 
     if (current != lastValue) {
