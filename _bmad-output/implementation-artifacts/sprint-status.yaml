@@ -1,0 +1,88 @@
+# generated: 2026-01-02
+# project: UtilityButtonsWithKnobUSB
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-02
+project: UtilityButtonsWithKnobUSB
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 6: Codebase Cleanup & Consolidation (FR1-FR5)
+  epic-6: in-progress
+  6-1-consolidate-device-name-as-single-source-of-truth: ready-for-dev
+  6-2-consolidate-button-names-with-position-based-identifiers: ready-for-dev
+  6-3-evaluate-and-optimize-button-input-handling: ready-for-dev
+  epic-6-retrospective: optional
+
+  # Epic 7: Wheel Direction Control (FR6-FR9)
+  epic-7: in-progress
+  7-1-restructure-wheel-behavior-menu-with-sub-items: ready-for-dev
+  7-2-add-wheel-direction-setting-with-nvs-persistence: ready-for-dev
+  7-3-apply-wheel-direction-to-encoder-input-processing: ready-for-dev
+  epic-7-retrospective: optional
+
+  # Epic 8: Bluetooth Menu Control (FR10-FR12)
+  epic-8: in-progress
+  8-1-add-bluetooth-menu-with-pair-and-disconnect-options: ready-for-dev
+  8-2-implement-bluetooth-pairing-action: ready-for-dev
+  8-3-implement-bluetooth-disconnect-action: ready-for-dev
+  epic-8-retrospective: optional
+
+  # Epic 9: Physical OLED Display (FR13-FR18)
+  epic-9: in-progress
+  9-1-implement-oleddisplay-driver-for-128x32-ssd1306: ready-for-dev
+  9-2-create-normal-mode-status-screen-with-icons: ready-for-dev
+  9-3-implement-bluetooth-icon-states-solid-flashing-none: ready-for-dev
+  9-4-create-menu-mode-display-with-status-bar: ready-for-dev
+  9-5-add-display-power-control-menu-option: ready-for-dev
+  9-6-implement-display-wake-on-menu-activation: ready-for-dev
+  epic-9-retrospective: optional
+
+  # Epic 10: Power Management & Deep Sleep (FR19-FR22) - Depends on Epic 9
+  epic-10: in-progress
+  10-1-implement-inactivity-timer-with-input-reset: ready-for-dev
+  10-2-display-sleep-warning-at-4-minutes-idle: ready-for-dev
+  10-3-enter-deep-sleep-after-5-minutes-inactivity: ready-for-dev
+  10-4-configure-wheel-button-as-wake-source: ready-for-dev
+  10-5-auto-reconnect-bluetooth-after-wake: ready-for-dev
+  epic-10-retrospective: optional
+
+  # Epic 11: LED Strip Control (FR23-FR28)
+  epic-11: in-progress
+  11-1-add-fastled-library-and-led-menu-structure: ready-for-dev
+  11-2-implement-led-power-toggle-with-nvs-persistence: ready-for-dev
+  11-3-implement-wheel-controlled-brightness-with-live-preview: ready-for-dev
+  11-4-implement-led-mode-selection-with-nvs-persistence: ready-for-dev
+  11-5-implement-led-color-selection-with-nvs-persistence: ready-for-dev
+  epic-11-retrospective: optional

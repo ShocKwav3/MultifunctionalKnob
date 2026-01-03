@@ -27,10 +27,11 @@ workflow_status:
   document-project: _bmad-output/index.md
 
   # Phase 0: Discovery (Optional - user selected brainstorm)
-  brainstorm-project: _bmad-output/analysis/brainstorming-session-2025-12-14.md
+  brainstorm-project: _bmad-output/analysis/brainstorming-session-2026-01-01.md
+  product-brief: _bmad-output/project-planning-artifacts/product-brief-UtilityButtonsWithKnobUSB-2026-01-01.md
 
   # Phase 1: Planning
-  prd: _bmad-output/prd/index.md
+  prd: _bmad-output/project-planning-artifacts/prd.md
   create-ux-design: skipped
 
   # Phase 2: Solutioning
