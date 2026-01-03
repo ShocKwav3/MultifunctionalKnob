@@ -10,10 +10,10 @@ struct ButtonConfig {
 };
 
 inline constexpr ButtonConfig BUTTONS[] = {
-    {3, "Button 1", true},
-    {4, "Button 2", true},
-    {5, "Button 3", true},
-    {9, "Button 4", true}  // GPIO 8 is strapping pin, using GPIO 9
+    {3, "Top Left", true},
+    {4, "Top Right", true},
+    {5, "Bottom Left", true},
+    {9, "Bottom Right", true}  // GPIO 8 is strapping pin, using GPIO 9
 };
 
 inline constexpr size_t BUTTON_COUNT = sizeof(BUTTONS) / sizeof(BUTTONS[0]);

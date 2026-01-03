@@ -3,6 +3,7 @@
 #include "MenuItem.h"
 #include "Menu/Action/SelectWheelModeAction.h"
 #include "Menu/Action/SetButtonBehaviorAction.h"
+#include "Config/button_config.h"
 
 // Forward declaration
 class ButtonEventHandler;
@@ -26,13 +27,13 @@ class ButtonEventHandler;
  *   - Volume (leaf - SelectWheelModeAction)
  *   - Zoom (leaf - SelectWheelModeAction)
  * - Button Config (branch)
- *   - Button 1 (branch)
+ *   - Top Left (branch)
  *     - None, Mute, Play, Pause, Next, Previous (leaf - SetButtonBehaviorAction)
- *   - Button 2 (branch)
+ *   - Top Right (branch)
  *     - None, Mute, Play, Pause, Next, Previous (leaf - SetButtonBehaviorAction)
- *   - Button 3 (branch)
+ *   - Bottom Left (branch)
  *     - None, Mute, Play, Pause, Next, Previous (leaf - SetButtonBehaviorAction)
- *   - Button 4 (branch)
+ *   - Bottom Right (branch)
  *     - None, Mute, Play, Pause, Next, Previous (leaf - SetButtonBehaviorAction)
  * - Device Status (leaf - ShowStatusAction)
  * - About (leaf - ShowAboutAction)
@@ -68,19 +69,19 @@ inline MenuItem buttonBehaviorItems[] = {
 inline constexpr uint8_t BUTTON_BEHAVIOR_COUNT = 6;
 
 // Button Config submenu (branch nodes - all reference the same shared buttonBehaviorItems)
-inline MenuItem buttonConfigSubmenu[] = {
-    { "Button 1", nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr },
-    { "Button 2", nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr },
-    { "Button 3", nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr },
-    { "Button 4", nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr }
+// Labels set at runtime from BUTTONS[].label in initMenuTree()
+// Array size matches BUTTON_COUNT to prevent overflow if button count changes
+inline MenuItem buttonConfigSubmenu[BUTTON_COUNT] = {
+    { nullptr, nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr },
+    { nullptr, nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr },
+    { nullptr, nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr },
+    { nullptr, nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr }
 };
-
-inline constexpr uint8_t BUTTON_CONFIG_COUNT = 4;
 
 // Main menu items
 inline MenuItem mainMenu[] = {
     { "Wheel Behavior", nullptr, wheelBehaviorSubmenu, WHEEL_BEHAVIOR_COUNT, nullptr },
-    { "Button Config",  nullptr, buttonConfigSubmenu, BUTTON_CONFIG_COUNT, nullptr },
+    { "Button Config",  nullptr, buttonConfigSubmenu, BUTTON_COUNT, nullptr },
     { "Device Status",  nullptr, nullptr, 0, nullptr },
     { "About",          nullptr, nullptr, 0, nullptr }
 };
@@ -99,9 +100,10 @@ namespace Index {
 }
 
 /**
- * @brief Initialize parent pointers in the menu tree
+ * @brief Initialize parent pointers and button labels in the menu tree
  *
- * Must be called once at startup to establish parent-child relationships.
+ * Must be called once at startup to establish parent-child relationships
+ * and set button labels from button_config.h as single source of truth.
  * Parent pointers cannot be constexpr due to circular reference limitations.
  */
 inline void initMenuTree() {
@@ -115,13 +117,15 @@ inline void initMenuTree() {
         wheelBehaviorSubmenu[i].parent = &mainMenu[Index::WHEEL_BEHAVIOR];
     }
 
-    // Set parent for button config submenu items (Button 1-4)
-    for (uint8_t i = 0; i < BUTTON_CONFIG_COUNT; i++) {
+    // Set parent and labels for button config submenu items
+    // Labels come from BUTTONS[].label (single source of truth)
+    for (uint8_t i = 0; i < BUTTON_COUNT; i++) {
         buttonConfigSubmenu[i].parent = &mainMenu[Index::BUTTON_CONFIG];
+        buttonConfigSubmenu[i].label = BUTTONS[i].label;
     }
 
     // Set parent for shared button behavior items
-    // Note: Parent is set to buttonConfigSubmenu[0] (Button 1) as default
+    // Note: Parent is set to buttonConfigSubmenu[0] (Top Left) as default
     // This will be dynamically overridden during navigation in MenuController
     // to reflect which button submenu is currently active
     for (uint8_t i = 0; i < BUTTON_BEHAVIOR_COUNT; i++) {

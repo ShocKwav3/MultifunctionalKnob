@@ -12,7 +12,13 @@ SetButtonBehaviorAction::SetButtonBehaviorAction(ButtonAction action, ConfigMana
 
 void SetButtonBehaviorAction::execute(const MenuItem* context) {
     // Extract button index from menu navigation context
-    uint8_t buttonIndex = extractButtonIndex(context);
+    int8_t buttonIndex = extractButtonIndex(context);
+    
+    // Validate button index before proceeding
+    if (buttonIndex < 0 || buttonIndex >= BUTTON_COUNT) {
+        LOG_ERROR("SetButtonBehavior", "Invalid button index %d - aborting action assignment", buttonIndex);
+        return;
+    }
 
     // Persist action to NVS
     Error saveResult = configManager->saveButtonAction(buttonIndex, action);
@@ -27,54 +33,35 @@ void SetButtonBehaviorAction::execute(const MenuItem* context) {
         LOG_DEBUG("SetButtonBehavior", "Invalidated button action cache");
     }
     
-    LOG_INFO("SetButtonBehavior", "Button %d set to: %s", buttonIndex, buttonActionToString(action));
+    LOG_INFO("SetButtonBehavior", "%s set to: %s", BUTTONS[buttonIndex].label, buttonActionToString(action));
 }
 
-uint8_t SetButtonBehaviorAction::extractButtonIndex(const MenuItem* context) const {
+int8_t SetButtonBehaviorAction::extractButtonIndex(const MenuItem* context) const {
     // Context is the parent branch (currentItem from MenuController)
-    // It should be one of the button submenu items: "Button 1", "Button 2", "Button 3", "Button 4"
+    // It should be one of the button submenu items with labels from BUTTONS[].label
     
     // Null pointer validation
     if (!context) {
-        LOG_ERROR("SetButtonBehavior", "Null menu context - defaulting to button 0");
-        return 0;
+        LOG_ERROR("SetButtonBehavior", "Null menu context - returning invalid index");
+        return -1;
     }
     
     if (!context->label) {
-        LOG_ERROR("SetButtonBehavior", "Menu context has null label - defaulting to button 0");
-        return 0;
+        LOG_ERROR("SetButtonBehavior", "Menu context has null label - returning invalid index");
+        return -1;
     }
     
-    // Validate label format: must start with "Button "
-    const char* expectedPrefix = "Button ";
-    const size_t prefixLen = 7; // strlen("Button ")
-    
-    if (strncmp(context->label, expectedPrefix, prefixLen) != 0) {
-        LOG_ERROR("SetButtonBehavior", "Invalid label format '%s' (expected 'Button X') - defaulting to button 0", context->label);
-        return 0;
+    // Match label against BUTTONS[].label to find button index
+    for (uint8_t i = 0; i < BUTTON_COUNT; i++) {
+        if (strcmp(context->label, BUTTONS[i].label) == 0) {
+            LOG_DEBUG("SetButtonBehavior", "Matched button index %d from label: %s", i, context->label);
+            return i;
+        }
     }
     
-    // Extract and validate the button number character
-    char buttonChar = context->label[prefixLen];
-    
-    // Validate digit range '1' to '4'
-    if (buttonChar < '1' || buttonChar > '0' + BUTTON_COUNT) {
-        LOG_ERROR("SetButtonBehavior", "Button number '%c' out of valid range (1-%d) in label '%s' - defaulting to button 0", 
-                  buttonChar, BUTTON_COUNT, context->label);
-        return 0;
-    }
-    
-    // Ensure the string ends after the digit (no trailing characters)
-    if (context->label[prefixLen + 1] != '\0') {
-        LOG_ERROR("SetButtonBehavior", "Label '%s' has unexpected trailing characters - defaulting to button 0", context->label);
-        return 0;
-    }
-    
-    // Convert '1'-'4' to 0-3 index
-    uint8_t index = buttonChar - '1';
-    
-    LOG_DEBUG("SetButtonBehavior", "Extracted button index %d from label: %s", index, context->label);
-    return index;
+    // No match found - log error and return invalid index
+    LOG_ERROR("SetButtonBehavior", "Label '%s' does not match any button label - returning invalid index", context->label);
+    return -1;
 }
 
 const char* SetButtonBehaviorAction::getConfirmationMessage() {
