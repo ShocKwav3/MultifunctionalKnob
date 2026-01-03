@@ -2,6 +2,7 @@
 
 #include "MenuAction.h"
 #include "Enum/ButtonActionEnum.h"
+#include <cstdint>
 
 // Forward declarations
 class ConfigManager;
@@ -16,7 +17,7 @@ class ButtonEventHandler;
  * from the parent menu item label at runtime.
  *
  * Encapsulates button action assignment:
- * 1. Extract button index from menu context (parent label "Button 1" → index 0)
+ * 1. Extract button index by matching menu context label to BUTTONS[].label
  * 2. Persist the button action to NVS via ConfigManager
  * 3. Invalidate ButtonEventHandler cache to force reload on next button press
  *
@@ -64,11 +65,10 @@ private:
     /**
      * @brief Extract button index from menu navigation context
      *
-     * Walks up the parent chain to find the button submenu parent (e.g., "Button 1"),
-     * then extracts the numeric index from the label.
+     * Matches the context label against BUTTONS[].label to determine button index.
      *
      * @param context The selected MenuItem
-     * @return Button index (0-3), or 0 if unable to determine
+     * @return Button index (0 to BUTTON_COUNT-1), or -1 if unable to determine
      */
-    uint8_t extractButtonIndex(const MenuItem* context) const;
+    int8_t extractButtonIndex(const MenuItem* context) const;
 };
