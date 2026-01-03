@@ -2,6 +2,8 @@
 #include "Event/Dispatcher/ButtonEventDispatcher.h"
 #include "Arduino.h"
 
+// TODO (Story 6.3): Move polling to dedicated FreeRTOS task for consistency with encoder button pattern
+
 ButtonManager::ButtonManager(ButtonEventDispatcher* dispatcher)
     : eventDispatcher(dispatcher), buttonStates{} {}
 
