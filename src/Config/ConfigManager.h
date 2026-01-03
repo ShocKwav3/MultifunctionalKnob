@@ -4,6 +4,7 @@
 #include "Enum/ErrorEnum.h"
 #include "Enum/WheelModeEnum.h"
 #include "Enum/ButtonActionEnum.h"
+#include "Config/device_config.h"
 
 class ConfigManager {
 public:
@@ -22,7 +23,6 @@ public:
     Error clearAll();
 
 private:
-    static constexpr const char* NVS_NAMESPACE = "knobkoky";
     static constexpr const char* KEY_WHEEL_MODE = "wheel.mode";
     static constexpr uint8_t BUTTON_KEY_BUFFER_SIZE = 16;
 
