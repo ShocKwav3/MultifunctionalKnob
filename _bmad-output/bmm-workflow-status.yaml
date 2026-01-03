@@ -15,7 +15,7 @@
 #   - {file-path}: File created/found (e.g., "_bmad-output/product-brief.md")
 #   - skipped: Optional/conditional workflow that was skipped
 
-generated: "2025-12-14T10:55:00Z"
+generated: "2026-01-03T00:00:00Z"
 project: "UtilityButtonsWithKnobUSB"
 project_type: "Embedded/IoT - ESP32-C3 Bluetooth HID Device"
 selected_track: "bmad-method"
@@ -36,10 +36,10 @@ workflow_status:
 
   # Phase 2: Solutioning
   create-architecture: _bmad-output/architecture/index.md
-  create-epics-and-stories: _bmad-output/epics/index.md
+  create-epics-and-stories: _bmad-output/project-planning-artifacts/epics.md
   test-design: skipped
   validate-architecture: skipped
-  implementation-readiness: _bmad-output/implementation-readiness-report-2025-12-16.md
+  implementation-readiness: _bmad-output/project-planning-artifacts/implementation-readiness-report-2026-01-02.md
 
   # Phase 3: Implementation
-  sprint-planning: _bmad-output/sprint-artifacts/sprint-status.yaml
+  implementation-artifacts: _bmad-output/implementation-artifacts/
