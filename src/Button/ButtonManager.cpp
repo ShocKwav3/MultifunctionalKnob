@@ -2,6 +2,13 @@
 #include "Event/Dispatcher/ButtonEventDispatcher.h"
 #include "Arduino.h"
 
+// ButtonManager uses FreeRTOS task-based polling (Story 6.3).
+// Decision rationale:
+// - Consistent with encoder button pattern (both use task-based polling)
+// - Predictable 10ms polling interval independent of main loop
+// - Simple implementation (no ISR complexity)
+// - Clean separation from main loop
+
 ButtonManager::ButtonManager(ButtonEventDispatcher* dispatcher)
     : eventDispatcher(dispatcher), buttonStates{} {}
 
@@ -9,6 +16,29 @@ void ButtonManager::init() {
     for (size_t i = 0; i < BUTTON_COUNT; i++) {
         pinMode(BUTTONS[i].pin, BUTTONS[i].activeLow ? INPUT_PULLUP : INPUT_PULLDOWN);
         buttonStates[i] = {false, false, 0};
+    }
+
+    // Create dedicated FreeRTOS task for button polling
+    BaseType_t taskCreated = xTaskCreate(
+        buttonTask,           // Task function
+        "ButtonTask",         // Name
+        2048,                 // Stack size (match encoder pattern)
+        this,                 // Pass ButtonManager instance
+        1,                    // Priority (same as encoder)
+        nullptr              // Task handle (not needed)
+    );
+    
+    if (taskCreated != pdPASS) {
+        Serial.println("ERROR: Failed to create ButtonTask - insufficient memory");
+        // Task creation failed - buttons will not work
+    }
+}
+
+void ButtonManager::buttonTask(void* pvParameters) {
+    ButtonManager* manager = (ButtonManager*)pvParameters;
+    while (true) {
+        manager->poll();      // Existing poll logic unchanged
+        vTaskDelay(pdMS_TO_TICKS(10));  // 10ms interval (match encoder)
     }
 }
 

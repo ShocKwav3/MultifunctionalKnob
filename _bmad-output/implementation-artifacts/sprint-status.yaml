@@ -42,7 +42,7 @@ development_status:
   epic-6: in-progress
   6-1-consolidate-device-name-as-single-source-of-truth: done
   6-2-consolidate-button-names-with-position-based-identifiers: done
-  6-3-evaluate-and-optimize-button-input-handling: ready-for-dev
+  6-3-evaluate-and-optimize-button-input-handling: done
   epic-6-retrospective: optional
 
   # Epic 7: Wheel Direction Control (FR6-FR9)

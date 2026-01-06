@@ -49,7 +49,6 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 BleKeyboard bleKeyboard(BLUETOOTH_DEVICE_NAME, BLUETOOTH_DEVICE_MANUFACTURER, BLUETOOTH_DEVICE_BATTERY_LEVEL_DEFAULT);
 EncoderDriver* encoderDriver;
-ButtonManager* buttonManager = nullptr;  // Pointer to static instance
 AppState appState;
 
 // Configuration management
@@ -127,8 +126,7 @@ void setup()
     appEventHandler.start();
 
     static ButtonManager buttonManagerInstance(&buttonEventDispatcher);
-    buttonManager = &buttonManagerInstance;
-    buttonManager->init();
+    buttonManagerInstance.init();
 
     static EncoderEventDispatcher encoderEventDispatcher(appState.encoderInputEventQueue);
     encoderDriver = EncoderDriver::getInstance(
@@ -161,8 +159,6 @@ void setup()
 
 void loop()
 {
-    // Poll buttons for state changes
-    if (buttonManager) {
-        buttonManager->poll();
-    }
+    // Button polling now handled by dedicated FreeRTOS task in ButtonManager (Story 6.3)
+    // Empty loop - all input handling occurs in event-driven tasks
 }
