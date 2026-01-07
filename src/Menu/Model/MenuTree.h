@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MenuItem.h"
+#include "Enum/WheelModeEnum.h"
 #include "Menu/Action/SelectWheelModeAction.h"
 #include "Menu/Action/SetButtonBehaviorAction.h"
 #include "Config/button_config.h"
@@ -23,9 +24,13 @@ class ButtonEventHandler;
  *
  * Menu Structure:
  * - Wheel Behavior (branch)
- *   - Scroll (leaf - SelectWheelModeAction)
- *   - Volume (leaf - SelectWheelModeAction)
- *   - Zoom (leaf - SelectWheelModeAction)
+ *   - Wheel Mode (branch)
+ *     - Scroll (leaf - SelectWheelModeAction)
+ *     - Volume (leaf - SelectWheelModeAction)
+ *     - Zoom (leaf - SelectWheelModeAction)
+ *   - Wheel Direction (branch)
+ *     - Normal (leaf - placeholder, no action)
+ *     - Reversed (leaf - placeholder, no action)
  * - Button Config (branch)
  *   - Top Left (branch)
  *     - None, Mute, Play, Pause, Next, Previous (leaf - SetButtonBehaviorAction)
@@ -43,17 +48,36 @@ namespace MenuTree {
 // Forward declarations for parent references
 extern MenuItem mainMenu[];
 extern MenuItem wheelBehaviorSubmenu[];
+extern MenuItem wheelModeSubmenu[];
+extern MenuItem wheelDirectionSubmenu[];
 extern MenuItem buttonConfigSubmenu[];
 extern MenuItem buttonBehaviorItems[];
 
-// Wheel Behavior submenu items (leaf nodes with actions set at runtime)
-inline MenuItem wheelBehaviorSubmenu[] = {
-    { "Scroll",  nullptr, nullptr, 0, nullptr },
-    { "Volume",  nullptr, nullptr, 0, nullptr },
-    { "Zoom",    nullptr, nullptr, 0, nullptr }
+// Wheel Mode submenu items (leaf nodes with actions set at runtime)
+// Labels derived from WheelMode enum to ensure alignment
+inline MenuItem wheelModeSubmenu[] = {
+    { wheelModeToDisplayString(WheelMode::SCROLL),  nullptr, nullptr, 0, nullptr },
+    { wheelModeToDisplayString(WheelMode::VOLUME),  nullptr, nullptr, 0, nullptr },
+    { wheelModeToDisplayString(WheelMode::ZOOM),    nullptr, nullptr, 0, nullptr }
 };
 
-inline constexpr uint8_t WHEEL_BEHAVIOR_COUNT = 3;
+inline constexpr uint8_t WHEEL_MODE_COUNT = 3;
+
+// Wheel Direction submenu items (placeholder items for Story 7.2)
+inline MenuItem wheelDirectionSubmenu[] = {
+    { "Normal",   nullptr, nullptr, 0, nullptr },
+    { "Reversed", nullptr, nullptr, 0, nullptr }
+};
+
+inline constexpr uint8_t WHEEL_DIRECTION_COUNT = 2;
+
+// Wheel Behavior submenu (branch nodes - parent menu)
+inline MenuItem wheelBehaviorSubmenu[] = {
+    { "Wheel Mode",      nullptr, wheelModeSubmenu,      WHEEL_MODE_COUNT,      nullptr },
+    { "Wheel Direction", nullptr, wheelDirectionSubmenu, WHEEL_DIRECTION_COUNT, nullptr }
+};
+
+inline constexpr uint8_t WHEEL_BEHAVIOR_COUNT = 2;
 
 // Shared button behavior items - all buttons have the same 6 options
 // Parent pointers set at runtime in initMenuTree() based on which button submenu references this
@@ -112,9 +136,19 @@ inline void initMenuTree() {
         mainMenu[i].parent = &root;
     }
 
-    // Set parent for wheel behavior submenu items
+    // Set parent for wheel behavior submenu items (Wheel Mode, Wheel Direction)
     for (uint8_t i = 0; i < WHEEL_BEHAVIOR_COUNT; i++) {
         wheelBehaviorSubmenu[i].parent = &mainMenu[Index::WHEEL_BEHAVIOR];
+    }
+
+    // Set parent for wheel mode submenu items (Scroll, Volume, Zoom)
+    for (uint8_t i = 0; i < WHEEL_MODE_COUNT; i++) {
+        wheelModeSubmenu[i].parent = &wheelBehaviorSubmenu[0];  // Parent is "Wheel Mode" item
+    }
+
+    // Set parent for wheel direction submenu items (Normal, Reversed)
+    for (uint8_t i = 0; i < WHEEL_DIRECTION_COUNT; i++) {
+        wheelDirectionSubmenu[i].parent = &wheelBehaviorSubmenu[1];  // Parent is "Wheel Direction" item
     }
 
     // Set parent and labels for button config submenu items
@@ -134,13 +168,13 @@ inline void initMenuTree() {
 }
 
 /**
- * @brief Set action for a wheel behavior menu item
- * @param index Wheel behavior index (0=Scroll, 1=Volume, 2=Zoom)
+ * @brief Set action for a wheel mode menu item
+ * @param index Wheel mode index (0=Scroll, 1=Volume, 2=Zoom)
  * @param action Pointer to MenuAction instance (must outlive menu)
  */
-inline void setWheelBehaviorAction(uint8_t index, MenuAction* action) {
-    if (index < WHEEL_BEHAVIOR_COUNT) {
-        wheelBehaviorSubmenu[index].action = action;
+inline void setWheelModeAction(uint8_t index, MenuAction* action) {
+    if (index < WHEEL_MODE_COUNT) {
+        wheelModeSubmenu[index].action = action;
     }
 }
 
@@ -201,10 +235,13 @@ inline void initWheelBehaviorActions(ConfigManager* config, EncoderModeManager* 
     static SelectWheelModeAction volumeAction(WheelMode::VOLUME, config, modeMgr);
     static SelectWheelModeAction zoomAction(WheelMode::ZOOM, config, modeMgr);
 
-    // Assign actions to menu items
-    setWheelBehaviorAction(0, &scrollAction);   // Scroll
-    setWheelBehaviorAction(1, &volumeAction);   // Volume
-    setWheelBehaviorAction(2, &zoomAction);     // Zoom
+    // Assign actions to wheel mode submenu items
+    // Use WheelMode enum values to ensure alignment with menu labels
+    setWheelModeAction(static_cast<uint8_t>(WheelMode::SCROLL), &scrollAction);
+    setWheelModeAction(static_cast<uint8_t>(WheelMode::VOLUME), &volumeAction);
+    setWheelModeAction(static_cast<uint8_t>(WheelMode::ZOOM), &zoomAction);
+
+    // Wheel Direction submenu actions remain nullptr (to be implemented in Story 7.2)
 }
 
 /**
