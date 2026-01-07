@@ -18,3 +18,12 @@ inline const char* wheelModeToString(WheelMode m) {
         default:                return "UNKNOWN";
     }
 }
+
+inline const char* wheelModeToDisplayString(WheelMode m) {
+    switch (m) {
+        case WheelMode::SCROLL: return "Scroll";
+        case WheelMode::VOLUME: return "Volume";
+        case WheelMode::ZOOM:   return "Zoom";
+        default:                return "Unknown";
+    }
+}
