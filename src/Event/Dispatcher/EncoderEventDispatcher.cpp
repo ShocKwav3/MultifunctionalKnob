@@ -1,7 +1,9 @@
 #include "EncoderEventDispatcher.h"
+#include "Config/ConfigManager.h"
+#include "Enum/WheelDirection.h"
 
-EncoderEventDispatcher::EncoderEventDispatcher(QueueHandle_t queue)
-    : eventQueue(queue) {}
+EncoderEventDispatcher::EncoderEventDispatcher(QueueHandle_t queue, ConfigManager* configManager)
+    : eventQueue(queue), configManager(configManager) {}
 
 void EncoderEventDispatcher::onEncoderValueChange(int32_t newValue) {
     // Encoder boundaries: 0-1000 with circular mode enabled
@@ -19,6 +21,11 @@ void EncoderEventDispatcher::onEncoderValueChange(int32_t newValue) {
     } else if (delta < -WRAP_THRESHOLD) {
         // Wrapped forward: 998 -> 5 should be +7, not -993
         delta = delta + RANGE;
+    }
+    
+    // Apply wheel direction inversion if configured
+    if (configManager && configManager->getWheelDirection() == WheelDirection::REVERSED) {
+        delta = -delta;
     }
     
     lastValue = newValue;
