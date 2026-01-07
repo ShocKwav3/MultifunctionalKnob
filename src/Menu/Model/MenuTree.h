@@ -42,6 +42,9 @@ class ButtonEventHandler;
  *     - None, Mute, Play, Pause, Next, Previous (leaf - SetButtonBehaviorAction)
  *   - Bottom Right (branch)
  *     - None, Mute, Play, Pause, Next, Previous (leaf - SetButtonBehaviorAction)
+ * - Bluetooth (branch)
+ *   - Pair (leaf - placeholder, Story 8.2)
+ *   - Disconnect (leaf - placeholder, Story 8.3)
  * - Device Status (leaf - ShowStatusAction)
  * - About (leaf - ShowAboutAction)
  */
@@ -53,6 +56,7 @@ extern MenuItem wheelBehaviorSubmenu[];
 extern MenuItem wheelModeSubmenu[];
 extern MenuItem wheelDirectionSubmenu[];
 extern MenuItem buttonConfigSubmenu[];
+extern MenuItem bluetoothSubmenu[];
 extern MenuItem buttonBehaviorItems[];
 
 // Wheel Mode submenu items (leaf nodes with actions set at runtime)
@@ -96,6 +100,14 @@ inline MenuItem buttonBehaviorItems[] = {
 
 inline constexpr uint8_t BUTTON_BEHAVIOR_COUNT = 6;
 
+// Bluetooth submenu items (leaf nodes with actions set at runtime - Stories 8.2 and 8.3)
+inline MenuItem bluetoothSubmenu[] = {
+    { "Pair",       nullptr, nullptr, 0, nullptr },  // Action filled in Story 8.2
+    { "Disconnect", nullptr, nullptr, 0, nullptr }   // Action filled in Story 8.3
+};
+
+inline constexpr uint8_t BLUETOOTH_SUBMENU_COUNT = 2;
+
 // Button Config submenu (branch nodes - all reference the same shared buttonBehaviorItems)
 // Labels set at runtime from BUTTONS[].label in initMenuTree()
 // Array size matches BUTTON_COUNT to prevent overflow if button count changes
@@ -109,12 +121,13 @@ inline MenuItem buttonConfigSubmenu[BUTTON_COUNT] = {
 // Main menu items
 inline MenuItem mainMenu[] = {
     { "Wheel Behavior", nullptr, wheelBehaviorSubmenu, WHEEL_BEHAVIOR_COUNT, nullptr },
-    { "Button Config",  nullptr, buttonConfigSubmenu, BUTTON_COUNT, nullptr },
+    { "Button Config",   nullptr, buttonConfigSubmenu, BUTTON_COUNT, nullptr },
+    { "Bluetooth",      nullptr, bluetoothSubmenu, BLUETOOTH_SUBMENU_COUNT, nullptr },
     { "Device Status",  nullptr, nullptr, 0, nullptr },
     { "About",          nullptr, nullptr, 0, nullptr }
 };
 
-inline constexpr uint8_t MAIN_MENU_COUNT = 4;
+inline constexpr uint8_t MAIN_MENU_COUNT = 5;
 
 // Root node representing the main menu container
 inline MenuItem root = { "Menu", nullptr, mainMenu, MAIN_MENU_COUNT, nullptr };
@@ -123,8 +136,9 @@ inline MenuItem root = { "Menu", nullptr, mainMenu, MAIN_MENU_COUNT, nullptr };
 namespace Index {
     inline constexpr uint8_t WHEEL_BEHAVIOR = 0;
     inline constexpr uint8_t BUTTON_CONFIG = 1;
-    inline constexpr uint8_t DEVICE_STATUS = 2;
-    inline constexpr uint8_t ABOUT = 3;
+    inline constexpr uint8_t BLUETOOTH = 2;
+    inline constexpr uint8_t DEVICE_STATUS = 3;
+    inline constexpr uint8_t ABOUT = 4;
 }
 
 /**
@@ -160,6 +174,11 @@ inline void initMenuTree() {
     for (uint8_t i = 0; i < BUTTON_COUNT; i++) {
         buttonConfigSubmenu[i].parent = &mainMenu[Index::BUTTON_CONFIG];
         buttonConfigSubmenu[i].label = BUTTONS[i].label;
+    }
+
+    // Set parent for bluetooth submenu items (Pair, Disconnect)
+    for (uint8_t i = 0; i < BLUETOOTH_SUBMENU_COUNT; i++) {
+        bluetoothSubmenu[i].parent = &mainMenu[Index::BLUETOOTH];
     }
 
     // Set parent for shared button behavior items
@@ -268,13 +287,26 @@ inline void initWheelBehaviorActions(ConfigManager* config, EncoderModeManager* 
 }
 
 /**
+ * @brief Initialize bluetooth menu actions
+ *
+ * Placeholder function for Stories 8.2 and 8.3.
+ * Will create PairAction and DisconnectAction instances for bluetooth menu items.
+ *
+ * Must be called after DI objects are created.
+ */
+inline void initBluetoothActions() {
+    // Story 8.2: Create PairAction and set bluetoothSubmenu[0].action
+    // Story 8.3: Create DisconnectAction and set bluetoothSubmenu[1].action
+}
+
+/**
  * @brief Initialize button behavior menu actions
  *
  * Creates context-aware SetButtonBehaviorAction instances for shared button behavior menu items.
  * All buttons share the same behavior items array (None, Mute, Play, Pause, Next, Previous).
  * The button index is determined dynamically at runtime by analyzing the menu navigation context
  * (which button submenu the user navigated through).
- * 
+ *
  * Must be called after DI objects (ConfigManager, ButtonEventHandler) are created.
  *
  * @param config ConfigManager instance for NVS persistence
