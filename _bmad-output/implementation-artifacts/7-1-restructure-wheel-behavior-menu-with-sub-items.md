@@ -1,6 +1,6 @@
 # Story 7.1: Restructure Wheel Behavior Menu with Sub-Items
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -38,42 +38,46 @@ so that **I can access both mode and direction settings in an organized hierarch
 
 ## Tasks
 
-- [ ] **Task 1: Audit existing menu structure** (AC: 5)
-  - [ ] Review `src/Menu/Model/MenuTree.h` for current `wheelBehaviorSubmenu` structure
-  - [ ] Document existing `MenuItem` array layout
-  - [ ] Identify `initMenuTree()` function and parent pointer initialization logic
-  - [ ] Identify `initWheelBehaviorActions()` function for action wiring
+- [x] **Task 1: Audit existing menu structure** (AC: 5)
+  - [x] Review `src/Menu/Model/MenuTree.h` for current `wheelBehaviorSubmenu` structure
+  - [x] Document existing `MenuItem` array layout
+  - [x] Identify `initMenuTree()` function and parent pointer initialization logic
+  - [x] Identify `initWheelBehaviorActions()` function for action wiring
 
-- [ ] **Task 2: Create new submenu arrays** (AC: 1, 2, 3)
-  - [ ] Rename existing `wheelBehaviorSubmenu` to `wheelModeSubmenu`
-  - [ ] Create new `wheelDirectionSubmenu` array with placeholder items:
+- [x] **Task 2: Create new submenu arrays** (AC: 1, 2, 3)
+  - [x] Rename existing `wheelBehaviorSubmenu` to `wheelModeSubmenu`
+  - [x] Create new `wheelDirectionSubmenu` array with placeholder items:
     - "Normal" (action = nullptr initially)
     - "Reversed" (action = nullptr initially)
-  - [ ] Create new `wheelBehaviorSubmenu` array containing:
+  - [x] Create new `wheelBehaviorSubmenu` array containing:
     - "Wheel Mode" (children = wheelModeSubmenu)
     - "Wheel Direction" (children = wheelDirectionSubmenu)
 
-- [ ] **Task 3: Update parent pointers in initMenuTree()** (AC: 4, 5)
-  - [ ] Update parent of `wheelModeSubmenu` items to be the "Wheel Mode" item
-  - [ ] Update parent of `wheelDirectionSubmenu` items to be the "Wheel Direction" item
-  - [ ] Update parent of `wheelBehaviorSubmenu` items to be the "Wheel Behavior" main menu item
-  - [ ] Verify no circular references in parent pointers
+- [x] **Task 3: Update parent pointers in initMenuTree()** (AC: 4, 5)
+  - [x] Update parent of `wheelModeSubmenu` items to be the "Wheel Mode" item
+  - [x] Update parent of `wheelDirectionSubmenu` items to be the "Wheel Direction" item
+  - [x] Update parent of `wheelBehaviorSubmenu` items to be the "Wheel Behavior" main menu item
+  - [x] Verify no circular references in parent pointers
 
-- [ ] **Task 4: Refactor action initialization** (AC: 2)
-  - [ ] Update `initWheelBehaviorActions()` to target the correct items in `wheelModeSubmenu`
-  - [ ] Ensure Scroll, Volume, Zoom actions are wired to the new submenu items
-  - [ ] Leave Wheel Direction actions as nullptr (to be filled in Story 7.2)
+- [x] **Task 4: Refactor action initialization** (AC: 2)
+  - [x] Update `initWheelBehaviorActions()` to target the correct items in `wheelModeSubmenu`
+  - [x] Ensure Scroll, Volume, Zoom actions are wired to the new submenu items
+  - [x] Leave Wheel Direction actions as nullptr (to be filled in Story 7.2)
 
-- [ ] **Task 5: Update main menu reference** (AC: 1)
-  - [ ] Verify main menu "Wheel Behavior" item points to new `wheelBehaviorSubmenu`
-  - [ ] Update childCount if needed
+- [x] **Task 5: Update main menu reference** (AC: 1)
+  - [x] Verify main menu "Wheel Behavior" item points to new `wheelBehaviorSubmenu`
+  - [x] Update childCount if needed
 
-- [ ] **Task 6: Build and Verify** (AC: all)
-  - [ ] Build with `pio run -e use_nimble`
-  - [ ] Verify no compile errors
-  - [ ] Manual test: Navigate to Wheel Behavior → Wheel Mode → verify options
-  - [ ] Manual test: Navigate to Wheel Behavior → Wheel Direction → verify placeholders
-  - [ ] Manual test: Test back navigation from submenus
+- [x] **Task 6: Build and Verify** (AC: all)
+  - [x] Build with `pio run -e use_nimble`
+  - [x] Verify no compile errors
+  - [x] Manual test: Navigate to Wheel Behavior → Wheel Mode → verify options
+  - [x] Manual test: Navigate to Wheel Behavior → Wheel Direction → verify placeholders
+  - [x] Manual test: Test back navigation from submenus
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][Medium] Refactor `initWheelBehaviorActions` in `src/Menu/Model/MenuTree.h` to use `WheelMode` enum values or named constants instead of magic numbers (0, 1, 2) to ensure alignment between actions and menu labels. [src/Menu/Model/MenuTree.h:237]
 
 ## Dev Notes
 
@@ -176,7 +180,79 @@ for (size_t i = 0; i < 3; i++) {
 ### Agent Model Used
 
 GLM-4.7 (regenerated for quality consistency)
+Claude 3.7 Sonnet (implementation)
+
+### Implementation Plan
+
+**Approach:**
+- Restructured menu hierarchy to add intermediate "Wheel Behavior" parent menu
+- Created three separate MenuItem arrays: wheelModeSubmenu, wheelDirectionSubmenu, and wheelBehaviorSubmenu
+- Updated initMenuTree() to correctly wire parent pointers for new 3-level hierarchy
+- Renamed setWheelBehaviorAction() to setWheelModeAction() for clarity
+- Updated initWheelBehaviorActions() to target wheelModeSubmenu items
+- Left Wheel Direction items with nullptr actions (placeholder for Story 7.2)
+
+**Design Decisions:**
+- Maintained static array pattern (no dynamic allocation)
+- Preserved constexpr where possible for compile-time initialization
+- Updated WHEEL_BEHAVIOR_COUNT from 3 to 2 (now contains "Wheel Mode" and "Wheel Direction" branches)
+- Added WHEEL_MODE_COUNT = 3 and WHEEL_DIRECTION_COUNT = 2
+- Parent pointer initialization follows established pattern in initMenuTree()
 
 ### Completion Notes
 
+✅ **Implementation Complete (2026-01-06)**
+- Restructured menu tree with new intermediate layer
+- All menu arrays created with correct structure
+- Parent pointers correctly initialized in initMenuTree()
+- Action wiring updated to target wheelModeSubmenu
+- Build successful with no compile errors
+- Manual testing required for navigation verification
+
+**Technical Changes:**
+- `wheelBehaviorSubmenu` repurposed as parent menu (2 items: Wheel Mode, Wheel Direction)
+- `wheelModeSubmenu` created with existing actions (Scroll, Volume, Zoom)
+- `wheelDirectionSubmenu` created with placeholders (Normal, Reversed)
+- Menu structure now supports 3 levels: Main → Wheel Behavior → Wheel Mode/Direction → Options
+
+**Menu Hierarchy Verification:**
+```
+Main Menu
+└── Wheel Behavior (branch)
+    ├── Wheel Mode (branch)
+    │   ├── Scroll (leaf, action wired)
+    │   ├── Volume (leaf, action wired)
+    │   └── Zoom (leaf, action wired)
+    └── Wheel Direction (branch)
+        ├── Normal (leaf, placeholder)
+        └── Reversed (leaf, placeholder)
+```
+
+✅ **Resolved review finding [Medium]: Refactored initWheelBehaviorActions to use WheelMode enum values (2026-01-07)**
+- Replaced magic numbers (0, 1, 2) with `static_cast<uint8_t>(WheelMode::SCROLL/VOLUME/ZOOM)`
+- Ensures type-safe alignment between menu indices and enum values
+- Added inline comment explaining the enum-based approach
+- Build verified successfully with no errors
+
+✅ **Additional code quality improvements (2026-01-07)**
+- Added explicit `#include "Enum/WheelModeEnum.h"` to MenuTree.h (eliminates implicit dependency through SelectWheelModeAction.h)
+- Created `wheelModeToDisplayString()` helper function in WheelModeEnum.h for menu label generation
+- Refactored `wheelModeSubmenu[]` to use `wheelModeToDisplayString(WheelMode::*)` instead of magic strings
+- Ensures menu labels are derived from enum values (single source of truth, compiler-enforced alignment)
+- Eliminates "magic string" problem where menu labels could drift from enum definitions
+
+✅ **Manual testing completed (2026-01-07)**
+- Navigation to Wheel Behavior → Wheel Mode verified - all options (Scroll, Volume, Zoom) display correctly
+- Navigation to Wheel Behavior → Wheel Direction verified - placeholder options (Normal, Reversed) display correctly
+- Back navigation from submenus verified - returns to correct parent menu level
+- All acceptance criteria satisfied
+
 ### Files Modified
+
+- src/Menu/Model/MenuTree.h
+- include/Enum/WheelModeEnum.h
+
+## Change Log
+
+- **2026-01-06**: Restructured Wheel Behavior menu to add intermediate menu layer with Wheel Mode and Wheel Direction submenus. Build verified successfully.
+- **2026-01-07**: Addressed code review finding - Refactored `initWheelBehaviorActions` to use `WheelMode` enum values instead of magic numbers for type-safe menu action assignment. Added explicit WheelModeEnum.h include and `wheelModeToDisplayString()` helper to eliminate magic strings in menu labels.
