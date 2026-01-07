@@ -3,6 +3,7 @@
 #include <Preferences.h>
 #include "Enum/ErrorEnum.h"
 #include "Enum/WheelModeEnum.h"
+#include "Enum/WheelDirection.h"
 #include "Enum/ButtonActionEnum.h"
 #include "Config/device_config.h"
 
@@ -12,6 +13,9 @@ public:
 
     Error saveWheelMode(WheelMode mode);
     WheelMode loadWheelMode();
+
+    Error setWheelDirection(WheelDirection direction);
+    WheelDirection getWheelDirection() const;
 
     Error saveButtonAction(uint8_t index, ButtonAction action);
     ButtonAction loadButtonAction(uint8_t index);
@@ -23,7 +27,6 @@ public:
     Error clearAll();
 
 private:
-    static constexpr const char* KEY_WHEEL_MODE = "wheel.mode";
     static constexpr uint8_t BUTTON_KEY_BUFFER_SIZE = 16;
 
     Preferences* prefs;

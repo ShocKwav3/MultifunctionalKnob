@@ -2,7 +2,9 @@
 
 #include "MenuItem.h"
 #include "Enum/WheelModeEnum.h"
+#include "Enum/WheelDirection.h"
 #include "Menu/Action/SelectWheelModeAction.h"
+#include "Menu/Action/SelectWheelDirectionAction.h"
 #include "Menu/Action/SetButtonBehaviorAction.h"
 #include "Config/button_config.h"
 
@@ -63,10 +65,11 @@ inline MenuItem wheelModeSubmenu[] = {
 
 inline constexpr uint8_t WHEEL_MODE_COUNT = 3;
 
-// Wheel Direction submenu items (placeholder items for Story 7.2)
+// Wheel Direction submenu items (leaf nodes with actions set at runtime)
+// Labels derived from WheelDirection enum to ensure alignment
 inline MenuItem wheelDirectionSubmenu[] = {
-    { "Normal",   nullptr, nullptr, 0, nullptr },
-    { "Reversed", nullptr, nullptr, 0, nullptr }
+    { wheelDirectionToDisplayString(WheelDirection::NORMAL),    nullptr, nullptr, 0, nullptr },
+    { wheelDirectionToDisplayString(WheelDirection::REVERSED),  nullptr, nullptr, 0, nullptr }
 };
 
 inline constexpr uint8_t WHEEL_DIRECTION_COUNT = 2;
@@ -80,14 +83,15 @@ inline MenuItem wheelBehaviorSubmenu[] = {
 inline constexpr uint8_t WHEEL_BEHAVIOR_COUNT = 2;
 
 // Shared button behavior items - all buttons have the same 6 options
+// Labels derived from ButtonAction enum to ensure alignment
 // Parent pointers set at runtime in initMenuTree() based on which button submenu references this
 inline MenuItem buttonBehaviorItems[] = {
-    { "None",     nullptr, nullptr, 0, nullptr },
-    { "Mute",     nullptr, nullptr, 0, nullptr },
-    { "Play",     nullptr, nullptr, 0, nullptr },
-    { "Pause",    nullptr, nullptr, 0, nullptr },
-    { "Next",     nullptr, nullptr, 0, nullptr },
-    { "Previous", nullptr, nullptr, 0, nullptr }
+    { buttonActionToDisplayString(ButtonAction::NONE),     nullptr, nullptr, 0, nullptr },
+    { buttonActionToDisplayString(ButtonAction::MUTE),     nullptr, nullptr, 0, nullptr },
+    { buttonActionToDisplayString(ButtonAction::PLAY),     nullptr, nullptr, 0, nullptr },
+    { buttonActionToDisplayString(ButtonAction::PAUSE),    nullptr, nullptr, 0, nullptr },
+    { buttonActionToDisplayString(ButtonAction::NEXT),     nullptr, nullptr, 0, nullptr },
+    { buttonActionToDisplayString(ButtonAction::PREVIOUS), nullptr, nullptr, 0, nullptr }
 };
 
 inline constexpr uint8_t BUTTON_BEHAVIOR_COUNT = 6;
@@ -178,6 +182,17 @@ inline void setWheelModeAction(uint8_t index, MenuAction* action) {
     }
 }
 
+/**
+ * @brief Set action for a wheel direction menu item
+ * @param index Wheel direction index (0=Normal, 1=Reversed)
+ * @param action Pointer to MenuAction instance (must outlive menu)
+ */
+inline void setWheelDirectionAction(uint8_t index, MenuAction* action) {
+    if (index < WHEEL_DIRECTION_COUNT) {
+        wheelDirectionSubmenu[index].action = action;
+    }
+}
+
 
 
 /**
@@ -224,6 +239,7 @@ inline constexpr uint8_t getMainMenuCount() {
  * @brief Initialize wheel behavior menu actions
  *
  * Creates SelectWheelModeAction instances for Scroll, Volume, and Zoom modes.
+ * Creates SelectWheelDirectionAction instances for Normal and Reversed directions.
  * Must be called after DI objects (ConfigManager, EncoderModeManager) are created.
  *
  * @param config ConfigManager instance for NVS persistence
@@ -241,7 +257,14 @@ inline void initWheelBehaviorActions(ConfigManager* config, EncoderModeManager* 
     setWheelModeAction(static_cast<uint8_t>(WheelMode::VOLUME), &volumeAction);
     setWheelModeAction(static_cast<uint8_t>(WheelMode::ZOOM), &zoomAction);
 
-    // Wheel Direction submenu actions remain nullptr (to be implemented in Story 7.2)
+    // Create static wheel direction action instances
+    static SelectWheelDirectionAction normalAction(WheelDirection::NORMAL, config);
+    static SelectWheelDirectionAction reversedAction(WheelDirection::REVERSED, config);
+
+    // Assign actions to wheel direction submenu items
+    // Use WheelDirection enum values to ensure alignment with menu labels
+    setWheelDirectionAction(static_cast<uint8_t>(WheelDirection::NORMAL), &normalAction);
+    setWheelDirectionAction(static_cast<uint8_t>(WheelDirection::REVERSED), &reversedAction);
 }
 
 /**

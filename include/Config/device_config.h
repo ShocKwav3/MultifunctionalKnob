@@ -11,3 +11,7 @@ constexpr const char* NVS_NAMESPACE = "knobkoky";  // lowercase, derived from DE
 
 #define KNOB_BUTTON_SHORT_PRESS_MS 50
 #define KNOB_BUTTON_LONG_PRESS_MS 1000
+
+// Wheel Configuration
+constexpr const char* KEY_WHEEL_MODE = "wheel.mode";
+constexpr const char* KEY_WHEEL_DIR = "wheel.dir";

@@ -68,6 +68,44 @@ WheelMode ConfigManager::loadWheelMode() {
     return mode;
 }
 
+Error ConfigManager::setWheelDirection(WheelDirection direction) {
+    if (static_cast<uint8_t>(direction) > WheelDirection_MAX) {
+        LOG_ERROR(TAG, "Invalid wheel direction: %d", static_cast<uint8_t>(direction));
+        return Error::INVALID_PARAM;
+    }
+
+    if (!ensureInitialized()) {
+        return Error::NVS_WRITE_FAIL;
+    }
+
+    size_t written = prefs->putUChar(KEY_WHEEL_DIR, static_cast<uint8_t>(direction));
+    if (written == 0) {
+        LOG_ERROR(TAG, "Failed to write wheel direction to NVS");
+        return Error::NVS_WRITE_FAIL;
+    }
+
+    LOG_INFO(TAG, "Saved wheel direction: %s", wheelDirectionToString(direction));
+    return Error::OK;
+}
+
+WheelDirection ConfigManager::getWheelDirection() const {
+    if (!const_cast<ConfigManager*>(this)->ensureInitialized()) {
+        LOG_ERROR(TAG, "NVS not initialized, returning default NORMAL");
+        return DEFAULT_WHEEL_DIR;
+    }
+
+    uint8_t stored = prefs->getUChar(KEY_WHEEL_DIR, static_cast<uint8_t>(DEFAULT_WHEEL_DIR));
+
+    if (stored > WheelDirection_MAX) {
+        LOG_ERROR(TAG, "Invalid stored wheel direction: %d, returning default NORMAL", stored);
+        return DEFAULT_WHEEL_DIR;
+    }
+
+    WheelDirection direction = static_cast<WheelDirection>(stored);
+    LOG_DEBUG(TAG, "Loaded wheel direction: %s", wheelDirectionToString(direction));
+    return direction;
+}
+
 Error ConfigManager::saveButtonAction(uint8_t index, ButtonAction action) {
     if (index >= BUTTON_COUNT) {
         LOG_ERROR(TAG, "Invalid button index: %d (max: %d)", index, BUTTON_COUNT - 1);
