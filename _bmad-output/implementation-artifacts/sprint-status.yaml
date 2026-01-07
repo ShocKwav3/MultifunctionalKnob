@@ -48,7 +48,7 @@ development_status:
   # Epic 7: Wheel Direction Control (FR6-FR9)
   epic-7: in-progress
   7-1-restructure-wheel-behavior-menu-with-sub-items: done
-  7-2-add-wheel-direction-setting-with-nvs-persistence: ready-for-dev
+  7-2-add-wheel-direction-setting-with-nvs-persistence: done
   7-3-apply-wheel-direction-to-encoder-input-processing: ready-for-dev
   epic-7-retrospective: optional
 
