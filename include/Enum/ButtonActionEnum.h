@@ -24,3 +24,15 @@ inline const char* buttonActionToString(ButtonAction a) {
         default:                     return "UNKNOWN";
     }
 }
+
+inline const char* buttonActionToDisplayString(ButtonAction a) {
+    switch (a) {
+        case ButtonAction::NONE:     return "None";
+        case ButtonAction::MUTE:     return "Mute";
+        case ButtonAction::PLAY:     return "Play";
+        case ButtonAction::PAUSE:    return "Pause";
+        case ButtonAction::NEXT:     return "Next";
+        case ButtonAction::PREVIOUS: return "Previous";
+        default:                     return "Unknown";
+    }
+}
