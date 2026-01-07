@@ -128,7 +128,7 @@ void setup()
     static ButtonManager buttonManagerInstance(&buttonEventDispatcher);
     buttonManagerInstance.init();
 
-    static EncoderEventDispatcher encoderEventDispatcher(appState.encoderInputEventQueue);
+    static EncoderEventDispatcher encoderEventDispatcher(appState.encoderInputEventQueue, &configManager);
     encoderDriver = EncoderDriver::getInstance(
         ENCODER_PIN_A,
         ENCODER_PIN_B,

@@ -49,7 +49,7 @@ development_status:
   epic-7: in-progress
   7-1-restructure-wheel-behavior-menu-with-sub-items: done
   7-2-add-wheel-direction-setting-with-nvs-persistence: done
-  7-3-apply-wheel-direction-to-encoder-input-processing: ready-for-dev
+  7-3-apply-wheel-direction-to-encoder-input-processing: done
   epic-7-retrospective: optional
 
   # Epic 8: Bluetooth Menu Control (FR10-FR12)
