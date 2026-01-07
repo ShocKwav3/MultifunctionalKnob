@@ -1,6 +1,6 @@
 # Story 7.3: Apply Wheel Direction to Encoder Input Processing
 
-Status: review
+Status: done
 
 ## Story
 
@@ -326,7 +326,7 @@ This approach maintains clean separation of concerns while achieving the functio
 
 **Manual Testing Required:**
 - Test Scroll mode with Normal and Reversed directions
-- Test Volume mode with Normal and Reversed directions  
+- Test Volume mode with Normal and Reversed directions
 - Test Zoom mode with Normal and Reversed directions
 - Verify immediate effect when changing direction via menu (no reboot)
 
