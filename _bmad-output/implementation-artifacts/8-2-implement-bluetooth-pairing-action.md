@@ -1,6 +1,6 @@
 # Story 8.2: Implement Bluetooth Pairing Action
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -273,8 +273,59 @@ Menu exits
 
 ### Agent Model Used
 
-GLM-4.7 (regenerated for quality consistency)
+Claude 3.7 Sonnet (OpenCode CLI - Amelia Dev Agent)
 
 ### Completion Notes
 
+**Implementation Date**: 2026-01-08
+
+**Build Status**: ✅ PASSED (`pio run -e use_nimble`)
+
+**Key Implementation Details**:
+
+1. **PairAction Class** (src/Menu/Action/PairAction.h/cpp):
+   - Uses `bleKeyboard->startAdvertising()` NOT `begin()` (correct method for pairing)
+   - Checks `isConnected()` before calling `disconnect()` to handle already-connected state
+   - Sends DisplayRequest with SHOW_STATUS type and "BLE: Pairing..." message
+   - 100ms delay after disconnect before startAdvertising (allows disconnect to process)
+
+2. **BLE Callbacks** (src/main.cpp lines 72-93):
+   - Used `setOnConnect()` and `setOnDisconnect()` (NOT setOnConnectCallback/setOnDisconnectCallback)
+   - Callbacks send SHOW_STATUS messages with "BLE" prefix to distinguish from future WiFi messages
+   - Menu does NOT exit on connection (user stays in menu per feedback)
+
+3. **BleKeyboard.h typedef wrapper** (lib/BleKeyboard/BleKeyboard.h):
+   - Created typedef header to switch between NimBleKeyboard and StandardBleKeyboard
+   - Defaults to NimBleKeyboard if no build flag specified
+
+4. **MenuTree wiring** (src/Menu/Model/MenuTree.h line 297):
+   - Implemented `initBluetoothActions(BleKeyboard*, QueueHandle_t)` with PairAction
+   - Called from main.cpp line 139 after other menu actions initialized
+
+5. **Fixed includes**:
+   - Added `#include "Config/log_config.h"` to main.cpp for LOG_INFO macro
+   - Removed QueueHandle_t typedef (conflicts with FreeRTOS) - use FreeRTOS includes instead
+   - Removed BleKeyboard forward declaration (conflicts with typedef) - include BleKeyboard.h directly
+
+**Known Limitations** (as planned):
+- Pairing timeout not detected (no callback from library) - deferred to Story 8.4
+- Display shows "BLE: Pairing..." indefinitely until connection or manual menu exit
+- No automatic menu exit on connection (user must exit manually - per design)
+
+**Testing Required** (manual - no hardware available):
+- [ ] Test pairing from disconnected state
+- [ ] Test pairing when already connected (disconnect-then-pair flow)
+- [ ] Test "BLE: Connected" / "BLE: Disconnected" display feedback
+- [ ] Verify menu remains active after pairing
+- [ ] Verify Serial logs show correct pairing flow
+
 ### Files Modified
+
+**Created:**
+- `src/Menu/Action/PairAction.h` - PairAction class declaration
+- `src/Menu/Action/PairAction.cpp` - PairAction implementation with startAdvertising()
+- `lib/BleKeyboard/BleKeyboard.h` - Typedef wrapper for NimBLE/StandardBLE selection
+
+**Modified:**
+- `src/Menu/Model/MenuTree.h` - Implemented initBluetoothActions() (line 297), added FreeRTOS queue includes, added PairAction include
+- `src/main.cpp` - Added BLE callbacks with setOnConnect/setOnDisconnect (lines 72-93), added initBluetoothActions() call (line 139), added log_config.h include

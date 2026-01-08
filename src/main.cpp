@@ -7,6 +7,7 @@
 
 #include "Config/device_config.h"
 #include "Config/encoder_config.h"
+#include "Config/log_config.h"
 #include "Config/FactoryReset.h"
 #include "Config/ConfigManager.h"
 #include "Display/DisplayFactory.h"
@@ -68,6 +69,29 @@ void setup()
     display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
     bleKeyboard.begin();
 
+    // Register BLE connection state callbacks for user feedback
+    bleKeyboard.setOnConnect([]() {
+        LOG_INFO("main", "BLE device connected");
+        
+        DisplayRequest req;
+        req.type = DisplayRequestType::SHOW_STATUS;
+        req.data.status.key = "BLE";
+        req.data.status.value = "Connected";
+        xQueueSend(appState.displayRequestQueue, &req, pdMS_TO_TICKS(10));
+        
+        // NOTE: Menu does NOT exit on connection (user stays in menu)
+    });
+
+    bleKeyboard.setOnDisconnect([](int reason) {
+        LOG_INFO("main", "BLE device disconnected (reason: %d)", reason);
+        
+        DisplayRequest req;
+        req.type = DisplayRequestType::SHOW_STATUS;
+        req.data.status.key = "BLE";
+        req.data.status.value = "Disconnected";
+        xQueueSend(appState.displayRequestQueue, &req, pdMS_TO_TICKS(10));
+    });
+
     appState.encoderInputEventQueue = xQueueCreate(10, sizeof(EncoderInputEvent));
     appState.buttonEventQueue = xQueueCreate(10, sizeof(ButtonEvent));
     appState.appEventQueue = xQueueCreate(10, sizeof(AppEvent));
@@ -113,6 +137,7 @@ void setup()
     MenuTree::initMenuTree();
     MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager);
     MenuTree::initButtonBehaviorActions(&configManager, &buttonEventHandler);
+    MenuTree::initBluetoothActions(&bleKeyboard, appState.displayRequestQueue);
     
     // Initialize Device Status and About actions
     static ShowStatusAction showStatusAction(&configManager, &bleKeyboard, &DisplayFactory::getDisplay());
