@@ -1,6 +1,6 @@
 # Story 8.3: Implement Bluetooth Disconnect Action
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
