@@ -7,6 +7,7 @@
 #include "Menu/Action/SelectWheelDirectionAction.h"
 #include "Menu/Action/SetButtonBehaviorAction.h"
 #include "Menu/Action/PairAction.h"
+#include "Menu/Action/DisconnectAction.h"
 #include "Config/button_config.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
@@ -292,22 +293,21 @@ inline void initWheelBehaviorActions(ConfigManager* config, EncoderModeManager* 
 /**
  * @brief Initialize bluetooth menu actions
  *
- * Creates PairAction instance for the Bluetooth → Pair menu item.
- * Story 8.3 will add DisconnectAction for Bluetooth → Disconnect.
+ * Creates PairAction and DisconnectAction instances for Bluetooth menu items.
  *
  * Must be called after DI objects (BleKeyboard, displayQueue) are created.
  *
- * @param bleKeyboard BleKeyboard instance for pairing control
+ * @param bleKeyboard BleKeyboard instance for BLE control
  * @param displayQueue DisplayRequestQueue for user feedback
  */
 inline void initBluetoothActions(BleKeyboard* bleKeyboard, QueueHandle_t displayQueue) {
-    // Create static action instance (must outlive menu)
+    // Create static action instances (must outlive menu)
     static PairAction pairAction(bleKeyboard, displayQueue);
-    
-    // Assign to Bluetooth submenu "Pair" item (index 0)
-    bluetoothSubmenu[0].action = &pairAction;
-    
-    // Story 8.3 will add DisconnectAction to bluetoothSubmenu[1]
+    static DisconnectAction disconnectAction(bleKeyboard, displayQueue);
+
+    // Assign to Bluetooth submenu items
+    bluetoothSubmenu[0].action = &pairAction;       // "Pair" (Story 8.2)
+    bluetoothSubmenu[1].action = &disconnectAction; // "Disconnect" (Story 8.3)
 }
 
 /**
