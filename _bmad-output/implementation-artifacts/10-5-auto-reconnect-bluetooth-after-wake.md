@@ -37,7 +37,7 @@ so that **I can resume using it without manually re-pairing**.
 ## Tasks
 
 - [ ] **Task 1: Verify NimBLE/BleKeyboard Auto-Reconnect Behavior** (AC: 1, 4)
-  - [ ] Review `src/Helper/BleKeyboard.h` for existing methods
+  - [ ] Review BleKeyboard library (external PlatformIO dependency in `.pio/`) for existing methods
   - [ ] Check if `begin()` or `startAdvertising()` handles auto-reconnect
   - [ ] Verify if NimBLE stores bonding data automatically
   - [ ] Document current reconnection behavior
@@ -173,8 +173,8 @@ private:
 
 ```
 src/System/PowerManager.h/cpp           - Connection state tracking
-src/Helper/BleKeyboard.h/cpp             - BLE reconnection
-src/main.cpp                                    - Wake detection and reconnection trigger
+BleKeyboard (external library in .pio/) - BLE reconnection (begin, startAdvertising, isConnected)
+src/main.cpp                            - Wake detection and reconnection trigger
 ```
 
 ### Key Files to Modify

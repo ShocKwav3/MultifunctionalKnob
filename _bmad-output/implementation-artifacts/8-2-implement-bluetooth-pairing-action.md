@@ -37,8 +37,8 @@ so that **I can connect to a new host without physical access to it**.
 
 ## Tasks
 
-- [ ] **Task 1: Audit BleKeyboard Wrapper** (AC: 1)
-  - [ ] Review `src/Helper/BleKeyboard.h` for existing BLE methods
+- [ ] **Task 1: Audit BleKeyboard Library** (AC: 1)
+  - [ ] Review BleKeyboard library (external PlatformIO dependency in `.pio/`) for existing BLE methods
   - [ ] Identify `isConnected()` method
   - [ ] Identify `disconnect()` method
   - [ ] Identify `begin()` or `startAdvertising()` method
@@ -152,21 +152,21 @@ xQueueSend(displayQueue, &req, portMAX_DELAY);
 ### Existing Code Locations
 
 ```
-src/Helper/BleKeyboard.h/cpp           - BLE wrapper with pairing methods
+BleKeyboard (external library in .pio/)  - BLE methods (startAdvertising, disconnect, isConnected)
 src/Menu/Action/PairAction.h/cpp         - New action class
 src/Menu/Model/MenuTree.h                - Update menu items
-src/Display/Task/DisplayTask.cpp           - Handle display requests
+src/Display/Task/DisplayTask.cpp         - Handle display requests
 ```
 
 ### Key Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/Helper/BleKeyboard.h` | Add `startPairing()` method declaration |
-| `src/Helper/BleKeyboard.cpp` | Implement `startPairing()` with disconnect-then-advertise logic |
 | `src/Menu/Action/PairAction.h` | New action class header |
-| `src/Menu/Action/PairAction.cpp` | New action class implementation |
+| `src/Menu/Action/PairAction.cpp` | New action class implementation using BleKeyboard library methods |
 | `src/Menu/Model/MenuTree.h` | Update menu items and action initialization |
+
+Note: BleKeyboard is an external library in `.pio/` - use existing methods like `startAdvertising()`, `disconnect()`, `isConnected()`
 
 ### Testing Approach
 
@@ -294,9 +294,10 @@ Claude 3.7 Sonnet (OpenCode CLI - Amelia Dev Agent)
    - Callbacks send SHOW_STATUS messages with "BLE" prefix to distinguish from future WiFi messages
    - Menu does NOT exit on connection (user stays in menu per feedback)
 
-3. **BleKeyboard.h typedef wrapper** (lib/BleKeyboard/BleKeyboard.h):
-   - Created typedef header to switch between NimBleKeyboard and StandardBleKeyboard
-   - Defaults to NimBleKeyboard if no build flag specified
+3. **BleKeyboard Library**:
+   - BleKeyboard is an external library managed by PlatformIO in `.pio/`
+   - Uses NimBleKeyboard methods: `startAdvertising()`, `disconnect()`, `isConnected()`
+   - No wrapper needed - PairAction calls library methods directly
 
 4. **MenuTree wiring** (src/Menu/Model/MenuTree.h line 297):
    - Implemented `initBluetoothActions(BleKeyboard*, QueueHandle_t)` with PairAction
@@ -323,8 +324,7 @@ Claude 3.7 Sonnet (OpenCode CLI - Amelia Dev Agent)
 
 **Created:**
 - `src/Menu/Action/PairAction.h` - PairAction class declaration
-- `src/Menu/Action/PairAction.cpp` - PairAction implementation with startAdvertising()
-- `lib/BleKeyboard/BleKeyboard.h` - Typedef wrapper for NimBLE/StandardBLE selection
+- `src/Menu/Action/PairAction.cpp` - PairAction implementation using BleKeyboard library methods
 
 **Modified:**
 - `src/Menu/Model/MenuTree.h` - Implemented initBluetoothActions() (line 297), added FreeRTOS queue includes, added PairAction include
