@@ -57,6 +57,7 @@ development_status:
   8-1-add-bluetooth-menu-with-pair-and-disconnect-options: done
   8-2-implement-bluetooth-pairing-action: done
   8-3-implement-bluetooth-disconnect-action: review
+  8-4-fix-ble-auto-reconnect-behavior-for-device-switching: done
   epic-8-retrospective: optional
 
   # Epic 9: Physical OLED Display (FR13-FR18)
