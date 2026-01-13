@@ -16,6 +16,11 @@ void DisconnectAction::execute(const MenuItem* context) {
     if (bleKeyboard->isConnected()) {
         LOG_INFO("DisconnectAction", "Disconnecting BLE");
         bleKeyboard->disconnect();
+
+        // Stop advertising to prevent new connections
+        bleKeyboard->stopAdvertising();
+        LOG_INFO("DisconnectAction", "Advertising stopped");
+
         req.data.status.value = "Disconnected";
     } else {
         LOG_INFO("DisconnectAction", "Already disconnected");
