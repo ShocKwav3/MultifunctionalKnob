@@ -14,6 +14,7 @@
 
 // Forward declarations
 class ButtonEventHandler;
+struct BlePairingState;
 
 /**
  * @brief Static menu tree structure
@@ -295,14 +296,15 @@ inline void initWheelBehaviorActions(ConfigManager* config, EncoderModeManager* 
  *
  * Creates PairAction and DisconnectAction instances for Bluetooth menu items.
  *
- * Must be called after DI objects (BleKeyboard, displayQueue) are created.
+ * Must be called after DI objects (BleKeyboard, displayQueue, pairingState) are created.
  *
  * @param bleKeyboard BleKeyboard instance for BLE control
  * @param displayQueue DisplayRequestQueue for user feedback
+ * @param pairingState Shared pairing state for conflict detection
  */
-inline void initBluetoothActions(BleKeyboard* bleKeyboard, QueueHandle_t displayQueue) {
+inline void initBluetoothActions(BleKeyboard* bleKeyboard, QueueHandle_t displayQueue, BlePairingState* pairingState) {
     // Create static action instances (must outlive menu)
-    static PairAction pairAction(bleKeyboard, displayQueue);
+    static PairAction pairAction(bleKeyboard, displayQueue, pairingState);
     static DisconnectAction disconnectAction(bleKeyboard, displayQueue);
 
     // Assign to Bluetooth submenu items

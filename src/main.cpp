@@ -39,6 +39,7 @@
 #include "Event/Dispatcher/MenuEventDispatcher.h"
 #include "Type/MenuEvent.h"
 #include "AppState.h"
+#include "BLE/BleCallbackHandler.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -71,25 +72,12 @@ void setup()
 
     // Register BLE connection state callbacks for user feedback
     bleKeyboard.setOnConnect([]() {
-        LOG_INFO("main", "BLE device connected");
-        
-        DisplayRequest req;
-        req.type = DisplayRequestType::SHOW_STATUS;
-        req.data.status.key = "BLE";
-        req.data.status.value = "Connected";
-        xQueueSend(appState.displayRequestQueue, &req, pdMS_TO_TICKS(10));
-        
-        // NOTE: Menu does NOT exit on connection (user stays in menu)
+        BleCallbackHandler::handleConnect(&appState.blePairingState, appState.displayRequestQueue);
     });
 
     bleKeyboard.setOnDisconnect([](int reason) {
-        LOG_INFO("main", "BLE device disconnected (reason: %d)", reason);
-        
-        DisplayRequest req;
-        req.type = DisplayRequestType::SHOW_STATUS;
-        req.data.status.key = "BLE";
-        req.data.status.value = "Disconnected";
-        xQueueSend(appState.displayRequestQueue, &req, pdMS_TO_TICKS(10));
+        BleCallbackHandler::handleDisconnect(reason, &appState.blePairingState,
+                                            appState.displayRequestQueue, &bleKeyboard);
     });
 
     appState.encoderInputEventQueue = xQueueCreate(10, sizeof(EncoderInputEvent));
@@ -137,7 +125,7 @@ void setup()
     MenuTree::initMenuTree();
     MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager);
     MenuTree::initButtonBehaviorActions(&configManager, &buttonEventHandler);
-    MenuTree::initBluetoothActions(&bleKeyboard, appState.displayRequestQueue);
+    MenuTree::initBluetoothActions(&bleKeyboard, appState.displayRequestQueue, &appState.blePairingState);
     
     // Initialize Device Status and About actions
     static ShowStatusAction showStatusAction(&configManager, &bleKeyboard, &DisplayFactory::getDisplay());
