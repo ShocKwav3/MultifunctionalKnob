@@ -1,18 +1,16 @@
 #include "Display/DisplayFactory.h"
 #include "Display/Impl/SerialDisplay.h"
 
-// TODO: Add conditional include for OLED display when implemented
-// #ifdef USE_OLED_DISPLAY
-// #include "Display/Impl/OledDisplay.h"
-// #endif
+#ifdef USE_OLED_DISPLAY
+#include "Display/Impl/OLEDDisplay.h"
+#endif
 
 DisplayInterface& DisplayFactory::getDisplay() {
-    // TODO: Use build flags to select implementation
-    // #ifdef USE_OLED_DISPLAY
-    // static OledDisplay display;
-    // #else
+#ifdef USE_OLED_DISPLAY
+    static OLEDDisplay display;
+#else
     static SerialDisplay display;
-    // #endif
+#endif
 
     return display;
 }

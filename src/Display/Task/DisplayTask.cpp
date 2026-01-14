@@ -73,7 +73,7 @@ void DisplayTask::processRequest(const DisplayRequest& request) {
             break;
 
         case DisplayRequestType::SHOW_MESSAGE:
-            display->showMessage(request.data.message.message);
+            display->showMessage(request.data.message.value);
             break;
 
         case DisplayRequestType::CLEAR:
