@@ -43,7 +43,7 @@ struct DisplayRequest {
         } status;
 
         struct {
-            const char* message;  ///< Message text to display
+            const char* value;  ///< Message text to display
         } message;
     } data;
 };

@@ -1,6 +1,3 @@
-#include "Wire.h"
-#include "Adafruit_GFX.h"
-#include "Adafruit_SSD1306.h"
 #include "EncoderDriver.h"
 #include "BleKeyboard.h"
 #include <Preferences.h>
@@ -41,14 +38,6 @@
 #include "AppState.h"
 #include "BLE/BleCallbackHandler.h"
 
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-#define OLED_RESET -1
-#define SCREEN_ADDRESS 0x3C
-#define SDA_PIN 6
-#define SCL_PIN 7
-
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 BleKeyboard bleKeyboard(BLUETOOTH_DEVICE_NAME, BLUETOOTH_DEVICE_MANUFACTURER, BLUETOOTH_DEVICE_BATTERY_LEVEL_DEFAULT);
 EncoderDriver* encoderDriver;
 AppState appState;
@@ -66,8 +55,6 @@ void setup()
         FactoryReset::execute(configManager, DisplayFactory::getDisplay());
     }
 
-    Wire.begin(SDA_PIN, SCL_PIN);
-    display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
     bleKeyboard.begin();
 
     // Register BLE connection state callbacks for user feedback
@@ -115,6 +102,12 @@ void setup()
     appState.displayRequestQueue = displayTask.init(10);
     displayTask.start(2048, 1);
 
+    // Show welcome message on boot
+    DisplayRequest initRequest;
+    initRequest.type = DisplayRequestType::SHOW_MESSAGE;
+    initRequest.data.message.value = "Ready";
+    xQueueSend(appState.displayRequestQueue, &initRequest, portMAX_DELAY);
+
     // Initialize menu event pipeline
     MenuEventDispatcher::init(appState.menuEventQueue);
     static MenuEventHandler menuEventHandler(appState.menuEventQueue, appState.displayRequestQueue);
@@ -161,13 +154,6 @@ void setup()
         encoderEventDispatcher.onLongClick();
     });
     encoderDriver->begin();
-
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(WHITE);
-    display.setCursor(5, 5);
-    display.println("Knob firmware! - Concrete implementation");
-    display.display();
 }
 
 void loop()
