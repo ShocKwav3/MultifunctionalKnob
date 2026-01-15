@@ -1,4 +1,5 @@
 #include "OLEDDisplay.h"
+#include "state/HardwareState.h"
 #include "../Bitmaps.h"
 #include "Config/log_config.h"
 #include <Wire.h>
@@ -33,7 +34,7 @@ void OLEDDisplay::ensureInitialized() {
     LOG_INFO(TAG, "Initialized 128x32 SSD1306");
 }
 
-void OLEDDisplay::showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected) {
+void OLEDDisplay::showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected, const HardwareState& state) {
     ensureInitialized();
 
     if (!initialized || items == nullptr || count == 0) {
@@ -42,34 +43,55 @@ void OLEDDisplay::showMenu(const char* title, const char* const* items, uint8_t 
 
     display.clearDisplay();
 
-    // Display title on first line (0-7 pixels)
-    if (title != nullptr) {
-        display.setCursor(0, 0);
-        display.print(title);
-    }
+    // Draw status bar (y=0-7) with BT icon and mode indicator
+    drawMenuModeStatusBar(state);
 
-    // Display menu items starting from line 2 (y=10)
-    // With 32 pixels height and 8 pixel font, we can show 2-3 items comfortably
-    uint8_t startY = 10;
-    uint8_t lineHeight = 11; // 8px font + 3px spacing
-    uint8_t maxVisibleItems = 2; // Show only 2 items to fit in 32px height
+    // Display menu items starting below status bar (y=8)
+    // With 24 pixels available (y=8-31) and 8px font, we can show 3 items
+    uint8_t startY = 8;
+    uint8_t lineHeight = 8; // 8px font height (no extra spacing needed)
+    uint8_t maxVisibleItems = 3; // Show 3 items in the 24px available space
 
-    // Calculate which items to show (center around selected)
-    uint8_t startIdx = 0;
-    if (selected > 0 && count > maxVisibleItems) {
-        startIdx = selected;
-        if (startIdx + maxVisibleItems > count) {
-            startIdx = count - maxVisibleItems;
+    // Calculate scrolling window to keep selected item visible
+    // Window shows 3 items, centered around selection when possible
+    uint8_t windowStart = 0;
+    if (count > maxVisibleItems) {
+        if (selected >= maxVisibleItems - 1) {
+            windowStart = selected - (maxVisibleItems - 2);  // Keep selected near top
+            if (windowStart + maxVisibleItems > count) {
+                windowStart = count - maxVisibleItems;  // Clamp to end
+            }
         }
     }
 
-    for (uint8_t i = 0; i < maxVisibleItems && (startIdx + i) < count; i++) {
-        uint8_t itemIdx = startIdx + i;
-        display.setCursor(0, startY + (i * lineHeight));
+    // Render menu items with highlighting for selected item
+    for (uint8_t i = 0; i < maxVisibleItems && (windowStart + i) < count; i++) {
+        uint8_t itemIdx = windowStart + i;
+        uint8_t itemY = startY + (i * lineHeight);
+        bool isSelected = (itemIdx == selected);
 
-        // Show selection indicator
-        display.print(itemIdx == selected ? "> " : "  ");
+        // Apply highlighting to selected item (inverted colors)
+        if (isSelected) {
+            // Draw white filled rectangle behind selected item
+            display.fillRect(0, itemY, OLED_SCREEN_WIDTH, lineHeight, SSD1306_WHITE);
+            display.setTextColor(SSD1306_BLACK);
+        } else {
+            // Normal colors for non-selected items
+            display.setTextColor(SSD1306_WHITE);
+        }
+
+        // Draw arrow indicator for selected item
+        display.setCursor(0, itemY);
+        if (isSelected) {
+            display.print(">");
+        }
+
+        // Draw menu item text
+        display.setCursor(isSelected ? 10 : 4, itemY);  // Offset for arrow
         display.print(items[itemIdx] != nullptr ? items[itemIdx] : "");
+
+        // Reset text color for next item
+        display.setTextColor(SSD1306_WHITE);
     }
 
     display.display();
@@ -230,6 +252,61 @@ void OLEDDisplay::drawDirectionIndicator(WheelDirection direction) {
     } else {
         display.drawBitmap(0, 24, arrowDownIcon, ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
     }
+}
+
+void OLEDDisplay::drawMenuModeStatusBar(const HardwareState& state) {
+    // STATUS BAR for MENU MODE (y=0-7): BT icon (left) + mode (center) + battery (right)
+
+    // Draw BT icon on left side with flashing effect when pairing
+    if (state.bleState.isConnected) {
+        // Solid icon when connected
+        display.drawBitmap(0, 0, btIcon, ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
+    } else if (state.bleState.isPairingMode) {
+        // Flashing icon when pairing (time-based toggle for consistency)
+        if ((millis() / 500) % 2 == 0) {  // Toggle every 500ms (1Hz blink rate)
+            display.drawBitmap(0, 0, btIcon, ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
+        }
+    }
+
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+
+    // Draw mode indicator in center
+    const char* modeChar;
+    switch (state.encoderWheelState.mode) {
+        case WheelMode::SCROLL:
+            modeChar = "S";
+            break;
+        case WheelMode::VOLUME:
+            modeChar = "V";
+            break;
+        case WheelMode::ZOOM:
+            modeChar = "Z";
+            break;
+        default:
+            modeChar = "?";
+            break;
+    }
+
+    // Calculate center position for mode indicator
+    int16_t x1, y1;
+    uint16_t w, h;
+    display.getTextBounds(modeChar, 0, 0, &x1, &y1, &w, &h);
+    int16_t modeX = (OLED_SCREEN_WIDTH - w) / 2;
+    display.setCursor(modeX, 0);
+    display.print(modeChar);
+
+    // Draw battery percentage on right side
+    char batteryStr[8];
+    snprintf(batteryStr, sizeof(batteryStr), "%d%%", state.batteryPercent);
+
+    // Calculate x position to right-align battery text
+    display.getTextBounds(batteryStr, 0, 0, &x1, &y1, &w, &h);
+    display.setCursor(OLED_SCREEN_WIDTH - w - 2, 0);
+    display.print(batteryStr);
+
+    // Draw horizontal separator line at y=7 (bottom of status bar)
+    display.drawLine(0, 7, OLED_SCREEN_WIDTH, 7, SSD1306_WHITE);
 }
 
 void OLEDDisplay::centerText(const char* text, uint8_t y) {

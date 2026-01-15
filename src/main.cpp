@@ -144,7 +144,7 @@ void setup()
     // Initialize menu system
     static MenuController menuController;
     MenuTree::initMenuTree();
-    MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager, appState.displayRequestQueue);
+    MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager, appState.displayRequestQueue, &hardwareState);
     MenuTree::initButtonBehaviorActions(&configManager, &buttonEventHandler);
     MenuTree::initBluetoothActions(&bleKeyboard, appState.displayRequestQueue);
     

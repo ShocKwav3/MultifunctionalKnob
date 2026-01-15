@@ -17,7 +17,7 @@ class OLEDDisplay : public DisplayInterface {
 public:
     OLEDDisplay();
 
-    void showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected) override;
+    void showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected, const HardwareState& state) override;
     void showMessage(const char* message) override;
     void showConfirmation(const char* message) override;
     void showStatus(const char* key, const char* value) override;
@@ -40,6 +40,9 @@ private:
     void drawStatusBar(const HardwareState& state);
     void drawModeIndicator(WheelMode mode);
     void drawDirectionIndicator(WheelDirection direction);
+
+    // Menu mode drawing helpers
+    void drawMenuModeStatusBar(const HardwareState& state);
 
     static constexpr const char* TAG = "OLEDDisplay";
 };

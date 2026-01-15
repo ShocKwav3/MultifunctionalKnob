@@ -5,10 +5,13 @@ SerialDisplay::SerialDisplay() {
     LOG_INFO(TAG, "Initialized");
 }
 
-void SerialDisplay::showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected) {
+void SerialDisplay::showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected, const HardwareState& state) {
     if (items == nullptr || count == 0) {
         return;
     }
+
+    // Note: state parameter available but not used in serial output
+    // Could be enhanced to show status bar info in serial output if desired
 
     if (title != nullptr) {
         Serial.println(title);

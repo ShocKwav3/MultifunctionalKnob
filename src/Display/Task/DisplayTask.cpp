@@ -61,7 +61,8 @@ void DisplayTask::processRequest(const DisplayRequest& request) {
                 request.data.menu.title,
                 request.data.menu.items,
                 request.data.menu.count,
-                request.data.menu.selected
+                request.data.menu.selected,
+                request.data.menu.state
             );
             break;
 

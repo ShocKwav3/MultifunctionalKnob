@@ -13,7 +13,7 @@ class SerialDisplay : public DisplayInterface {
 public:
     SerialDisplay();
 
-    void showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected) override;
+    void showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected, const HardwareState& state) override;
     void showMessage(const char* message) override;
     void showConfirmation(const char* message) override;
     void showStatus(const char* key, const char* value) override;

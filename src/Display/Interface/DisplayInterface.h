@@ -22,8 +22,9 @@ public:
      * @param items Array of menu item strings
      * @param count Number of items in the array
      * @param selected Index of the currently selected item (0-based)
+     * @param state Hardware state for menu status bar (BT, mode, battery)
      */
-    virtual void showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected) = 0;
+    virtual void showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected, const HardwareState& state) = 0;
 
     /**
      * @brief Display a general message

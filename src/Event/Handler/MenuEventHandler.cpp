@@ -76,6 +76,7 @@ void MenuEventHandler::sendDrawMenuRequest(const MenuEvent& event) {
     request.data.menu.title = event.currentItem->label;
     request.data.menu.count = event.itemCount;
     request.data.menu.selected = event.selectedIndex;
+    request.data.menu.state = *hardwareState;  // Pass hardware state for menu status bar
 
     // Populate menu items from children
     const MenuItem* children = event.currentItem->children;

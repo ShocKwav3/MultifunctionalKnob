@@ -6,6 +6,7 @@
 // Forward declarations
 class ConfigManager;
 class EncoderModeManager;
+struct HardwareState;
 
 /**
  * @brief Menu action to select and activate a wheel mode
@@ -13,8 +14,10 @@ class EncoderModeManager;
  * Encapsulates the user's wheel mode selection:
  * 1. Persist the mode selection to NVS via ConfigManager
  * 2. Apply the mode immediately to EncoderModeManager
+ * 3. Update HardwareState to reflect the mode change for display
  *
  * Follows the Command Pattern for menu actions.
+ * Dependencies are injected via constructor (Dependency Inversion Principle).
  */
 class SelectWheelModeAction : public MenuAction {
 public:
@@ -24,8 +27,9 @@ public:
      * @param mode The target WheelMode to activate (SCROLL, VOLUME, or ZOOM)
      * @param config ConfigManager instance for NVS persistence
      * @param modeMgr EncoderModeManager instance for runtime mode switching
+     * @param hwState HardwareState instance for updating display state
      */
-    explicit SelectWheelModeAction(WheelMode mode, ConfigManager* config, EncoderModeManager* modeMgr);
+    explicit SelectWheelModeAction(WheelMode mode, ConfigManager* config, EncoderModeManager* modeMgr, HardwareState* hwState);
 
     /**
      * @brief Execute the wheel mode change
@@ -51,4 +55,5 @@ private:
     WheelMode targetMode;
     ConfigManager* configManager;
     EncoderModeManager* modeManager;
+    HardwareState* hardwareState;  // Injected dependency for display state updates
 };
