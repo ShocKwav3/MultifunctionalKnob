@@ -56,14 +56,14 @@ development_status:
   epic-8: in-progress
   8-1-add-bluetooth-menu-with-pair-and-disconnect-options: done
   8-2-implement-bluetooth-pairing-action: done
-  8-3-implement-bluetooth-disconnect-action: review
+  8-3-implement-bluetooth-disconnect-action: done
   8-4-fix-ble-auto-reconnect-behavior-for-device-switching: done
   epic-8-retrospective: optional
 
   # Epic 9: Physical OLED Display (FR13-FR18)
   epic-9: in-progress
   9-1-implement-oleddisplay-driver-for-128x32-ssd1306: done
-  9-2-create-normal-mode-status-screen-with-icons: ready-for-dev
+  9-2-create-normal-mode-status-screen-with-icons: done
   9-3-implement-bluetooth-icon-states-solid-flashing-none: ready-for-dev
   9-4-create-menu-mode-display-with-status-bar: ready-for-dev
   9-5-add-display-power-control-menu-option: ready-for-dev
