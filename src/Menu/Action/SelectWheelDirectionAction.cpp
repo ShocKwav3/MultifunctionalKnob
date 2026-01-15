@@ -1,9 +1,13 @@
 #include "SelectWheelDirectionAction.h"
 #include "Config/ConfigManager.h"
 #include "Config/log_config.h"
+#include "Display/Model/DisplayRequest.h"
+#include "state/HardwareState.h"
 
-SelectWheelDirectionAction::SelectWheelDirectionAction(WheelDirection direction, ConfigManager* config)
-    : targetDirection(direction), configManager(config) {
+extern HardwareState hardwareState;
+
+SelectWheelDirectionAction::SelectWheelDirectionAction(WheelDirection direction, ConfigManager* config, QueueHandle_t displayQueue)
+    : targetDirection(direction), configManager(config), displayRequestQueue(displayQueue) {
 }
 
 void SelectWheelDirectionAction::execute(const MenuItem* context) {
@@ -12,8 +16,20 @@ void SelectWheelDirectionAction::execute(const MenuItem* context) {
     Error saveResult = configManager->setWheelDirection(targetDirection);
     if (saveResult != Error::OK) {
         LOG_ERROR("SelectWheelDir", "Failed to persist wheel direction");
-    } else {
-        LOG_INFO("SelectWheelDir", "Wheel direction saved: %s", wheelDirectionToString(targetDirection));
+        return;  // Early return on error - don't update state or display
+    }
+
+    LOG_INFO("SelectWheelDir", "Wheel direction saved: %s", wheelDirectionToString(targetDirection));
+
+    // Update global hardware state immediately (AC 4)
+    hardwareState.encoderWheelState.direction = targetDirection;
+
+    // Trigger display refresh to show new direction indicator
+    if (displayRequestQueue != nullptr) {
+        DisplayRequest normalModeReq;
+        normalModeReq.type = DisplayRequestType::DRAW_NORMAL_MODE;
+        normalModeReq.data.normalMode.state = hardwareState;
+        xQueueSend(displayRequestQueue, &normalModeReq, pdMS_TO_TICKS(10));
     }
 }
 

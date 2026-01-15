@@ -1,8 +1,18 @@
 #include "EncoderModeManager.h"
+#include "Helper/EncoderModeHelper.h"
+#include "Display/Model/DisplayRequest.h"
+#include "state/HardwareState.h"
 
-EncoderModeManager::EncoderModeManager(EncoderEventHandler* encoderEventHandler, EncoderModeSelector* encoderModeSelector)
+EncoderModeManager::EncoderModeManager(
+    EncoderEventHandler* encoderEventHandler,
+    EncoderModeSelector* encoderModeSelector,
+    QueueHandle_t displayQueue,
+    HardwareState* hwState
+)
     : encoderEventHandler(encoderEventHandler),
       encoderModeSelector(encoderModeSelector),
+      displayQueue(displayQueue),
+      hardwareState(hwState),
       currentMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL),
       previousMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL) {}
 
@@ -31,6 +41,10 @@ void EncoderModeManager::setMode(EventEnum::EncoderModeEventTypes mode) {
     if (handler) {
         setCurrentHandler(handler);
     }
+
+    // Update hardware state and refresh display
+    hardwareState->encoderWheelState.mode = EncoderModeHelper::toWheelMode(mode);
+    updateDisplayState();
 }
 
 void EncoderModeManager::enterModeSelection() {
@@ -44,4 +58,13 @@ void EncoderModeManager::enterModeSelection() {
 
 void EncoderModeManager::cancelModeSelection() {
     setMode(previousMode);
+}
+
+void EncoderModeManager::updateDisplayState() {
+    DisplayRequest request;
+    request.type = DisplayRequestType::DRAW_NORMAL_MODE;
+    request.data.normalMode.state = *hardwareState;
+
+    // Non-blocking send with short timeout
+    xQueueSend(displayQueue, &request, pdMS_TO_TICKS(10));
 }

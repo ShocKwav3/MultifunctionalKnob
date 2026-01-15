@@ -2,6 +2,8 @@
 
 #include "MenuAction.h"
 #include "Enum/WheelDirection.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 
 // Forward declaration
 class ConfigManager;
@@ -21,14 +23,15 @@ public:
      *
      * @param direction The target WheelDirection (NORMAL or REVERSED)
      * @param config ConfigManager instance for NVS persistence
+     * @param displayQueue Queue for display refresh
      */
-    explicit SelectWheelDirectionAction(WheelDirection direction, ConfigManager* config);
+    explicit SelectWheelDirectionAction(WheelDirection direction, ConfigManager* config, QueueHandle_t displayQueue);
 
     /**
      * @brief Execute the wheel direction change
      *
-     * Saves the direction to NVS. Direction will be applied to encoder
-     * input processing after device restart.
+     * Saves the direction to NVS, updates appState.hardwareState.encoderWheelState.direction,
+     * and triggers display refresh immediately (AC 4).
      *
      * @param context The MenuItem that was selected (unused)
      */
@@ -44,4 +47,5 @@ public:
 private:
     WheelDirection targetDirection;
     ConfigManager* configManager;
+    QueueHandle_t displayRequestQueue;
 };

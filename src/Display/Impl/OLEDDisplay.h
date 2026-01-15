@@ -4,6 +4,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "../Interface/DisplayInterface.h"
+#include "state/HardwareState.h"
 #include "Config/display_config.h"
 
 /**
@@ -22,12 +23,23 @@ public:
     void showStatus(const char* key, const char* value) override;
     void clear() override;
 
+    /**
+     * @brief Draw normal mode status screen with icons
+     * @param state Hardware state containing mode, direction, battery, BT status
+     */
+    void drawNormalMode(const HardwareState& state) override;
+
 private:
     Adafruit_SSD1306 display;
     bool initialized;
 
     void ensureInitialized();
     void centerText(const char* text, uint8_t y);
+
+    // Normal mode drawing helpers (decomposed from drawNormalMode)
+    void drawStatusBar(const HardwareState& state);
+    void drawModeIndicator(WheelMode mode);
+    void drawDirectionIndicator(WheelDirection direction);
 
     static constexpr const char* TAG = "OLEDDisplay";
 };

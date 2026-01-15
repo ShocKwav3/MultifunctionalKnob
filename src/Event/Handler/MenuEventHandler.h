@@ -5,6 +5,9 @@
 #include "Type/MenuEvent.h"
 #include "Display/Model/DisplayRequest.h"
 
+// Forward declarations
+struct HardwareState;
+
 /**
  * @brief Handles menu events and translates them to display requests
  *
@@ -17,11 +20,12 @@
 class MenuEventHandler {
 public:
     /**
-     * @brief Construct MenuEventHandler with required queues
+     * @brief Construct MenuEventHandler with required dependencies
      * @param menuEventQueue Queue to receive MenuEvent from
      * @param displayRequestQueue Queue to send DisplayRequest to
+     * @param hwState Pointer to hardware state for display requests
      */
-    MenuEventHandler(QueueHandle_t menuEventQueue, QueueHandle_t displayRequestQueue);
+    MenuEventHandler(QueueHandle_t menuEventQueue, QueueHandle_t displayRequestQueue, HardwareState* hwState);
 
     /**
      * @brief Start the event handler task
@@ -33,6 +37,7 @@ public:
 private:
     QueueHandle_t menuEventQueue;
     QueueHandle_t displayRequestQueue;
+    HardwareState* hardwareState;  ///< Hardware state for display requests
 
     static void taskEntry(void* param);
     void taskLoop();
@@ -44,6 +49,7 @@ private:
 
     void sendDrawMenuRequest(const MenuEvent& event);
     void sendClearRequest();
+    void sendDrawNormalModeRequest();
 
     static constexpr const char* TAG = "MenuEventHandler";
 };
