@@ -1,7 +1,6 @@
 #pragma once
 
 #include "BleKeyboard.h"
-#include "Type/BlePairingState.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 
@@ -15,18 +14,18 @@ struct DisplayRequest;
  * Extracted from main.cpp lambdas to reduce complexity and improve testability.
  *
  * These handlers are called from BleKeyboard callbacks on the BLE task thread.
+ * Uses global hardwareState for BLE state tracking.
  */
 namespace BleCallbackHandler {
     /**
      * @brief Handle BLE device connection
      *
      * Called when a host device successfully connects.
-     * Clears pairing mode flag and sends connection status to display.
+     * Updates global hardwareState and sends connection status to display.
      *
-     * @param pairingState Shared pairing state for conflict detection
      * @param displayQueue Queue for sending display requests
      */
-    void handleConnect(BlePairingState* pairingState, QueueHandle_t displayQueue);
+    void handleConnect(QueueHandle_t displayQueue);
 
     /**
      * @brief Handle BLE device disconnection
@@ -38,10 +37,8 @@ namespace BleCallbackHandler {
      * On normal disconnect: Shows disconnected status.
      *
      * @param reason BLE disconnect reason code (531 = encryption/pairing failure)
-     * @param pairingState Shared pairing state for conflict detection
      * @param displayQueue Queue for sending display requests
      * @param bleKeyboard BleKeyboard instance for stopping advertising
      */
-    void handleDisconnect(int reason, BlePairingState* pairingState,
-                         QueueHandle_t displayQueue, BleKeyboard* bleKeyboard);
+    void handleDisconnect(int reason, QueueHandle_t displayQueue, BleKeyboard* bleKeyboard);
 }

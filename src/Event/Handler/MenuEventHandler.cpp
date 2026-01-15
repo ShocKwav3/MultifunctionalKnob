@@ -1,6 +1,7 @@
 #include "MenuEventHandler.h"
 #include "Menu/Model/MenuItem.h"
 #include "Config/log_config.h"
+#include "state/HardwareState.h"
 
 MenuEventHandler::MenuEventHandler(QueueHandle_t menuEventQueue, QueueHandle_t displayRequestQueue)
     : menuEventQueue(menuEventQueue)
@@ -49,7 +50,7 @@ void MenuEventHandler::handleMenuActivated(const MenuEvent& event) {
 
 void MenuEventHandler::handleMenuDeactivated() {
     LOG_DEBUG(TAG, "Menu deactivated");
-    sendClearRequest();
+    sendDrawNormalModeRequest();
 }
 
 void MenuEventHandler::handleNavigationChanged(const MenuEvent& event) {
@@ -109,5 +110,19 @@ void MenuEventHandler::sendClearRequest() {
 
     if (xQueueSend(displayRequestQueue, &request, 0) != pdTRUE) {
         LOG_INFO(TAG, "Display queue full, clear request dropped");
+    }
+}
+
+void MenuEventHandler::sendDrawNormalModeRequest() {
+    if (displayRequestQueue == nullptr) {
+        return;
+    }
+
+    DisplayRequest request{};
+    request.type = DisplayRequestType::DRAW_NORMAL_MODE;
+    request.data.normalMode.state = hardwareState;
+
+    if (xQueueSend(displayRequestQueue, &request, 0) != pdTRUE) {
+        LOG_INFO(TAG, "Display queue full, normal mode request dropped");
     }
 }

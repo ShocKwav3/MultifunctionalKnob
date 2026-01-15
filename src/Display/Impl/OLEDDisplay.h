@@ -4,6 +4,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "../Interface/DisplayInterface.h"
+#include "state/HardwareState.h"
 #include "Config/display_config.h"
 
 /**
@@ -21,6 +22,12 @@ public:
     void showConfirmation(const char* message) override;
     void showStatus(const char* key, const char* value) override;
     void clear() override;
+
+    /**
+     * @brief Draw normal mode status screen with icons
+     * @param state Hardware state containing mode, direction, battery, BT status
+     */
+    void drawNormalMode(const HardwareState& state) override;
 
 private:
     Adafruit_SSD1306 display;

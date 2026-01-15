@@ -13,4 +13,11 @@ public:
      * @return Corresponding EncoderModeEventTypes value
      */
     static EventEnum::EncoderModeEventTypes fromWheelMode(WheelMode mode);
+
+    /**
+     * @brief Convert EncoderModeEventTypes to WheelMode
+     * @param type The EncoderModeEventTypes to convert
+     * @return Corresponding WheelMode value
+     */
+    static WheelMode toWheelMode(EventEnum::EncoderModeEventTypes type);
 };

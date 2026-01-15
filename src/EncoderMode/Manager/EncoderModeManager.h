@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Arduino.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 
 #include "Enum/EventEnum.h"
 #include "EncoderMode/Handler/EncoderModeHandlerInterface.h"
@@ -20,6 +22,9 @@ public:
     void enterModeSelection();
     void cancelModeSelection();
 
+    // Set display queue for status updates
+    void setDisplayQueue(QueueHandle_t queue);
+
 private:
     EventEnum::EncoderModeEventTypes currentMode;
     EventEnum::EncoderModeEventTypes previousMode;
@@ -28,6 +33,8 @@ private:
     EncoderModeSelector* encoderModeSelector = nullptr;
 
     EncoderEventHandler* encoderEventHandler;
+    QueueHandle_t displayQueue = nullptr;  // For sending state updates to display
 
     void setCurrentHandler(EncoderModeBaseInterface* handler);
+    void updateDisplayState();  // Helper to send DRAW_NORMAL_MODE request
 };

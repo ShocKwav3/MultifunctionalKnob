@@ -24,3 +24,16 @@ EventEnum::EncoderModeEventTypes EncoderModeHelper::fromWheelMode(WheelMode mode
             return EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL;
     }
 }
+
+WheelMode EncoderModeHelper::toWheelMode(EventEnum::EncoderModeEventTypes type) {
+    switch (type) {
+        case EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL:
+            return WheelMode::SCROLL;
+        case EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME:
+            return WheelMode::VOLUME;
+        case EventEnum::EncoderModeEventTypes::ENCODER_MODE_ZOOM:
+            return WheelMode::ZOOM;
+        default:
+            return WheelMode::SCROLL;
+    }
+}

@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include "../Interface/DisplayInterface.h"
+#include "state/HardwareState.h"
 
 /**
  * @brief Serial monitor implementation of DisplayInterface
@@ -17,6 +18,7 @@ public:
     void showConfirmation(const char* message) override;
     void showStatus(const char* key, const char* value) override;
     void clear() override;
+    void drawNormalMode(const HardwareState& state) override;
 
 private:
     static constexpr const char* TAG = "SerialDisplay";

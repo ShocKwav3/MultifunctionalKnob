@@ -14,7 +14,6 @@
 
 // Forward declarations
 class ButtonEventHandler;
-struct BlePairingState;
 
 /**
  * @brief Static menu tree structure
@@ -264,12 +263,13 @@ inline constexpr uint8_t getMainMenuCount() {
  *
  * Creates SelectWheelModeAction instances for Scroll, Volume, and Zoom modes.
  * Creates SelectWheelDirectionAction instances for Normal and Reversed directions.
- * Must be called after DI objects (ConfigManager, EncoderModeManager) are created.
+ * Must be called after DI objects (ConfigManager, EncoderModeManager, displayRequestQueue) are created.
  *
  * @param config ConfigManager instance for NVS persistence
  * @param modeMgr EncoderModeManager instance for runtime mode switching
+ * @param displayQueue Queue for display refresh on direction change
  */
-inline void initWheelBehaviorActions(ConfigManager* config, EncoderModeManager* modeMgr) {
+inline void initWheelBehaviorActions(ConfigManager* config, EncoderModeManager* modeMgr, QueueHandle_t displayQueue) {
     // Create static action instances (must outlive menu)
     static SelectWheelModeAction scrollAction(WheelMode::SCROLL, config, modeMgr);
     static SelectWheelModeAction volumeAction(WheelMode::VOLUME, config, modeMgr);
@@ -282,8 +282,8 @@ inline void initWheelBehaviorActions(ConfigManager* config, EncoderModeManager* 
     setWheelModeAction(static_cast<uint8_t>(WheelMode::ZOOM), &zoomAction);
 
     // Create static wheel direction action instances
-    static SelectWheelDirectionAction normalAction(WheelDirection::NORMAL, config);
-    static SelectWheelDirectionAction reversedAction(WheelDirection::REVERSED, config);
+    static SelectWheelDirectionAction normalAction(WheelDirection::NORMAL, config, displayQueue);
+    static SelectWheelDirectionAction reversedAction(WheelDirection::REVERSED, config, displayQueue);
 
     // Assign actions to wheel direction submenu items
     // Use WheelDirection enum values to ensure alignment with menu labels
@@ -295,16 +295,16 @@ inline void initWheelBehaviorActions(ConfigManager* config, EncoderModeManager* 
  * @brief Initialize bluetooth menu actions
  *
  * Creates PairAction and DisconnectAction instances for Bluetooth menu items.
+ * Uses global hardwareState for BLE state tracking.
  *
- * Must be called after DI objects (BleKeyboard, displayQueue, pairingState) are created.
+ * Must be called after DI objects (BleKeyboard, displayQueue) are created.
  *
  * @param bleKeyboard BleKeyboard instance for BLE control
  * @param displayQueue DisplayRequestQueue for user feedback
- * @param pairingState Shared pairing state for conflict detection
  */
-inline void initBluetoothActions(BleKeyboard* bleKeyboard, QueueHandle_t displayQueue, BlePairingState* pairingState) {
+inline void initBluetoothActions(BleKeyboard* bleKeyboard, QueueHandle_t displayQueue) {
     // Create static action instances (must outlive menu)
-    static PairAction pairAction(bleKeyboard, displayQueue, pairingState);
+    static PairAction pairAction(bleKeyboard, displayQueue);
     static DisconnectAction disconnectAction(bleKeyboard, displayQueue);
 
     // Assign to Bluetooth submenu items

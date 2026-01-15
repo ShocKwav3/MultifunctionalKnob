@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "state/HardwareState.h"
 
 /**
  * @brief Maximum number of menu items that can be displayed
@@ -11,10 +12,11 @@ static constexpr uint8_t DISPLAY_MAX_MENU_ITEMS = 8;
  * @brief Display request types for the display arbitration queue
  */
 enum class DisplayRequestType : uint8_t {
-    DRAW_MENU,    ///< Draw a menu with items and selection indicator
-    SHOW_STATUS,  ///< Show a key-value status pair
-    SHOW_MESSAGE, ///< Show a simple message
-    CLEAR         ///< Clear the display
+    DRAW_MENU,       ///< Draw a menu with items and selection indicator
+    SHOW_STATUS,     ///< Show a key-value status pair
+    SHOW_MESSAGE,    ///< Show a simple message
+    CLEAR,           ///< Clear the display
+    DRAW_NORMAL_MODE ///< Draw normal mode status screen with icons
 };
 
 /**
@@ -45,5 +47,9 @@ struct DisplayRequest {
         struct {
             const char* value;  ///< Message text to display
         } message;
+
+        struct {
+            HardwareState state;  ///< Hardware state for normal mode display
+        } normalMode;
     } data;
 };

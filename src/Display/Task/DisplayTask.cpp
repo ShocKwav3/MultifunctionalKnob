@@ -79,5 +79,9 @@ void DisplayTask::processRequest(const DisplayRequest& request) {
         case DisplayRequestType::CLEAR:
             display->clear();
             break;
+
+        case DisplayRequestType::DRAW_NORMAL_MODE:
+            display->drawNormalMode(request.data.normalMode.state);
+            break;
     }
 }

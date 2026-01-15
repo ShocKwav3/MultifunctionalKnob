@@ -44,6 +44,7 @@ private:
 
     void sendDrawMenuRequest(const MenuEvent& event);
     void sendClearRequest();
+    void sendDrawNormalModeRequest();
 
     static constexpr const char* TAG = "MenuEventHandler";
 };

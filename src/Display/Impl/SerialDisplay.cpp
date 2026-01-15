@@ -39,3 +39,19 @@ void SerialDisplay::showStatus(const char* key, const char* value) {
 void SerialDisplay::clear() {
     Serial.println("---");
 }
+
+void SerialDisplay::drawNormalMode(const HardwareState& state) {
+    Serial.println("=== Normal Mode Status ===");
+    Serial.print("Mode: ");
+    Serial.println(wheelModeToDisplayString(state.encoderWheelState.mode));
+    Serial.print("Direction: ");
+    Serial.println(wheelDirectionToDisplayString(state.encoderWheelState.direction));
+    Serial.print("Battery: ");
+    Serial.print(state.batteryPercent);
+    Serial.println("%");
+    Serial.print("BT Connected: ");
+    Serial.println(state.bleState.isConnected ? "Yes" : "No");
+    Serial.print("BT Pairing: ");
+    Serial.println(state.bleState.isPairingMode ? "Yes" : "No");
+    Serial.println("=========================");
+}

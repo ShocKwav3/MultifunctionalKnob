@@ -35,16 +35,35 @@
 #include "Event/Handler/MenuEventHandler.h"
 #include "Event/Dispatcher/MenuEventDispatcher.h"
 #include "Type/MenuEvent.h"
-#include "AppState.h"
+#include "state/AppState.h"
+#include "state/HardwareState.h"
 #include "BLE/BleCallbackHandler.h"
 
 BleKeyboard bleKeyboard(BLUETOOTH_DEVICE_NAME, BLUETOOTH_DEVICE_MANUFACTURER, BLUETOOTH_DEVICE_BATTERY_LEVEL_DEFAULT);
 EncoderDriver* encoderDriver;
 AppState appState;
+HardwareState hardwareState;  // Global hardware state instance
+TimerHandle_t btFlashTimer = nullptr;  // BT flash animation timer
 
 // Configuration management
 Preferences preferences;
 ConfigManager configManager(&preferences);
+
+/**
+ * @brief Timer callback for BT icon flashing animation
+ *
+ * Periodically sends DRAW_NORMAL_MODE requests while in pairing mode
+ * to create flashing animation. Timer runs at 500ms period (1Hz blink rate).
+ */
+void btFlashTimerCallback(TimerHandle_t xTimer) {
+    // Only refresh display if in pairing mode
+    if (hardwareState.bleState.isPairingMode && appState.displayRequestQueue != nullptr) {
+        DisplayRequest normalModeReq;
+        normalModeReq.type = DisplayRequestType::DRAW_NORMAL_MODE;
+        normalModeReq.data.normalMode.state = hardwareState;
+        xQueueSend(appState.displayRequestQueue, &normalModeReq, 0); // Non-blocking send
+    }
+}
 
 void setup()
 {
@@ -59,12 +78,11 @@ void setup()
 
     // Register BLE connection state callbacks for user feedback
     bleKeyboard.setOnConnect([]() {
-        BleCallbackHandler::handleConnect(&appState.blePairingState, appState.displayRequestQueue);
+        BleCallbackHandler::handleConnect(appState.displayRequestQueue);
     });
 
     bleKeyboard.setOnDisconnect([](int reason) {
-        BleCallbackHandler::handleDisconnect(reason, &appState.blePairingState,
-                                            appState.displayRequestQueue, &bleKeyboard);
+        BleCallbackHandler::handleDisconnect(reason, appState.displayRequestQueue, &bleKeyboard);
     });
 
     appState.encoderInputEventQueue = xQueueCreate(10, sizeof(EncoderInputEvent));
@@ -86,11 +104,22 @@ void setup()
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL, &encoderModeHandlerScroll);
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME, &encoderModeHandlerVolume);
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_ZOOM, &encoderModeHandlerZoom);
+    encoderModeManager.setDisplayQueue(appState.displayRequestQueue);
 
     // Load saved wheel mode from NVS and apply (defaults to SCROLL if no config exists)
     WheelMode savedWheelMode = configManager.loadWheelMode();
     EventEnum::EncoderModeEventTypes initialMode = EncoderModeHelper::fromWheelMode(savedWheelMode);
     encoderModeManager.setMode(initialMode);
+
+    // Initialize hardware state with loaded config
+    hardwareState.encoderWheelState.mode = savedWheelMode;
+    hardwareState.encoderWheelState.direction = configManager.getWheelDirection();
+    // TODO: Implement battery monitoring via ADC + voltage divider on GPIO pin
+    // Current placeholder value (100%) should be replaced with periodic ADC reads
+    // and voltage-to-percentage conversion. Consider adding low-battery warning threshold.
+    hardwareState.batteryPercent = 100;
+    hardwareState.bleState.isConnected = false;  // Updated by BLE callbacks
+    hardwareState.bleState.isPairingMode = false;
 
     // Initialize button event system
     static ButtonEventDispatcher buttonEventDispatcher(appState.buttonEventQueue);
@@ -102,11 +131,28 @@ void setup()
     appState.displayRequestQueue = displayTask.init(10);
     displayTask.start(2048, 1);
 
+    // Create BT flash timer for pairing animation (500ms period = 1Hz blink rate)
+    // Timer is started/stopped dynamically when entering/exiting pairing mode
+    btFlashTimer = xTimerCreate(
+        "BTFlash",              // Timer name
+        pdMS_TO_TICKS(500),     // 500ms period
+        pdTRUE,                 // Auto-reload (periodic)
+        nullptr,                // Timer ID (unused)
+        btFlashTimerCallback    // Callback function
+    );
+
     // Show welcome message on boot
     DisplayRequest initRequest;
     initRequest.type = DisplayRequestType::SHOW_MESSAGE;
     initRequest.data.message.value = "Ready";
     xQueueSend(appState.displayRequestQueue, &initRequest, portMAX_DELAY);
+
+    // Wait briefly for welcome message, then show normal mode status
+    vTaskDelay(pdMS_TO_TICKS(1000));  // 1 second delay
+    DisplayRequest normalModeRequest;
+    normalModeRequest.type = DisplayRequestType::DRAW_NORMAL_MODE;
+    normalModeRequest.data.normalMode.state = hardwareState;
+    xQueueSend(appState.displayRequestQueue, &normalModeRequest, portMAX_DELAY);
 
     // Initialize menu event pipeline
     MenuEventDispatcher::init(appState.menuEventQueue);
@@ -116,9 +162,9 @@ void setup()
     // Initialize menu system
     static MenuController menuController;
     MenuTree::initMenuTree();
-    MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager);
+    MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager, appState.displayRequestQueue);
     MenuTree::initButtonBehaviorActions(&configManager, &buttonEventHandler);
-    MenuTree::initBluetoothActions(&bleKeyboard, appState.displayRequestQueue, &appState.blePairingState);
+    MenuTree::initBluetoothActions(&bleKeyboard, appState.displayRequestQueue);
     
     // Initialize Device Status and About actions
     static ShowStatusAction showStatusAction(&configManager, &bleKeyboard, &DisplayFactory::getDisplay());

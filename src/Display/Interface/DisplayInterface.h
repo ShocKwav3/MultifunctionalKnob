@@ -2,6 +2,9 @@
 
 #include <stdint.h>
 
+// Forward declaration to avoid circular dependency
+struct HardwareState;
+
 /**
  * @brief Abstract interface for display output
  *
@@ -45,4 +48,10 @@ public:
      * @brief Clear the display
      */
     virtual void clear() = 0;
+
+    /**
+     * @brief Draw normal mode status screen with icons
+     * @param state Hardware state containing mode, direction, battery, BT status
+     */
+    virtual void drawNormalMode(const HardwareState& state) = 0;
 };
