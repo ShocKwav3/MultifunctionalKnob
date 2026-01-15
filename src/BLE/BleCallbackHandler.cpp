@@ -2,10 +2,10 @@
 #include "Display/Model/DisplayRequest.h"
 #include "Config/log_config.h"
 #include "state/HardwareState.h"
-#include "freertos/timers.h"
+#include "state/AppState.h"
 
 extern HardwareState hardwareState;
-extern TimerHandle_t btFlashTimer;
+extern AppState appState;
 
 namespace BleCallbackHandler {
 
@@ -17,8 +17,8 @@ void handleConnect(QueueHandle_t displayQueue) {
     hardwareState.bleState.isPairingMode = false;
 
     // Stop BT flash timer (pairing complete)
-    if (btFlashTimer != nullptr) {
-        xTimerStop(btFlashTimer, 0);
+    if (appState.btFlashTimer != nullptr) {
+        xTimerStop(appState.btFlashTimer, 0);
     }
 
     // Send connection status to display
@@ -58,8 +58,8 @@ void handleDisconnect(int reason, QueueHandle_t displayQueue, BleKeyboard* bleKe
         hardwareState.bleState.isPairingMode = false;
 
         // Stop BT flash timer (pairing aborted due to conflict)
-        if (btFlashTimer != nullptr) {
-            xTimerStop(btFlashTimer, 0);
+        if (appState.btFlashTimer != nullptr) {
+            xTimerStop(appState.btFlashTimer, 0);
         }
 
         // Guide user to resolve the conflict
@@ -79,8 +79,8 @@ void handleDisconnect(int reason, QueueHandle_t displayQueue, BleKeyboard* bleKe
     hardwareState.bleState.isPairingMode = false;
 
     // Stop BT flash timer (if it was running)
-    if (btFlashTimer != nullptr) {
-        xTimerStop(btFlashTimer, 0);
+    if (appState.btFlashTimer != nullptr) {
+        xTimerStop(appState.btFlashTimer, 0);
     }
 
     // Normal disconnect
@@ -98,6 +98,16 @@ void handleDisconnect(int reason, QueueHandle_t displayQueue, BleKeyboard* bleKe
     normalModeReq.type = DisplayRequestType::DRAW_NORMAL_MODE;
     normalModeReq.data.normalMode.state = hardwareState;
     xQueueSend(displayQueue, &normalModeReq, pdMS_TO_TICKS(10));
+}
+
+void btFlashTimerCallback(TimerHandle_t xTimer) {
+    // Only refresh display if in pairing mode
+    if (hardwareState.bleState.isPairingMode && appState.displayRequestQueue != nullptr) {
+        DisplayRequest normalModeReq;
+        normalModeReq.type = DisplayRequestType::DRAW_NORMAL_MODE;
+        normalModeReq.data.normalMode.state = hardwareState;
+        xQueueSend(appState.displayRequestQueue, &normalModeReq, 0); // Non-blocking send
+    }
 }
 
 } // namespace BleCallbackHandler

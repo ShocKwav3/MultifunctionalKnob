@@ -25,7 +25,3 @@ struct HardwareState {
 
 // Global hardware state instance (defined in main.cpp)
 extern HardwareState hardwareState;
-
-// BT flash animation timer (defined in main.cpp)
-// Used to create flashing BT icon during pairing mode
-extern TimerHandle_t btFlashTimer;

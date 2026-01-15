@@ -3,9 +3,10 @@
 #include "Config/log_config.h"
 #include "state/HardwareState.h"
 
-MenuEventHandler::MenuEventHandler(QueueHandle_t menuEventQueue, QueueHandle_t displayRequestQueue)
+MenuEventHandler::MenuEventHandler(QueueHandle_t menuEventQueue, QueueHandle_t displayRequestQueue, HardwareState* hwState)
     : menuEventQueue(menuEventQueue)
-    , displayRequestQueue(displayRequestQueue) {
+    , displayRequestQueue(displayRequestQueue)
+    , hardwareState(hwState) {
 }
 
 void MenuEventHandler::start(uint32_t stackSize, UBaseType_t priority) {
@@ -66,7 +67,7 @@ void MenuEventHandler::handleItemSelected(const MenuEvent& event) {
 }
 
 void MenuEventHandler::sendDrawMenuRequest(const MenuEvent& event) {
-    if (event.currentItem == nullptr || displayRequestQueue == nullptr) {
+    if (event.currentItem == nullptr) {
         return;
     }
 
@@ -101,10 +102,6 @@ void MenuEventHandler::sendDrawMenuRequest(const MenuEvent& event) {
 }
 
 void MenuEventHandler::sendClearRequest() {
-    if (displayRequestQueue == nullptr) {
-        return;
-    }
-
     DisplayRequest request{};
     request.type = DisplayRequestType::CLEAR;
 
@@ -114,13 +111,9 @@ void MenuEventHandler::sendClearRequest() {
 }
 
 void MenuEventHandler::sendDrawNormalModeRequest() {
-    if (displayRequestQueue == nullptr) {
-        return;
-    }
-
     DisplayRequest request{};
     request.type = DisplayRequestType::DRAW_NORMAL_MODE;
-    request.data.normalMode.state = hardwareState;
+    request.data.normalMode.state = *hardwareState;
 
     if (xQueueSend(displayRequestQueue, &request, 0) != pdTRUE) {
         LOG_INFO(TAG, "Display queue full, normal mode request dropped");

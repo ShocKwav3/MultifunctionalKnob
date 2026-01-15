@@ -10,20 +10,24 @@
 #include "EncoderMode/Interface/EncoderModeBaseInterface.h"
 #include "Event/Handler/EncoderEventHandler.h"
 
+// Forward declarations
 class EncoderEventHandler;
+struct HardwareState;
 
 class EncoderModeManager {
 public:
-    EncoderModeManager(EncoderEventHandler* encoderEventHandler, EncoderModeSelector* encoderModeSelector);
+    EncoderModeManager(
+        EncoderEventHandler* encoderEventHandler,
+        EncoderModeSelector* encoderModeSelector,
+        QueueHandle_t displayQueue,
+        HardwareState* hwState
+    );
 
     void registerHandler(EventEnum::EncoderModeEventTypes mode, EncoderModeHandlerInterface* handler);
 
     void setMode(EventEnum::EncoderModeEventTypes mode);
     void enterModeSelection();
     void cancelModeSelection();
-
-    // Set display queue for status updates
-    void setDisplayQueue(QueueHandle_t queue);
 
 private:
     EventEnum::EncoderModeEventTypes currentMode;
@@ -33,7 +37,8 @@ private:
     EncoderModeSelector* encoderModeSelector = nullptr;
 
     EncoderEventHandler* encoderEventHandler;
-    QueueHandle_t displayQueue = nullptr;  // For sending state updates to display
+    QueueHandle_t displayQueue;  ///< For sending state updates to display
+    HardwareState* hardwareState;  ///< Hardware state for display requests
 
     void setCurrentHandler(EncoderModeBaseInterface* handler);
     void updateDisplayState();  // Helper to send DRAW_NORMAL_MODE request

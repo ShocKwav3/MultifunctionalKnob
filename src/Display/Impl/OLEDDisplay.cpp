@@ -158,7 +158,13 @@ void OLEDDisplay::drawNormalMode(const HardwareState& state) {
     }
 
     display.clearDisplay();
+    drawStatusBar(state);
+    drawModeIndicator(state.encoderWheelState.mode);
+    drawDirectionIndicator(state.encoderWheelState.direction);
+    display.display();
+}
 
+void OLEDDisplay::drawStatusBar(const HardwareState& state) {
     // STATUS BAR (y=0-7): BT icon + battery
     // Draw BT icon with flashing effect when pairing
     if (state.bleState.isConnected) {
@@ -183,11 +189,13 @@ void OLEDDisplay::drawNormalMode(const HardwareState& state) {
     display.getTextBounds(batteryStr, 0, 0, &x1, &y1, &w, &h);
     display.setCursor(OLED_SCREEN_WIDTH - w - 2, 0);
     display.print(batteryStr);
+}
 
+void OLEDDisplay::drawModeIndicator(WheelMode mode) {
     // MAIN AREA (y=8-23): Large mode indicator (S/V/Z)
     display.setTextSize(2);
     const char* modeChar;
-    switch (state.encoderWheelState.mode) {
+    switch (mode) {
         case WheelMode::SCROLL:
             modeChar = "S";
             break;
@@ -203,23 +211,25 @@ void OLEDDisplay::drawNormalMode(const HardwareState& state) {
     }
 
     // Center mode indicator horizontally and vertically in main area
+    int16_t x1, y1;
+    uint16_t w, h;
     display.getTextBounds(modeChar, 0, 0, &x1, &y1, &w, &h);
     int16_t modeX = (OLED_SCREEN_WIDTH - w) / 2;
     int16_t modeY = 8 + ((16 - h) / 2);  // 16 = height of main area (y=8-23)
     display.setCursor(modeX, modeY);
     display.print(modeChar);
+}
 
+void OLEDDisplay::drawDirectionIndicator(WheelDirection direction) {
     // BOTTOM ROW (y=24-31): Direction indicator using arrow bitmaps
     display.setTextSize(1);
 
     // Draw direction arrow icon (up for normal, down for reversed)
-    if (state.encoderWheelState.direction == WheelDirection::NORMAL) {
+    if (direction == WheelDirection::NORMAL) {
         display.drawBitmap(0, 24, arrowUpIcon, ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
     } else {
         display.drawBitmap(0, 24, arrowDownIcon, ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
     }
-
-    display.display();
 }
 
 void OLEDDisplay::centerText(const char* text, uint8_t y) {

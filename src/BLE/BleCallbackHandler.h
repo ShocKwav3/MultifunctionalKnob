@@ -3,6 +3,7 @@
 #include "BleKeyboard.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
+#include "freertos/timers.h"
 
 // Forward declarations
 struct DisplayRequest;
@@ -41,4 +42,14 @@ namespace BleCallbackHandler {
      * @param bleKeyboard BleKeyboard instance for stopping advertising
      */
     void handleDisconnect(int reason, QueueHandle_t displayQueue, BleKeyboard* bleKeyboard);
+
+    /**
+     * @brief Timer callback for BT icon flashing animation
+     *
+     * Periodically sends DRAW_NORMAL_MODE requests while in pairing mode
+     * to create flashing animation. Timer runs at 500ms period (1Hz blink rate).
+     *
+     * @param xTimer Timer handle (unused)
+     */
+    void btFlashTimerCallback(TimerHandle_t xTimer);
 }

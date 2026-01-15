@@ -43,27 +43,10 @@ BleKeyboard bleKeyboard(BLUETOOTH_DEVICE_NAME, BLUETOOTH_DEVICE_MANUFACTURER, BL
 EncoderDriver* encoderDriver;
 AppState appState;
 HardwareState hardwareState;  // Global hardware state instance
-TimerHandle_t btFlashTimer = nullptr;  // BT flash animation timer
 
 // Configuration management
 Preferences preferences;
 ConfigManager configManager(&preferences);
-
-/**
- * @brief Timer callback for BT icon flashing animation
- *
- * Periodically sends DRAW_NORMAL_MODE requests while in pairing mode
- * to create flashing animation. Timer runs at 500ms period (1Hz blink rate).
- */
-void btFlashTimerCallback(TimerHandle_t xTimer) {
-    // Only refresh display if in pairing mode
-    if (hardwareState.bleState.isPairingMode && appState.displayRequestQueue != nullptr) {
-        DisplayRequest normalModeReq;
-        normalModeReq.type = DisplayRequestType::DRAW_NORMAL_MODE;
-        normalModeReq.data.normalMode.state = hardwareState;
-        xQueueSend(appState.displayRequestQueue, &normalModeReq, 0); // Non-blocking send
-    }
-}
 
 void setup()
 {
@@ -100,11 +83,10 @@ void setup()
     static EncoderEventHandler encoderEventHandler(appState.encoderInputEventQueue);
     encoderEventHandler.start();
 
-    static EncoderModeManager encoderModeManager(&encoderEventHandler, &encoderModeSelector);
+    static EncoderModeManager encoderModeManager(&encoderEventHandler, &encoderModeSelector, appState.displayRequestQueue, &hardwareState);
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL, &encoderModeHandlerScroll);
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME, &encoderModeHandlerVolume);
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_ZOOM, &encoderModeHandlerZoom);
-    encoderModeManager.setDisplayQueue(appState.displayRequestQueue);
 
     // Load saved wheel mode from NVS and apply (defaults to SCROLL if no config exists)
     WheelMode savedWheelMode = configManager.loadWheelMode();
@@ -133,12 +115,12 @@ void setup()
 
     // Create BT flash timer for pairing animation (500ms period = 1Hz blink rate)
     // Timer is started/stopped dynamically when entering/exiting pairing mode
-    btFlashTimer = xTimerCreate(
+    appState.btFlashTimer = xTimerCreate(
         "BTFlash",              // Timer name
         pdMS_TO_TICKS(500),     // 500ms period
         pdTRUE,                 // Auto-reload (periodic)
         nullptr,                // Timer ID (unused)
-        btFlashTimerCallback    // Callback function
+        BleCallbackHandler::btFlashTimerCallback    // Callback function
     );
 
     // Show welcome message on boot
@@ -156,7 +138,7 @@ void setup()
 
     // Initialize menu event pipeline
     MenuEventDispatcher::init(appState.menuEventQueue);
-    static MenuEventHandler menuEventHandler(appState.menuEventQueue, appState.displayRequestQueue);
+    static MenuEventHandler menuEventHandler(appState.menuEventQueue, appState.displayRequestQueue, &hardwareState);
     menuEventHandler.start(2048, 1);
 
     // Initialize menu system

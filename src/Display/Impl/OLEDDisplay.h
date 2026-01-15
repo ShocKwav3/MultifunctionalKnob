@@ -36,5 +36,10 @@ private:
     void ensureInitialized();
     void centerText(const char* text, uint8_t y);
 
+    // Normal mode drawing helpers (decomposed from drawNormalMode)
+    void drawStatusBar(const HardwareState& state);
+    void drawModeIndicator(WheelMode mode);
+    void drawDirectionIndicator(WheelDirection direction);
+
     static constexpr const char* TAG = "OLEDDisplay";
 };

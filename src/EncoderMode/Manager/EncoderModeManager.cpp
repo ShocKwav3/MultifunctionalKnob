@@ -3,14 +3,18 @@
 #include "Display/Model/DisplayRequest.h"
 #include "state/HardwareState.h"
 
-extern HardwareState hardwareState;
-
-EncoderModeManager::EncoderModeManager(EncoderEventHandler* encoderEventHandler, EncoderModeSelector* encoderModeSelector)
+EncoderModeManager::EncoderModeManager(
+    EncoderEventHandler* encoderEventHandler,
+    EncoderModeSelector* encoderModeSelector,
+    QueueHandle_t displayQueue,
+    HardwareState* hwState
+)
     : encoderEventHandler(encoderEventHandler),
       encoderModeSelector(encoderModeSelector),
+      displayQueue(displayQueue),
+      hardwareState(hwState),
       currentMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL),
-      previousMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL),
-      displayQueue(nullptr) {}
+      previousMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL) {}
 
 void EncoderModeManager::registerHandler(EventEnum::EncoderModeEventTypes mode, EncoderModeHandlerInterface* handler) {
     if (static_cast<int>(mode) >= static_cast<int>(EventEnum::EncoderModeEventTypes::__ENCODER_MODE_SELECTION_LIMIT)) return;
@@ -38,8 +42,8 @@ void EncoderModeManager::setMode(EventEnum::EncoderModeEventTypes mode) {
         setCurrentHandler(handler);
     }
 
-    // Update global system state and refresh display
-    hardwareState.encoderWheelState.mode = EncoderModeHelper::toWheelMode(mode);
+    // Update hardware state and refresh display
+    hardwareState->encoderWheelState.mode = EncoderModeHelper::toWheelMode(mode);
     updateDisplayState();
 }
 
@@ -56,18 +60,10 @@ void EncoderModeManager::cancelModeSelection() {
     setMode(previousMode);
 }
 
-void EncoderModeManager::setDisplayQueue(QueueHandle_t queue) {
-    displayQueue = queue;
-}
-
 void EncoderModeManager::updateDisplayState() {
-    if (displayQueue == nullptr) {
-        return;  // Display queue not set yet
-    }
-
     DisplayRequest request;
     request.type = DisplayRequestType::DRAW_NORMAL_MODE;
-    request.data.normalMode.state = hardwareState;
+    request.data.normalMode.state = *hardwareState;
 
     // Non-blocking send with short timeout
     xQueueSend(displayQueue, &request, pdMS_TO_TICKS(10));

@@ -3,12 +3,12 @@
 #include "Display/Model/DisplayRequest.h"
 #include "Config/log_config.h"
 #include "state/HardwareState.h"
+#include "state/AppState.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
-#include "freertos/timers.h"
 
 extern HardwareState hardwareState;
-extern TimerHandle_t btFlashTimer;
+extern AppState appState;
 
 PairAction::PairAction(BleKeyboard* ble, QueueHandle_t displayQueue)
     : bleKeyboard(ble), displayRequestQueue(displayQueue) {}
@@ -35,8 +35,8 @@ void PairAction::execute(const MenuItem* context) {
     LOG_INFO("PairAction", "Pairing mode flag set");
 
     // Start BT flash timer for pairing animation
-    if (btFlashTimer != nullptr) {
-        xTimerStart(btFlashTimer, 0);
+    if (appState.btFlashTimer != nullptr) {
+        xTimerStart(appState.btFlashTimer, 0);
         LOG_INFO("PairAction", "BT flash timer started");
     }
 

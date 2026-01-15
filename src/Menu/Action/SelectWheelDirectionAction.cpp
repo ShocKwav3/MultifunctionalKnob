@@ -16,9 +16,10 @@ void SelectWheelDirectionAction::execute(const MenuItem* context) {
     Error saveResult = configManager->setWheelDirection(targetDirection);
     if (saveResult != Error::OK) {
         LOG_ERROR("SelectWheelDir", "Failed to persist wheel direction");
-    } else {
-        LOG_INFO("SelectWheelDir", "Wheel direction saved: %s", wheelDirectionToString(targetDirection));
+        return;  // Early return on error - don't update state or display
     }
+
+    LOG_INFO("SelectWheelDir", "Wheel direction saved: %s", wheelDirectionToString(targetDirection));
 
     // Update global hardware state immediately (AC 4)
     hardwareState.encoderWheelState.direction = targetDirection;
