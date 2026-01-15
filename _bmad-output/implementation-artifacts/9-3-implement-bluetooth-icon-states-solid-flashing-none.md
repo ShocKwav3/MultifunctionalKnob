@@ -1,6 +1,6 @@
 # Story 9.3: Implement Bluetooth Icon States (Solid/Flashing/None)
 
-Status: review
+Status: done
 
 ## Story
 

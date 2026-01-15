@@ -64,7 +64,7 @@ development_status:
   epic-9: in-progress
   9-1-implement-oleddisplay-driver-for-128x32-ssd1306: done
   9-2-create-normal-mode-status-screen-with-icons: done
-  9-3-implement-bluetooth-icon-states-solid-flashing-none: review
+  9-3-implement-bluetooth-icon-states-solid-flashing-none: done
   9-4-create-menu-mode-display-with-status-bar: ready-for-dev
   9-5-add-display-power-control-menu-option: ready-for-dev
   9-6-implement-display-wake-on-menu-activation: ready-for-dev
