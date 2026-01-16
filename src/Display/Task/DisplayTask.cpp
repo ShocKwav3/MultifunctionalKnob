@@ -62,7 +62,7 @@ void DisplayTask::processRequest(const DisplayRequest& request) {
                 request.data.menu.items,
                 request.data.menu.count,
                 request.data.menu.selected,
-                request.data.menu.state
+                request.data.menu.hwState
             );
             break;
 
@@ -82,7 +82,7 @@ void DisplayTask::processRequest(const DisplayRequest& request) {
             break;
 
         case DisplayRequestType::DRAW_NORMAL_MODE:
-            display->drawNormalMode(request.data.normalMode.state);
+            display->drawNormalMode(request.data.normalMode.hwState);
             break;
     }
 }

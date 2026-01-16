@@ -34,7 +34,7 @@ void OLEDDisplay::ensureInitialized() {
     LOG_INFO(TAG, "Initialized 128x32 SSD1306");
 }
 
-void OLEDDisplay::showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected, const HardwareState& state) {
+void OLEDDisplay::showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected, const HardwareState& hwState) {
     ensureInitialized();
 
     if (!initialized || items == nullptr || count == 0) {
@@ -44,7 +44,7 @@ void OLEDDisplay::showMenu(const char* title, const char* const* items, uint8_t 
     display.clearDisplay();
 
     // Draw status bar (y=0-7) with BT icon and mode indicator
-    drawMenuModeStatusBar(state);
+    drawMenuModeStatusBar(hwState);
 
     // Display menu items starting below status bar (y=8)
     // With 24 pixels available (y=8-31) and 8px font, we can show 3 items
@@ -172,7 +172,7 @@ void OLEDDisplay::clear() {
     display.display();
 }
 
-void OLEDDisplay::drawNormalMode(const HardwareState& state) {
+void OLEDDisplay::drawNormalMode(const HardwareState& hwState) {
     ensureInitialized();
 
     if (!initialized) {
@@ -180,19 +180,19 @@ void OLEDDisplay::drawNormalMode(const HardwareState& state) {
     }
 
     display.clearDisplay();
-    drawStatusBar(state);
-    drawModeIndicator(state.encoderWheelState.mode);
-    drawDirectionIndicator(state.encoderWheelState.direction);
+    drawStatusBar(hwState);
+    drawModeIndicator(hwState.encoderWheelState.mode);
+    drawDirectionIndicator(hwState.encoderWheelState.direction);
     display.display();
 }
 
-void OLEDDisplay::drawStatusBar(const HardwareState& state) {
+void OLEDDisplay::drawStatusBar(const HardwareState& hwState) {
     // STATUS BAR (y=0-7): BT icon + battery
     // Draw BT icon with flashing effect when pairing
-    if (state.bleState.isConnected) {
+    if (hwState.bleState.isConnected) {
         // Solid icon when connected
         display.drawBitmap(0, 0, btIcon, ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
-    } else if (state.bleState.isPairingMode) {
+    } else if (hwState.bleState.isPairingMode) {
         // Flashing icon when pairing (time-based toggle for consistency)
         if ((millis() / 500) % 2 == 0) {  // Toggle every 500ms (1Hz blink rate)
             display.drawBitmap(0, 0, btIcon, ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
@@ -203,7 +203,7 @@ void OLEDDisplay::drawStatusBar(const HardwareState& state) {
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
     char batteryStr[8];
-    snprintf(batteryStr, sizeof(batteryStr), "%d%%", state.batteryPercent);
+    snprintf(batteryStr, sizeof(batteryStr), "%d%%", hwState.batteryPercent);
 
     // Calculate x position to right-align battery text
     int16_t x1, y1;
@@ -254,14 +254,14 @@ void OLEDDisplay::drawDirectionIndicator(WheelDirection direction) {
     }
 }
 
-void OLEDDisplay::drawMenuModeStatusBar(const HardwareState& state) {
+void OLEDDisplay::drawMenuModeStatusBar(const HardwareState& hwState) {
     // STATUS BAR for MENU MODE (y=0-7): BT icon (left) + mode (center) + battery (right)
 
     // Draw BT icon on left side with flashing effect when pairing
-    if (state.bleState.isConnected) {
+    if (hwState.bleState.isConnected) {
         // Solid icon when connected
         display.drawBitmap(0, 0, btIcon, ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
-    } else if (state.bleState.isPairingMode) {
+    } else if (hwState.bleState.isPairingMode) {
         // Flashing icon when pairing (time-based toggle for consistency)
         if ((millis() / 500) % 2 == 0) {  // Toggle every 500ms (1Hz blink rate)
             display.drawBitmap(0, 0, btIcon, ICON_WIDTH, ICON_HEIGHT, SSD1306_WHITE);
@@ -273,7 +273,7 @@ void OLEDDisplay::drawMenuModeStatusBar(const HardwareState& state) {
 
     // Draw mode indicator in center
     const char* modeChar;
-    switch (state.encoderWheelState.mode) {
+    switch (hwState.encoderWheelState.mode) {
         case WheelMode::SCROLL:
             modeChar = "S";
             break;
@@ -298,7 +298,7 @@ void OLEDDisplay::drawMenuModeStatusBar(const HardwareState& state) {
 
     // Draw battery percentage on right side
     char batteryStr[8];
-    snprintf(batteryStr, sizeof(batteryStr), "%d%%", state.batteryPercent);
+    snprintf(batteryStr, sizeof(batteryStr), "%d%%", hwState.batteryPercent);
 
     // Calculate x position to right-align battery text
     display.getTextBounds(batteryStr, 0, 0, &x1, &y1, &w, &h);

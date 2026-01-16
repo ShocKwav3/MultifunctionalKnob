@@ -57,7 +57,7 @@ void PairAction::execute(const MenuItem* context) {
     // Update status screen to show pairing state (BT icon will flash)
     DisplayRequest normalModeReq;
     normalModeReq.type = DisplayRequestType::DRAW_NORMAL_MODE;
-    normalModeReq.data.normalMode.state = hardwareState;
+    normalModeReq.data.normalMode.hwState = hardwareState;
     xQueueSend(displayRequestQueue, &normalModeReq, pdMS_TO_TICKS(10));
 }
 

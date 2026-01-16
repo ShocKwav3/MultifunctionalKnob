@@ -34,7 +34,7 @@ void handleConnect(QueueHandle_t displayQueue) {
     // Update status screen with new BT state
     DisplayRequest normalModeReq;
     normalModeReq.type = DisplayRequestType::DRAW_NORMAL_MODE;
-    normalModeReq.data.normalMode.state = hardwareState;
+    normalModeReq.data.normalMode.hwState = hardwareState;
     xQueueSend(displayQueue, &normalModeReq, pdMS_TO_TICKS(10));
 
     // NOTE: Menu does NOT exit on connection (user stays in menu)
@@ -96,7 +96,7 @@ void handleDisconnect(int reason, QueueHandle_t displayQueue, BleKeyboard* bleKe
     // Update status screen with new BT state
     DisplayRequest normalModeReq;
     normalModeReq.type = DisplayRequestType::DRAW_NORMAL_MODE;
-    normalModeReq.data.normalMode.state = hardwareState;
+    normalModeReq.data.normalMode.hwState = hardwareState;
     xQueueSend(displayQueue, &normalModeReq, pdMS_TO_TICKS(10));
 }
 
@@ -105,7 +105,7 @@ void btFlashTimerCallback(TimerHandle_t xTimer) {
     if (hardwareState.bleState.isPairingMode && appState.displayRequestQueue != nullptr) {
         DisplayRequest normalModeReq;
         normalModeReq.type = DisplayRequestType::DRAW_NORMAL_MODE;
-        normalModeReq.data.normalMode.state = hardwareState;
+        normalModeReq.data.normalMode.hwState = hardwareState;
         xQueueSend(appState.displayRequestQueue, &normalModeReq, 0); // Non-blocking send
     }
 }

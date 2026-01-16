@@ -63,7 +63,7 @@ void EncoderModeManager::cancelModeSelection() {
 void EncoderModeManager::updateDisplayState() {
     DisplayRequest request;
     request.type = DisplayRequestType::DRAW_NORMAL_MODE;
-    request.data.normalMode.state = *hardwareState;
+    request.data.normalMode.hwState = *hardwareState;
 
     // Non-blocking send with short timeout
     xQueueSend(displayQueue, &request, pdMS_TO_TICKS(10));
