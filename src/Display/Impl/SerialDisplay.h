@@ -13,12 +13,12 @@ class SerialDisplay : public DisplayInterface {
 public:
     SerialDisplay();
 
-    void showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected) override;
+    void showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected, const HardwareState& hwState) override;
     void showMessage(const char* message) override;
     void showConfirmation(const char* message) override;
     void showStatus(const char* key, const char* value) override;
     void clear() override;
-    void drawNormalMode(const HardwareState& state) override;
+    void drawNormalMode(const HardwareState& hwState) override;
 
 private:
     static constexpr const char* TAG = "SerialDisplay";

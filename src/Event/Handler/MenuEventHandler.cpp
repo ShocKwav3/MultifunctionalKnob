@@ -76,6 +76,7 @@ void MenuEventHandler::sendDrawMenuRequest(const MenuEvent& event) {
     request.data.menu.title = event.currentItem->label;
     request.data.menu.count = event.itemCount;
     request.data.menu.selected = event.selectedIndex;
+    request.data.menu.hwState = *hardwareState;  // Pass hardware state for menu status bar
 
     // Populate menu items from children
     const MenuItem* children = event.currentItem->children;
@@ -113,7 +114,7 @@ void MenuEventHandler::sendClearRequest() {
 void MenuEventHandler::sendDrawNormalModeRequest() {
     DisplayRequest request{};
     request.type = DisplayRequestType::DRAW_NORMAL_MODE;
-    request.data.normalMode.state = *hardwareState;
+    request.data.normalMode.hwState = *hardwareState;
 
     if (xQueueSend(displayRequestQueue, &request, 0) != pdTRUE) {
         LOG_INFO(TAG, "Display queue full, normal mode request dropped");

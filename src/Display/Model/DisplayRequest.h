@@ -37,6 +37,7 @@ struct DisplayRequest {
             const char* items[DISPLAY_MAX_MENU_ITEMS];  ///< Array of menu item labels
             uint8_t count;                              ///< Number of items
             uint8_t selected;                           ///< Currently selected index
+            HardwareState hwState;                      ///< Hardware state for menu status bar
         } menu;
 
         struct {
@@ -49,7 +50,7 @@ struct DisplayRequest {
         } message;
 
         struct {
-            HardwareState state;  ///< Hardware state for normal mode display
+            HardwareState hwState;  ///< Hardware state for normal mode display
         } normalMode;
     } data;
 };

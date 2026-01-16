@@ -17,7 +17,7 @@ class OLEDDisplay : public DisplayInterface {
 public:
     OLEDDisplay();
 
-    void showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected) override;
+    void showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected, const HardwareState& hwState) override;
     void showMessage(const char* message) override;
     void showConfirmation(const char* message) override;
     void showStatus(const char* key, const char* value) override;
@@ -27,7 +27,7 @@ public:
      * @brief Draw normal mode status screen with icons
      * @param state Hardware state containing mode, direction, battery, BT status
      */
-    void drawNormalMode(const HardwareState& state) override;
+    void drawNormalMode(const HardwareState& hwState) override;
 
 private:
     Adafruit_SSD1306 display;
@@ -37,9 +37,12 @@ private:
     void centerText(const char* text, uint8_t y);
 
     // Normal mode drawing helpers (decomposed from drawNormalMode)
-    void drawStatusBar(const HardwareState& state);
+    void drawStatusBar(const HardwareState& hwState);
     void drawModeIndicator(WheelMode mode);
     void drawDirectionIndicator(WheelDirection direction);
+
+    // Menu mode drawing helpers
+    void drawMenuModeStatusBar(const HardwareState& hwState);
 
     static constexpr const char* TAG = "OLEDDisplay";
 };

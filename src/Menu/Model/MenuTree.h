@@ -14,6 +14,7 @@
 
 // Forward declarations
 class ButtonEventHandler;
+struct HardwareState;
 
 /**
  * @brief Static menu tree structure
@@ -263,17 +264,19 @@ inline constexpr uint8_t getMainMenuCount() {
  *
  * Creates SelectWheelModeAction instances for Scroll, Volume, and Zoom modes.
  * Creates SelectWheelDirectionAction instances for Normal and Reversed directions.
- * Must be called after DI objects (ConfigManager, EncoderModeManager, displayRequestQueue) are created.
+ * Must be called after DI objects (ConfigManager, EncoderModeManager, displayRequestQueue, HardwareState) are created.
  *
  * @param config ConfigManager instance for NVS persistence
  * @param modeMgr EncoderModeManager instance for runtime mode switching
  * @param displayQueue Queue for display refresh on direction change
+ * @param hwState HardwareState instance for display state updates (DIP)
  */
-inline void initWheelBehaviorActions(ConfigManager* config, EncoderModeManager* modeMgr, QueueHandle_t displayQueue) {
+inline void initWheelBehaviorActions(ConfigManager* config, EncoderModeManager* modeMgr, QueueHandle_t displayQueue, HardwareState* hwState) {
     // Create static action instances (must outlive menu)
-    static SelectWheelModeAction scrollAction(WheelMode::SCROLL, config, modeMgr);
-    static SelectWheelModeAction volumeAction(WheelMode::VOLUME, config, modeMgr);
-    static SelectWheelModeAction zoomAction(WheelMode::ZOOM, config, modeMgr);
+    // HardwareState injected via constructor (Dependency Inversion Principle)
+    static SelectWheelModeAction scrollAction(WheelMode::SCROLL, config, modeMgr, hwState);
+    static SelectWheelModeAction volumeAction(WheelMode::VOLUME, config, modeMgr, hwState);
+    static SelectWheelModeAction zoomAction(WheelMode::ZOOM, config, modeMgr, hwState);
 
     // Assign actions to wheel mode submenu items
     // Use WheelMode enum values to ensure alignment with menu labels

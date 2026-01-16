@@ -5,10 +5,13 @@ SerialDisplay::SerialDisplay() {
     LOG_INFO(TAG, "Initialized");
 }
 
-void SerialDisplay::showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected) {
+void SerialDisplay::showMenu(const char* title, const char* const* items, uint8_t count, uint8_t selected, const HardwareState& hwState) {
     if (items == nullptr || count == 0) {
         return;
     }
+
+    // Note: hwState parameter available but not used in serial output
+    // Could be enhanced to show status bar info in serial output if desired
 
     if (title != nullptr) {
         Serial.println(title);
@@ -40,18 +43,18 @@ void SerialDisplay::clear() {
     Serial.println("---");
 }
 
-void SerialDisplay::drawNormalMode(const HardwareState& state) {
+void SerialDisplay::drawNormalMode(const HardwareState& hwState) {
     Serial.println("=== Normal Mode Status ===");
     Serial.print("Mode: ");
-    Serial.println(wheelModeToDisplayString(state.encoderWheelState.mode));
+    Serial.println(wheelModeToDisplayString(hwState.encoderWheelState.mode));
     Serial.print("Direction: ");
-    Serial.println(wheelDirectionToDisplayString(state.encoderWheelState.direction));
+    Serial.println(wheelDirectionToDisplayString(hwState.encoderWheelState.direction));
     Serial.print("Battery: ");
-    Serial.print(state.batteryPercent);
+    Serial.print(hwState.batteryPercent);
     Serial.println("%");
     Serial.print("BT Connected: ");
-    Serial.println(state.bleState.isConnected ? "Yes" : "No");
+    Serial.println(hwState.bleState.isConnected ? "Yes" : "No");
     Serial.print("BT Pairing: ");
-    Serial.println(state.bleState.isPairingMode ? "Yes" : "No");
+    Serial.println(hwState.bleState.isPairingMode ? "Yes" : "No");
     Serial.println("=========================");
 }

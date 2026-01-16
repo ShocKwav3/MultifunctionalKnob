@@ -28,7 +28,7 @@ void SelectWheelDirectionAction::execute(const MenuItem* context) {
     if (displayRequestQueue != nullptr) {
         DisplayRequest normalModeReq;
         normalModeReq.type = DisplayRequestType::DRAW_NORMAL_MODE;
-        normalModeReq.data.normalMode.state = hardwareState;
+        normalModeReq.data.normalMode.hwState = hardwareState;
         xQueueSend(displayRequestQueue, &normalModeReq, pdMS_TO_TICKS(10));
     }
 }

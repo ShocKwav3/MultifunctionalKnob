@@ -133,7 +133,7 @@ void setup()
     vTaskDelay(pdMS_TO_TICKS(1000));  // 1 second delay
     DisplayRequest normalModeRequest;
     normalModeRequest.type = DisplayRequestType::DRAW_NORMAL_MODE;
-    normalModeRequest.data.normalMode.state = hardwareState;
+    normalModeRequest.data.normalMode.hwState = hardwareState;
     xQueueSend(appState.displayRequestQueue, &normalModeRequest, portMAX_DELAY);
 
     // Initialize menu event pipeline
@@ -144,7 +144,7 @@ void setup()
     // Initialize menu system
     static MenuController menuController;
     MenuTree::initMenuTree();
-    MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager, appState.displayRequestQueue);
+    MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager, appState.displayRequestQueue, &hardwareState);
     MenuTree::initButtonBehaviorActions(&configManager, &buttonEventHandler);
     MenuTree::initBluetoothActions(&bleKeyboard, appState.displayRequestQueue);
     

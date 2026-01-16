@@ -107,13 +107,17 @@ void MenuController::handleSelect() {
         MenuEventDispatcher::dispatchItemSelected(selected);
         // Pass currentItem (parent branch) as context for context-aware actions
         selected->action->execute(currentItem);
-        
+
         // If action returns nullptr for confirmation (Device Status, About),
         // enter viewing mode to prevent rotation from overwriting the display
         const char* confirmation = selected->action->getConfirmationMessage();
         if (confirmation == nullptr) {
             viewing = true;
             LOG_DEBUG(TAG, "Entered viewing mode");
+        } else {
+            // Action completed with confirmation: redraw menu to refresh status bar
+            // This ensures any state changes (like wheel mode selection) are immediately visible
+            emitNavigationChanged();
         }
     }
 }
