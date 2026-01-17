@@ -147,7 +147,7 @@ void setup()
     menuEventHandler.start(2048, 1);
 
     // Initialize menu system
-    static MenuController menuController;
+    static MenuController menuController(&DisplayFactory::getDisplay());
     MenuTree::initMenuTree();
     MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager, appState.displayRequestQueue, &hardwareState);
     MenuTree::initButtonBehaviorActions(&configManager, &buttonEventHandler);
