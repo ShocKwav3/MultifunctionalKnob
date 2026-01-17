@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include "../Model/MenuItem.h"
 
+// Forward declarations
+class DisplayInterface;
+
 /**
  * @brief Menu controller state machine
  *
@@ -14,7 +17,7 @@
  */
 class MenuController {
 public:
-    MenuController();
+    MenuController(DisplayInterface* display);
 
     /**
      * @brief Check if menu system is currently active
@@ -73,6 +76,7 @@ public:
     uint8_t getSelectedIndex() const;
 
 private:
+    DisplayInterface* display;
     bool active;
     bool viewing;                 ///< True when viewing a leaf screen (Device Status, About)
     const MenuItem* currentItem;  ///< Current menu branch (parent of visible items)

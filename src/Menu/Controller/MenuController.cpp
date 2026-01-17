@@ -2,12 +2,14 @@
 #include "Menu/Action/MenuAction.h"
 #include "Event/Dispatcher/MenuEventDispatcher.h"
 #include "Menu/Model/MenuTree.h"
+#include "Display/Interface/DisplayInterface.h"
 #include "Config/log_config.h"
 
 static constexpr const char* TAG = "MenuController";
 
-MenuController::MenuController()
-    : active(false)
+MenuController::MenuController(DisplayInterface* display)
+    : display(display)
+    , active(false)
     , viewing(false)
     , currentItem(nullptr)
     , selectedIndex(0) {
@@ -26,6 +28,14 @@ bool MenuController::canSelect() const {
 }
 
 void MenuController::activate() {
+    LOG_INFO(TAG, "Activating menu");
+
+    // Wake display if it's off (updates hardwareState.displayPower internally)
+    if (display != nullptr) {
+        display->setPower(true);
+    }
+
+    // Activate menu
     active = true;
     viewing = false;
     currentItem = MenuTree::getRoot();
