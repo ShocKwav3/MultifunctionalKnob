@@ -66,7 +66,7 @@ development_status:
   9-2-create-normal-mode-status-screen-with-icons: done
   9-3-implement-bluetooth-icon-states-solid-flashing-none: done
   9-4-create-menu-mode-display-with-status-bar: done
-  9-5-add-display-power-control-menu-option: ready-for-dev
+  9-5-add-display-power-control-menu-option: done
   9-6-implement-display-wake-on-menu-activation: ready-for-dev
   epic-9-retrospective: optional
 

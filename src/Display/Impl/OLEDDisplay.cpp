@@ -6,7 +6,8 @@
 
 OLEDDisplay::OLEDDisplay()
     : display(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET)
-    , initialized(false) {
+    , initialized(false)
+    , displayOn(true) {  // Default to on
 }
 
 void OLEDDisplay::ensureInitialized() {
@@ -323,4 +324,25 @@ void OLEDDisplay::centerText(const char* text, uint8_t y) {
     if (x < 0) x = 0;  // Clamp to left edge if text too wide
     display.setCursor(x, y);
     display.print(text);
+}
+
+void OLEDDisplay::setPower(bool on) {
+    ensureInitialized();
+
+    if (!initialized) {
+        return;
+    }
+
+    if (!on) {
+        display.ssd1306_command(SSD1306_DISPLAYOFF);
+        displayOn = false;
+        hardwareState.displayPower = false;  // Update global hardware state
+        LOG_INFO(TAG, "Display OFF");
+        return;
+    }
+
+    display.ssd1306_command(SSD1306_DISPLAYON);
+    displayOn = true;
+    hardwareState.displayPower = true;  // Update global hardware state
+    LOG_INFO(TAG, "Display ON");
 }

@@ -13,6 +13,7 @@
  * - Encoder wheel state (mode and direction)
  * - Battery level (placeholder for now)
  * - Bluetooth state (consolidated connection and pairing status)
+ * - Display power state (on/off)
  *
  * This structure is independent of AppState and serves as the single
  * source of truth for hardware state.
@@ -21,6 +22,7 @@ struct HardwareState {
     EncoderWheelStateType encoderWheelState;  ///< Encoder wheel mode and direction
     uint8_t batteryPercent;                   ///< Battery level 0-100 (placeholder)
     BleStateType bleState;                    ///< Consolidated BLE state (connection + pairing)
+    bool displayPower;                        ///< Display power state (true = on, false = off)
 };
 
 // Global hardware state instance (defined in main.cpp)

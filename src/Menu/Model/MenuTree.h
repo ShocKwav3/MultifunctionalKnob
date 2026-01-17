@@ -8,12 +8,14 @@
 #include "Menu/Action/SetButtonBehaviorAction.h"
 #include "Menu/Action/PairAction.h"
 #include "Menu/Action/DisconnectAction.h"
+#include "Menu/Action/DisplayPowerAction.h"
 #include "Config/button_config.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 
 // Forward declarations
 class ButtonEventHandler;
+class MenuController;
 struct HardwareState;
 
 /**
@@ -50,6 +52,7 @@ struct HardwareState;
  * - Bluetooth (branch)
  *   - Pair (leaf - placeholder, Story 8.2)
  *   - Disconnect (leaf - placeholder, Story 8.3)
+ * - Display Off (leaf - DisplayPowerAction, Story 9.5)
  * - Device Status (leaf - ShowStatusAction)
  * - About (leaf - ShowAboutAction)
  */
@@ -128,11 +131,12 @@ inline MenuItem mainMenu[] = {
     { "Wheel Behavior", nullptr, wheelBehaviorSubmenu, WHEEL_BEHAVIOR_COUNT, nullptr },
     { "Button Config",   nullptr, buttonConfigSubmenu, BUTTON_COUNT, nullptr },
     { "Bluetooth",      nullptr, bluetoothSubmenu, BLUETOOTH_SUBMENU_COUNT, nullptr },
+    { "Display Off",    nullptr, nullptr, 0, nullptr },
     { "Device Status",  nullptr, nullptr, 0, nullptr },
     { "About",          nullptr, nullptr, 0, nullptr }
 };
 
-inline constexpr uint8_t MAIN_MENU_COUNT = 5;
+inline constexpr uint8_t MAIN_MENU_COUNT = 6;
 
 // Root node representing the main menu container
 inline MenuItem root = { "Menu", nullptr, mainMenu, MAIN_MENU_COUNT, nullptr };
@@ -142,8 +146,9 @@ namespace Index {
     inline constexpr uint8_t WHEEL_BEHAVIOR = 0;
     inline constexpr uint8_t BUTTON_CONFIG = 1;
     inline constexpr uint8_t BLUETOOTH = 2;
-    inline constexpr uint8_t DEVICE_STATUS = 3;
-    inline constexpr uint8_t ABOUT = 4;
+    inline constexpr uint8_t DISPLAY_OFF = 3;
+    inline constexpr uint8_t DEVICE_STATUS = 4;
+    inline constexpr uint8_t ABOUT = 5;
 }
 
 /**
@@ -225,6 +230,14 @@ inline void setWheelDirectionAction(uint8_t index, MenuAction* action) {
  */
 inline void setDeviceStatusAction(MenuAction* action) {
     mainMenu[Index::DEVICE_STATUS].action = action;
+}
+
+/**
+ * @brief Set action for Display Off menu item
+ * @param action Pointer to DisplayPowerAction instance
+ */
+inline void setDisplayOffAction(MenuAction* action) {
+    mainMenu[Index::DISPLAY_OFF].action = action;
 }
 
 /**
@@ -313,6 +326,24 @@ inline void initBluetoothActions(BleKeyboard* bleKeyboard, QueueHandle_t display
     // Assign to Bluetooth submenu items
     bluetoothSubmenu[0].action = &pairAction;       // "Pair" (Story 8.2)
     bluetoothSubmenu[1].action = &disconnectAction; // "Disconnect" (Story 8.3)
+}
+
+/**
+ * @brief Initialize display menu actions
+ *
+ * Creates DisplayPowerAction instance for Display Off menu item.
+ * Display power is session-only (no NVS persistence) - always starts ON after boot.
+ * When display turns OFF, menu automatically exits so controls work immediately.
+ *
+ * @param display DisplayInterface instance for hardware power control
+ * @param menuCtrl MenuController for menu exit when display turns off
+ */
+inline void initDisplayActions(DisplayInterface* display, MenuController* menuCtrl) {
+    // Create static action instance (must outlive menu)
+    static DisplayPowerAction displayPowerAction(display, menuCtrl);
+
+    // Assign to Display Off menu item
+    setDisplayOffAction(&displayPowerAction);
 }
 
 /**
