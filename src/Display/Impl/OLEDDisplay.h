@@ -29,9 +29,16 @@ public:
      */
     void drawNormalMode(const HardwareState& hwState) override;
 
+    /**
+     * @brief Control display power state
+     * @param on true to turn display on, false to enter power-save mode
+     */
+    void setPower(bool on) override;
+
 private:
     Adafruit_SSD1306 display;
     bool initialized;
+    bool displayOn;
 
     void ensureInitialized();
     void centerText(const char* text, uint8_t y);

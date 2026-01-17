@@ -102,6 +102,7 @@ void setup()
     hardwareState.batteryPercent = 100;
     hardwareState.bleState.isConnected = false;  // Updated by BLE callbacks
     hardwareState.bleState.isPairingMode = false;
+    hardwareState.displayPower = true;  // Display always starts ON after boot (session-only toggle)
 
     // Initialize button event system
     static ButtonEventDispatcher buttonEventDispatcher(appState.buttonEventQueue);
@@ -112,6 +113,10 @@ void setup()
     static DisplayTask displayTask(&DisplayFactory::getDisplay());
     appState.displayRequestQueue = displayTask.init(10);
     displayTask.start(2048, 1);
+
+    // Initialize display power state (always ON at boot for visual feedback)
+    DisplayFactory::getDisplay().setPower(hardwareState.displayPower);
+    LOG_INFO("Main", "Display power initialized: %s", hardwareState.displayPower ? "ON" : "OFF");
 
     // Create BT flash timer for pairing animation (500ms period = 1Hz blink rate)
     // Timer is started/stopped dynamically when entering/exiting pairing mode
@@ -147,7 +152,8 @@ void setup()
     MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager, appState.displayRequestQueue, &hardwareState);
     MenuTree::initButtonBehaviorActions(&configManager, &buttonEventHandler);
     MenuTree::initBluetoothActions(&bleKeyboard, appState.displayRequestQueue);
-    
+    MenuTree::initDisplayActions(&DisplayFactory::getDisplay(), &menuController);
+
     // Initialize Device Status and About actions
     static ShowStatusAction showStatusAction(&configManager, &bleKeyboard, &DisplayFactory::getDisplay());
     static ShowAboutAction showAboutAction(&DisplayFactory::getDisplay());

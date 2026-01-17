@@ -55,4 +55,16 @@ public:
      * @param hwState Hardware state containing mode, direction, battery, BT status
      */
     virtual void drawNormalMode(const HardwareState& hwState) = 0;
+
+    /**
+     * @brief Control display power state
+     * @param on true to turn display on, false to enter power-save mode
+     *
+     * Implementations should use hardware-specific power commands (e.g.,
+     * SSD1306_DISPLAYON/DISPLAYOFF for OLED displays) to control the
+     * display power state. Display functionality should remain operational
+     * even when powered off (i.e., buffer updates continue, only output
+     * is disabled).
+     */
+    virtual void setPower(bool on) = 0;
 };
