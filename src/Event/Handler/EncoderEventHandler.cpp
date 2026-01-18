@@ -1,9 +1,10 @@
 #include "EncoderEventHandler.h"
 #include "Menu/Controller/MenuController.h"
 #include "Config/log_config.h"
+#include "System/PowerManager.h"
 
-EncoderEventHandler::EncoderEventHandler(QueueHandle_t queue)
-    : eventQueue(queue) {}
+EncoderEventHandler::EncoderEventHandler(QueueHandle_t queue, PowerManager* pm)
+    : eventQueue(queue), powerManager(pm) {}
 
 void EncoderEventHandler::setModeHandler(EncoderModeBaseInterface* handler) {
     if (!handler) {
@@ -24,6 +25,12 @@ void EncoderEventHandler::start() {
     xTaskCreate(taskEntry, "EncoderEventTask", 4096, this, 1, nullptr);
 }
 
+void EncoderEventHandler::notifyUserActivity() {
+    if (powerManager) {
+        powerManager->resetActivity();
+    }
+}
+
 void EncoderEventHandler::taskEntry(void* param) {
     static_cast<EncoderEventHandler*>(param)->taskLoop();
 }
@@ -33,6 +40,9 @@ void EncoderEventHandler::taskLoop() {
 
     while (true) {
         if (xQueueReceive(eventQueue, &evt, portMAX_DELAY)) {
+            // Interface-enforced user activity notification
+            notifyUserActivity();
+
             // Menu intercepts events when active
             if (menuController && menuController->isActive()) {
                 switch (evt.type) {

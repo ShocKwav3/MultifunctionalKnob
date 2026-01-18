@@ -3,11 +3,13 @@
 #include "Config/ConfigManager.h"
 #include "Config/button_config.h"
 #include "Enum/ButtonActionEnum.h"
+#include "System/PowerManager.h"
 
-ButtonEventHandler::ButtonEventHandler(QueueHandle_t queue, ConfigManager* config, BleKeyboard* keyboard)
+ButtonEventHandler::ButtonEventHandler(QueueHandle_t queue, ConfigManager* config, BleKeyboard* keyboard, PowerManager* pm)
     : eventQueue(queue)
     , configManager(config)
     , bleKeyboard(keyboard)
+    , powerManager(pm)
     , cacheValid(false) {
     // Dependencies are required - validate they are not null
     if (!config || !keyboard) {
@@ -54,6 +56,12 @@ void ButtonEventHandler::loadCache() {
     LOG_INFO("ButtonEventHandler", "Button action cache loaded from NVS");
 }
 
+void ButtonEventHandler::notifyUserActivity() {
+    if (powerManager) {
+        powerManager->resetActivity();
+    }
+}
+
 void ButtonEventHandler::taskEntry(void* param) {
     static_cast<ButtonEventHandler*>(param)->taskLoop();
 }
@@ -63,6 +71,9 @@ void ButtonEventHandler::taskLoop() {
 
     while (true) {
         if (xQueueReceive(eventQueue, &evt, portMAX_DELAY)) {
+            // Interface-enforced user activity notification
+            notifyUserActivity();
+
             switch (evt.type) {
                 case EventEnum::ButtonEventTypes::BUTTON_PRESSED:
                     LOG_DEBUG("ButtonEventHandler", "Button %d pressed", evt.buttonIndex);

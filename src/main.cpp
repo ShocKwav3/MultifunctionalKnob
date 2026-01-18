@@ -38,6 +38,7 @@
 #include "state/AppState.h"
 #include "state/HardwareState.h"
 #include "BLE/BleCallbackHandler.h"
+#include "System/PowerManager.h"
 
 BleKeyboard bleKeyboard(BLUETOOTH_DEVICE_NAME, BLUETOOTH_DEVICE_MANUFACTURER, BLUETOOTH_DEVICE_BATTERY_LEVEL_DEFAULT);
 EncoderDriver* encoderDriver;
@@ -47,6 +48,9 @@ HardwareState hardwareState;  // Global hardware state instance
 // Configuration management
 Preferences preferences;
 ConfigManager configManager(&preferences);
+
+// Power management
+PowerManager powerManager;
 
 void setup()
 {
@@ -80,7 +84,7 @@ void setup()
     static EncoderModeHandlerZoom encoderModeHandlerZoom(&appDispatcher, &bleKeyboard);
     static EncoderModeSelector encoderModeSelector(&appDispatcher);
 
-    static EncoderEventHandler encoderEventHandler(appState.encoderInputEventQueue);
+    static EncoderEventHandler encoderEventHandler(appState.encoderInputEventQueue, &powerManager);
     encoderEventHandler.start();
 
     static EncoderModeManager encoderModeManager(&encoderEventHandler, &encoderModeSelector, appState.displayRequestQueue, &hardwareState);
@@ -106,7 +110,7 @@ void setup()
 
     // Initialize button event system
     static ButtonEventDispatcher buttonEventDispatcher(appState.buttonEventQueue);
-    static ButtonEventHandler buttonEventHandler(appState.buttonEventQueue, &configManager, &bleKeyboard);
+    static ButtonEventHandler buttonEventHandler(appState.buttonEventQueue, &configManager, &bleKeyboard, &powerManager);
     buttonEventHandler.start();
 
     // Initialize display pipeline
@@ -188,10 +192,21 @@ void setup()
         encoderEventDispatcher.onLongClick();
     });
     encoderDriver->begin();
+
+    // Start power manager task for inactivity monitoring
+    powerManager.start();
 }
 
 void loop()
 {
-    // Button polling now handled by dedicated FreeRTOS task in ButtonManager (Story 6.3)
-    // Empty loop - all input handling occurs in event-driven tasks
+    // All operations now handled by FreeRTOS tasks:
+    // - PowerManager task monitors inactivity (Story 10.1)
+    // - EncoderEventHandler task processes encoder events
+    // - ButtonEventHandler task processes button events
+    // - AppEventHandler task processes app events
+    // - DisplayTask renders to OLED
+    // - MenuEventHandler task processes menu events
+    //
+    // loop() intentionally empty - event-driven architecture uses tasks only
+    vTaskDelay(portMAX_DELAY);  // Yield to scheduler indefinitely
 }
