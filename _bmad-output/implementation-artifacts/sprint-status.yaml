@@ -74,7 +74,7 @@ development_status:
   epic-10: in-progress
   10-1-implement-inactivity-timer-with-input-reset: done
   10-2-display-sleep-warning-at-4-minutes-idle: done
-  10-3-enter-deep-sleep-after-5-minutes-inactivity: ready-for-dev
+  10-3-enter-deep-sleep-after-5-minutes-inactivity: done
   10-4-configure-wheel-button-as-wake-source: ready-for-dev
   10-5-auto-reconnect-bluetooth-after-wake: ready-for-dev
   epic-10-retrospective: optional
