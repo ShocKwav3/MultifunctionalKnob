@@ -5,6 +5,7 @@
 #include "freertos/task.h"
 #include "../Interface/DisplayInterface.h"
 #include "../Model/DisplayRequest.h"
+#include "state/HardwareState.h"
 
 /**
  * @brief FreeRTOS task that arbitrates display access
@@ -27,9 +28,8 @@ public:
     /**
      * @brief Initialize the display request queue
      * @param queueSize Number of requests the queue can hold
-     * @return Queue handle for producers to use
      */
-    QueueHandle_t init(uint8_t queueSize = 10);
+    void init(uint8_t queueSize = 10);
 
     /**
      * @brief Start the display task
@@ -49,6 +49,7 @@ private:
     DisplayInterface* display;
     QueueHandle_t requestQueue;
     TaskHandle_t taskHandle;
+    HardwareState lastNormalModeState;  // Cached state for restoring after warning
 
     static void taskFunction(void* params);
     void processRequest(const DisplayRequest& request);
