@@ -76,7 +76,7 @@ void setup()
     appState.buttonEventQueue = xQueueCreate(10, sizeof(ButtonEvent));
     appState.appEventQueue = xQueueCreate(10, sizeof(AppEvent));
     appState.menuEventQueue = xQueueCreate(10, sizeof(MenuEvent));
-    appState.displayRequestQueue = xQueueCreate(10, sizeof(DisplayRequest));
+    // displayRequestQueue created by DisplayTask.init() at line 118
 
     static AppEventDispatcher appDispatcher(appState.appEventQueue);
     static EncoderModeHandlerScroll encoderModeHandlerScroll(&appDispatcher, &bleKeyboard);
@@ -115,12 +115,16 @@ void setup()
 
     // Initialize display pipeline
     static DisplayTask displayTask(&DisplayFactory::getDisplay());
-    appState.displayRequestQueue = displayTask.init(10);
+    displayTask.init(10);
+    appState.displayRequestQueue = displayTask.getQueue();
     displayTask.start(2048, 1);
 
     // Initialize display power state (always ON at boot for visual feedback)
     DisplayFactory::getDisplay().setPower(hardwareState.displayPower);
     LOG_INFO("Main", "Display power initialized: %s", hardwareState.displayPower ? "ON" : "OFF");
+
+    // Configure PowerManager with display queue for sleep warnings (Story 10.2)
+    powerManager.setDisplayQueue(appState.displayRequestQueue);
 
     // Create BT flash timer for pairing animation (500ms period = 1Hz blink rate)
     // Timer is started/stopped dynamically when entering/exiting pairing mode

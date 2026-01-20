@@ -16,6 +16,7 @@ enum class DisplayRequestType : uint8_t {
     SHOW_STATUS,     ///< Show a key-value status pair
     SHOW_MESSAGE,    ///< Show a simple message
     CLEAR,           ///< Clear the display
+    CLEAR_WARNING,   ///< Clear sleep warning and restore display
     DRAW_NORMAL_MODE ///< Draw normal mode status screen with icons
 };
 

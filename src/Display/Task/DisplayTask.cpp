@@ -7,12 +7,11 @@ DisplayTask::DisplayTask(DisplayInterface* display)
     , taskHandle(nullptr) {
 }
 
-QueueHandle_t DisplayTask::init(uint8_t queueSize) {
+void DisplayTask::init(uint8_t queueSize) {
     requestQueue = xQueueCreate(queueSize, sizeof(DisplayRequest));
     if (requestQueue == nullptr) {
         LOG_ERROR(TAG, "Failed to create request queue");
     }
-    return requestQueue;
 }
 
 bool DisplayTask::start(uint32_t stackSize, UBaseType_t priority) {
@@ -81,7 +80,16 @@ void DisplayTask::processRequest(const DisplayRequest& request) {
             display->clear();
             break;
 
+        case DisplayRequestType::CLEAR_WARNING:
+            // Clear warning and restore last normal mode state
+            display->clear();
+            display->drawNormalMode(lastNormalModeState);
+            LOG_DEBUG(TAG, "Warning cleared, normal mode restored");
+            break;
+
         case DisplayRequestType::DRAW_NORMAL_MODE:
+            // Cache state for restoration after warning
+            lastNormalModeState = request.data.normalMode.hwState;
             display->drawNormalMode(request.data.normalMode.hwState);
             break;
     }

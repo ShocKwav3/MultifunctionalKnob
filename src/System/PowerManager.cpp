@@ -1,19 +1,30 @@
 #include "PowerManager.h"
 #include "Config/log_config.h"
 #include "Config/system_config.h"
+#include "Display/Model/DisplayRequest.h"
 
 PowerManager::PowerManager()
-    : lastActivityTime(millis()), currentState(PowerState::ACTIVE) {
+    : lastActivityTime(millis()), currentState(PowerState::ACTIVE), warningDisplayed(false), displayQueue(nullptr) {
     LOG_DEBUG("PowerManager", "Initialized");
 }
 
 void PowerManager::resetActivity() {
-    // Critical section: atomically update both lastActivityTime and currentState
+    // Capture time outside critical section to minimize lock duration
+    uint32_t now = millis();
+
+    // Critical section: atomically update lastActivityTime and currentState
     // This prevents race condition where updateActivityState() reads stale lastActivityTime
     taskENTER_CRITICAL(&stateMux);
-    lastActivityTime = millis();
+    lastActivityTime = now;
+    PowerState previousState = currentState;
     currentState = PowerState::ACTIVE;
+    bool shouldClearWarning = (previousState == PowerState::WARNING) && warningDisplayed;
     taskEXIT_CRITICAL(&stateMux);
+
+    // Clear warning outside critical section only if needed (optimization + race fix)
+    if (shouldClearWarning) {
+        clearWarning();
+    }
 
     LOG_DEBUG("PowerManager", "Activity reset");
 }
@@ -24,6 +35,10 @@ PowerState PowerManager::getState() const {
     PowerState state = currentState;
     taskEXIT_CRITICAL(&stateMux);
     return state;
+}
+
+void PowerManager::setDisplayQueue(QueueHandle_t queue) {
+    displayQueue = queue;
 }
 
 void PowerManager::start() {
@@ -51,17 +66,15 @@ void PowerManager::taskLoop() {
 }
 
 void PowerManager::updateActivityState() {
-    // Critical section: atomically read lastActivityTime and currentState together
-    // This prevents race where resetActivity() updates lastActivityTime after we read it
+    // Critical section: atomically read state, calculate new state, and commit transition
+    // Mutex prevents resetActivity() from racing with state transitions
     taskENTER_CRITICAL(&stateMux);
-    uint32_t activityTimeSnapshot1 = lastActivityTime;
+
+    uint32_t activityTime = lastActivityTime;
     PowerState previousState = currentState;
-    taskEXIT_CRITICAL(&stateMux);
+    uint32_t elapsed = millis() - activityTime;
 
-    // Calculate elapsed time from atomic snapshot
-    uint32_t elapsed = millis() - activityTimeSnapshot1;
-
-    // Calculate new state outside critical section to minimize lock time
+    // Calculate and apply new state atomically
     PowerState newState;
     if (elapsed >= POWER_SLEEP_THRESHOLD_MS) {
         newState = PowerState::SLEEP;
@@ -71,35 +84,100 @@ void PowerManager::updateActivityState() {
         newState = PowerState::ACTIVE;
     }
 
-    // Critical section: re-check lastActivityTime and conditionally update state
-    // If lastActivityTime changed during calculation, resetActivity() was called
-    // mid-calculation and we must discard our stale result (AC5: no race conditions)
-    taskENTER_CRITICAL(&stateMux);
-    uint32_t activityTimeSnapshot2 = lastActivityTime;
-    if (activityTimeSnapshot1 == activityTimeSnapshot2) {
-        // No reset occurred during calculation - safe to apply newState
-        currentState = newState;
-    } else {
-        // Reset occurred during calculation - discard stale calculation
-        // currentState already set to ACTIVE by resetActivity()
-        newState = currentState;  // Update newState for logging consistency
-    }
+    currentState = newState;
+
+    // Recovery mechanism: enforce visual state consistency
+    // Check if display state is out of sync with power state and needs correction
+    bool displayStateOutOfSync = (newState == PowerState::WARNING && !warningDisplayed) ||
+                                   (newState != PowerState::WARNING && warningDisplayed);
+
+    // Determine what actions are needed based on committed state and sync status
+    bool isTransitionToWarning = (newState == PowerState::WARNING && newState != previousState);
+    bool needShowWarning = (newState == PowerState::WARNING && !warningDisplayed);  // Show on transition OR retry if failed
+    bool needClearWarning = (newState != PowerState::WARNING && warningDisplayed);  // Clear if not in WARNING state but flag is set
+
     taskEXIT_CRITICAL(&stateMux);
 
-    // Log only on state transitions (outside critical section)
-    if (newState != previousState) {
-        switch (newState) {
-            case PowerState::WARNING:
-                LOG_INFO("PowerManager", "State transition: ACTIVE → WARNING (elapsed: %lu ms)", elapsed);
-                // TODO Story 10.2: Dispatch warning event to display handler
-                break;
-            case PowerState::SLEEP:
-                LOG_INFO("PowerManager", "State transition: WARNING → SLEEP (elapsed: %lu ms)", elapsed);
-                // TODO Story 10.3: Dispatch sleep event to enter deep sleep
-                break;
-            case PowerState::ACTIVE:
-                LOG_DEBUG("PowerManager", "State transition: %d → ACTIVE", static_cast<int>(previousState));
-                break;
+    // Execute transitions outside critical section based on atomic decision
+    if (needShowWarning) {
+        if (isTransitionToWarning) {
+            LOG_INFO("PowerManager", "State transition: ACTIVE → WARNING (elapsed: %lu ms)", elapsed);
         }
+        showWarning();  // Will retry on every check cycle until successful
+    } else if (needClearWarning) {
+        if (newState == PowerState::SLEEP) {
+            LOG_INFO("PowerManager", "State transition: WARNING → SLEEP (elapsed: %lu ms)", elapsed);
+            // TODO Story 10.3: Dispatch sleep event to enter deep sleep
+        } else if (newState == PowerState::ACTIVE) {
+            LOG_DEBUG("PowerManager", "State transition: WARNING → ACTIVE");
+        }
+        clearWarning();  // Will retry on every check cycle until successful
     }
+}
+
+void PowerManager::showWarning() {
+    // Thread-safe check: protect warningDisplayed with mutex
+    taskENTER_CRITICAL(&stateMux);
+    bool alreadyDisplayed = warningDisplayed;
+    taskEXIT_CRITICAL(&stateMux);
+
+    if (alreadyDisplayed) {
+        return;  // Already showing warning
+    }
+
+    if (displayQueue == nullptr) {
+        LOG_ERROR("PowerManager", "Display queue not set, cannot show warning");
+        return;
+    }
+
+    // Request display to show warning
+    DisplayRequest req;
+    req.type = DisplayRequestType::SHOW_MESSAGE;
+    req.data.message.value = SLEEP_WARNING_MESSAGE;
+
+    // Use timeout instead of portMAX_DELAY to prevent PowerManager task blocking
+    BaseType_t result = xQueueSend(displayQueue, &req, pdMS_TO_TICKS(100));
+    if (result != pdPASS) {
+        LOG_ERROR("PowerManager", "Failed to send warning to display queue (timeout)");
+        return;  // Keep warningDisplayed=false, recovery mechanism will retry
+    }
+
+    // Only set flag after successful queue send - thread-safe update
+    taskENTER_CRITICAL(&stateMux);
+    warningDisplayed = true;
+    taskEXIT_CRITICAL(&stateMux);
+
+    LOG_INFO("PowerManager", "Warning displayed");
+}
+
+void PowerManager::clearWarning() {
+    // Thread-safe check: protect warningDisplayed with mutex
+    taskENTER_CRITICAL(&stateMux);
+    bool isDisplayed = warningDisplayed;
+    taskEXIT_CRITICAL(&stateMux);
+
+    if (!isDisplayed) {
+        return;  // No warning to clear
+    }
+
+    if (displayQueue == nullptr) {
+        return;  // No queue configured, nothing to clear
+    }
+
+    // Request display to clear warning - CLEAR_WARNING provides better encapsulation
+    DisplayRequest req;
+    req.type = DisplayRequestType::CLEAR_WARNING;
+
+    BaseType_t result = xQueueSend(displayQueue, &req, pdMS_TO_TICKS(10));
+    if (result != pdPASS) {
+        LOG_ERROR("PowerManager", "Failed to send clear request (queue full)");
+        return;  // Keep warningDisplayed=true, recovery mechanism will retry
+    }
+
+    // Only reset flag after successful queue send - thread-safe update
+    taskENTER_CRITICAL(&stateMux);
+    warningDisplayed = false;
+    taskEXIT_CRITICAL(&stateMux);
+
+    LOG_DEBUG("PowerManager", "Warning cleared");
 }
