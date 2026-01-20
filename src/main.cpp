@@ -1,6 +1,7 @@
 #include "EncoderDriver.h"
 #include "BleKeyboard.h"
 #include <Preferences.h>
+#include <esp_sleep.h>
 
 #include "Config/device_config.h"
 #include "Config/encoder_config.h"
@@ -49,15 +50,34 @@ HardwareState hardwareState;  // Global hardware state instance
 Preferences preferences;
 ConfigManager configManager(&preferences);
 
-// Power management
-PowerManager powerManager;
+/**
+ * @brief Check if device is waking from deep sleep
+ * @return true if waking from GPIO wake source (deep sleep), false otherwise
+ *
+ * Detects wake cause and logs if waking from deep sleep.
+ * Used to prevent accidental factory reset when user holds button to wake device.
+ */
+bool isWakingFromDeepSleep() {
+    esp_sleep_wakeup_cause_t wakeCause = esp_sleep_get_wakeup_cause();
+    bool wakingFromSleep = (wakeCause == ESP_SLEEP_WAKEUP_GPIO);
+
+    if (wakingFromSleep) {
+        LOG_INFO("Main", "Woke from deep sleep (GPIO wake)");
+    }
+
+    return wakingFromSleep;
+}
 
 void setup()
 {
     Serial.begin(460800);
 
+    // Check if waking from deep sleep (skips factory reset check to prevent accidental wipe)
+    bool wakingFromSleep = isWakingFromDeepSleep();
+
     // Check for factory reset request (button held for 5+ seconds at boot)
-    if (FactoryReset::isResetRequested(ENCODER_PIN_BUTTON)) {
+    // Skip check if waking from sleep to prevent accidental reset
+    if (!wakingFromSleep && FactoryReset::isResetRequested(ENCODER_PIN_BUTTON)) {
         FactoryReset::execute(configManager, DisplayFactory::getDisplay());
     }
 
@@ -76,7 +96,31 @@ void setup()
     appState.buttonEventQueue = xQueueCreate(10, sizeof(ButtonEvent));
     appState.appEventQueue = xQueueCreate(10, sizeof(AppEvent));
     appState.menuEventQueue = xQueueCreate(10, sizeof(MenuEvent));
-    // displayRequestQueue created by DisplayTask.init() at line 118
+
+    // Initialize display pipeline first (needed for displayRequestQueue)
+    static DisplayTask displayTask(&DisplayFactory::getDisplay());
+    displayTask.init(10);
+    appState.displayRequestQueue = displayTask.getQueue();
+    displayTask.start(2048, 1);
+
+    // Initialize hardware state with loaded config
+    WheelMode savedWheelMode = configManager.loadWheelMode();
+    hardwareState.encoderWheelState.mode = savedWheelMode;
+    hardwareState.encoderWheelState.direction = configManager.getWheelDirection();
+    // TODO: Implement battery monitoring via ADC + voltage divider on GPIO pin
+    // Current placeholder value (100%) should be replaced with periodic ADC reads
+    // and voltage-to-percentage conversion. Consider adding low-battery warning threshold.
+    hardwareState.batteryPercent = 100;
+    hardwareState.bleState.isConnected = false;  // Updated by BLE callbacks
+    hardwareState.bleState.isPairingMode = false;
+    hardwareState.displayPower = true;  // Display always starts ON after boot (session-only toggle)
+
+    // Initialize display power state (always ON at boot for visual feedback)
+    DisplayFactory::getDisplay().setPower(hardwareState.displayPower);
+    LOG_INFO("Main", "Display power initialized: %s", hardwareState.displayPower ? "ON" : "OFF");
+
+    // Initialize PowerManager with dependencies (now that all deps are ready)
+    static PowerManager powerManager(bleKeyboard, DisplayFactory::getDisplay(), appState.displayRequestQueue);
 
     static AppEventDispatcher appDispatcher(appState.appEventQueue);
     static EncoderModeHandlerScroll encoderModeHandlerScroll(&appDispatcher, &bleKeyboard);
@@ -92,39 +136,14 @@ void setup()
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_VOLUME, &encoderModeHandlerVolume);
     encoderModeManager.registerHandler(EventEnum::EncoderModeEventTypes::ENCODER_MODE_ZOOM, &encoderModeHandlerZoom);
 
-    // Load saved wheel mode from NVS and apply (defaults to SCROLL if no config exists)
-    WheelMode savedWheelMode = configManager.loadWheelMode();
+    // Load saved wheel mode and apply (defaults to SCROLL if no config exists)
     EventEnum::EncoderModeEventTypes initialMode = EncoderModeHelper::fromWheelMode(savedWheelMode);
     encoderModeManager.setMode(initialMode);
-
-    // Initialize hardware state with loaded config
-    hardwareState.encoderWheelState.mode = savedWheelMode;
-    hardwareState.encoderWheelState.direction = configManager.getWheelDirection();
-    // TODO: Implement battery monitoring via ADC + voltage divider on GPIO pin
-    // Current placeholder value (100%) should be replaced with periodic ADC reads
-    // and voltage-to-percentage conversion. Consider adding low-battery warning threshold.
-    hardwareState.batteryPercent = 100;
-    hardwareState.bleState.isConnected = false;  // Updated by BLE callbacks
-    hardwareState.bleState.isPairingMode = false;
-    hardwareState.displayPower = true;  // Display always starts ON after boot (session-only toggle)
 
     // Initialize button event system
     static ButtonEventDispatcher buttonEventDispatcher(appState.buttonEventQueue);
     static ButtonEventHandler buttonEventHandler(appState.buttonEventQueue, &configManager, &bleKeyboard, &powerManager);
     buttonEventHandler.start();
-
-    // Initialize display pipeline
-    static DisplayTask displayTask(&DisplayFactory::getDisplay());
-    displayTask.init(10);
-    appState.displayRequestQueue = displayTask.getQueue();
-    displayTask.start(2048, 1);
-
-    // Initialize display power state (always ON at boot for visual feedback)
-    DisplayFactory::getDisplay().setPower(hardwareState.displayPower);
-    LOG_INFO("Main", "Display power initialized: %s", hardwareState.displayPower ? "ON" : "OFF");
-
-    // Configure PowerManager with display queue for sleep warnings (Story 10.2)
-    powerManager.setDisplayQueue(appState.displayRequestQueue);
 
     // Create BT flash timer for pairing animation (500ms period = 1Hz blink rate)
     // Timer is started/stopped dynamically when entering/exiting pairing mode

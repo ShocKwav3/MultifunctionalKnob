@@ -1,11 +1,16 @@
 #include "PowerManager.h"
 #include "Config/log_config.h"
 #include "Config/system_config.h"
+#include "Config/encoder_config.h"
 #include "Display/Model/DisplayRequest.h"
+#include "Display/Interface/DisplayInterface.h"
+#include "BleKeyboard.h"
+#include "esp_sleep.h"
 
-PowerManager::PowerManager()
-    : lastActivityTime(millis()), currentState(PowerState::ACTIVE), warningDisplayed(false), displayQueue(nullptr) {
-    LOG_DEBUG("PowerManager", "Initialized");
+PowerManager::PowerManager(BleKeyboard& keyboard, DisplayInterface& displayInterface, QueueHandle_t queue)
+    : lastActivityTime(millis()), currentState(PowerState::ACTIVE), warningDisplayed(false),
+      displayQueue(queue), bleKeyboard(keyboard), display(displayInterface) {
+    LOG_DEBUG("PowerManager", "Initialized with dependencies");
 }
 
 void PowerManager::resetActivity() {
@@ -37,8 +42,43 @@ PowerState PowerManager::getState() const {
     return state;
 }
 
-void PowerManager::setDisplayQueue(QueueHandle_t queue) {
-    displayQueue = queue;
+void PowerManager::enterDeepSleep() {
+    // Final atomic check - abort if state changed to ACTIVE between decision and execution
+    // Prevents race: updateActivityState() decides SLEEP → resetActivity() changes to ACTIVE → we still sleep
+    taskENTER_CRITICAL(&stateMux);
+    if (currentState != PowerState::SLEEP) {
+        taskEXIT_CRITICAL(&stateMux);
+        LOG_INFO("PowerManager", "Sleep aborted - activity detected");
+        return;
+    }
+    taskEXIT_CRITICAL(&stateMux);
+
+    LOG_INFO("PowerManager", "Entering deep sleep mode");
+
+    // Turn off display
+    display.setPower(false);
+    LOG_INFO("PowerManager", "Display powered off");
+
+    // Disconnect BLE
+    if (bleKeyboard.isConnected()) {
+        bleKeyboard.end();
+        LOG_INFO("PowerManager", "BLE disconnected");
+    }
+
+    // Flush serial buffers
+    Serial.flush();
+
+    // Configure wake source: encoder button (GPIO 2) on LOW level
+    // ESP32-C3 uses esp_deep_sleep_enable_gpio_wakeup for GPIO wake
+    gpio_num_t wakePin = static_cast<gpio_num_t>(ENCODER_PIN_BUTTON);
+    esp_deep_sleep_enable_gpio_wakeup(1ULL << wakePin, ESP_GPIO_WAKEUP_GPIO_LOW);
+    LOG_INFO("PowerManager", "Wake source configured: GPIO %d (encoder button)", ENCODER_PIN_BUTTON);
+
+    // Enter deep sleep
+    LOG_INFO("PowerManager", "Calling esp_deep_sleep_start()");
+    esp_deep_sleep_start();
+
+    // Code never reaches here - device will reboot on wake
 }
 
 void PowerManager::start() {
@@ -107,7 +147,9 @@ void PowerManager::updateActivityState() {
     } else if (needClearWarning) {
         if (newState == PowerState::SLEEP) {
             LOG_INFO("PowerManager", "State transition: WARNING → SLEEP (elapsed: %lu ms)", elapsed);
-            // TODO Story 10.3: Dispatch sleep event to enter deep sleep
+            clearWarning();  // Clear warning before entering sleep
+            enterDeepSleep();  // Enter deep sleep - device will reboot on wake
+            // Code never reaches here
         } else if (newState == PowerState::ACTIVE) {
             LOG_DEBUG("PowerManager", "State transition: WARNING → ACTIVE");
         }
@@ -123,11 +165,6 @@ void PowerManager::showWarning() {
 
     if (alreadyDisplayed) {
         return;  // Already showing warning
-    }
-
-    if (displayQueue == nullptr) {
-        LOG_ERROR("PowerManager", "Display queue not set, cannot show warning");
-        return;
     }
 
     // Request display to show warning
@@ -158,10 +195,6 @@ void PowerManager::clearWarning() {
 
     if (!isDisplayed) {
         return;  // No warning to clear
-    }
-
-    if (displayQueue == nullptr) {
-        return;  // No queue configured, nothing to clear
     }
 
     // Request display to clear warning - CLEAR_WARNING provides better encapsulation
