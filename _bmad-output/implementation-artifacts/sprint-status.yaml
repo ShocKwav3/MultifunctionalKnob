@@ -19,11 +19,19 @@
 #   - done: Story completed
 
 development_status:
-  # Epic 11: LED Strip Control (FR23-FR28)
-  epic-11: backlog
-  11-1-add-fastled-library-and-led-menu-structure: backlog
-  11-2-implement-led-power-toggle-with-nvs-persistence: backlog
-  11-3-implement-wheel-controlled-brightness-with-live-preview: backlog
-  11-4-implement-led-mode-selection-with-nvs-persistence: backlog
-  11-5-implement-led-color-selection-with-nvs-persistence: backlog
+  # Epic 11: Macro Key Infrastructure
+  epic-11: in-progress
+  11-1-macro-infrastructure: done
+  11-2-hardware-layer: ready-for-dev
+  11-3-user-configuration: ready-for-dev
+  11-4-system-integration: ready-for-dev
   epic-11-retrospective: optional
+
+  # Epic 12: LED Strip Control (FR23-FR28)
+  epic-12: in-progress
+  12-1-add-fastled-library-and-led-menu-structure: ready-for-dev
+  12-2-implement-led-power-toggle-with-nvs-persistence: ready-for-dev
+  12-3-implement-wheel-controlled-brightness-with-live-preview: ready-for-dev
+  12-4-implement-led-mode-selection-with-nvs-persistence: ready-for-dev
+  12-5-implement-led-color-selection-with-nvs-persistence: ready-for-dev
+  epic-12-retrospective: optional
