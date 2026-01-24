@@ -1,4 +1,4 @@
-# Story 11.4: Implement LED Mode Selection with NVS Persistence
+# Story 12.4: Implement LED Mode Selection with NVS Persistence
 
 Status: ready-for-dev
 
@@ -296,7 +296,7 @@ src/main.cpp                        - Add update() call to loop
    - Verify currently selected mode is highlighted
 3. **Static Mode Test**:
    - Select Static
-   - Verify LED shows solid color (from Story 11.5)
+   - Verify LED shows solid color (from Story 12.5)
    - Verify no animation
 4. **Rainbow Mode Test**:
    - Select Rainbow
@@ -369,7 +369,7 @@ void LedController::update() {
 - [Source: architecture/implementation-patterns-consistency-rules.md#Format Patterns] - Error return pattern
 - [Source: project-context.md#ESP32-C3 Specific Gotchas] - Non-blocking requirements
 - [Source: project-context.md#Configuration Persistence Gotchas] - NVS validation
-- [Source: epics.md#Story 11.4] - Original acceptance criteria
+- [Source: epics.md#Story 12.4] - Original acceptance criteria
 
 ## Dev Agent Record
 

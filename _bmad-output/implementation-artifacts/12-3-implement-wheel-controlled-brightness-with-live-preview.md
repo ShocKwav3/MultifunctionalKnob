@@ -1,4 +1,4 @@
-# Story 11.3: Implement Wheel-Controlled Brightness with Live Preview
+# Story 12.3: Implement Wheel-Controlled Brightness with Live Preview
 
 Status: ready-for-dev
 
@@ -206,7 +206,7 @@ void AdjustBrightnessAction::execute() {
 ```
 src/EncoderMode/Handler/                    - Mode handlers
 src/EncoderMode/Manager/EncoderModeManager  - Mode switching
-src/Hardware/LedController.h/cpp            - LED control (from Story 11.1)
+src/Hardware/LedController.h/cpp            - LED control (from Story 12.1)
 src/Config/ConfigManager.h/cpp              - NVS persistence
 src/Menu/Action/                            - Action classes
 include/Enum/WheelModeEnum.h                - Mode enum (may need extension)
@@ -340,7 +340,7 @@ BrightnessAdjustModeHandler::handleShortClick()
 - [Source: architecture/implementation-patterns-consistency-rules.md#Structure Patterns] - File placement
 - [Source: project-context.md#Event Architecture Rules] - Non-blocking handlers
 - [Source: project-context.md#Configuration Persistence Gotchas] - NVS write validation
-- [Source: epics.md#Story 11.3] - Original acceptance criteria
+- [Source: epics.md#Story 12.3] - Original acceptance criteria
 
 ## Dev Agent Record
 

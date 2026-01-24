@@ -1,4 +1,4 @@
-# Story 11.2: Implement LED Power Toggle with NVS Persistence
+# Story 12.2: Implement LED Power Toggle with NVS Persistence
 
 Status: ready-for-dev
 
@@ -110,7 +110,7 @@ so that **I can turn the strip on or off and have it remember my choice**.
   - [ ] Update `initLedActions()` function (or add to existing init function)
   - [ ] Initialize `LedPowerAction` instance
   - [ ] Assign action to "Power" menu item in `ledSubmenu`
-  - [ ] Ensure parent pointers are set correctly (from Story 11.1)
+  - [ ] Ensure parent pointers are set correctly (from Story 12.1)
 
 - [ ] **Task 5: Integrate LedController in Main** (AC: 1)
   - [ ] Update `src/main.cpp`:
@@ -257,7 +257,7 @@ src/main.cpp                                    - Initialize LedController
    - Toggle LED power
    - Verify confirmation message displays
    - Verify menu shows correct state
-5. **Brightness Test** (for Story 11.3):
+5. **Brightness Test** (for Story 12.3):
    - Set LED power to On
    - Adjust brightness
    - Verify brightness changes
@@ -359,7 +359,7 @@ Menu exits with confirmation
 - [Source: architecture/core-architectural-decisions.md#Command Pattern for Actions] - Action class structure
 - [Source: architecture/implementation-patterns-consistency-rules.md#Format Patterns] - Error return pattern
 - [Source: project-context.md#Configuration Persistence Gotchas] - NVS write validation
-- [Source: epics.md#Story 11.2] - Original acceptance criteria
+- [Source: epics.md#Story 12.2] - Original acceptance criteria
 
 ## Dev Agent Record
 

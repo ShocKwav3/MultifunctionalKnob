@@ -1,5 +1,7 @@
 # Architecture Decision Document
 
+*Last Updated: 2026-01-22*
+
 ## Table of Contents
 
 - [Architecture Decision Document](#table-of-contents)
@@ -49,3 +51,12 @@
     - [Final Architecture Deliverables](./architecture-completion-summary.md#final-architecture-deliverables)
     - [Development Sequence](./architecture-completion-summary.md#development-sequence)
     - [Quality Assurance Checklist](./architecture-completion-summary.md#quality-assurance-checklist)
+
+## Feature Architecture Addenda
+
+- [Macro Activation System](./macro-feature-architecture.md) - *Added 2026-01-22*
+  - [Project Context Analysis](./macro-feature-architecture.md#project-context-analysis)
+  - [Core Architectural Decisions](./macro-feature-architecture.md#core-architectural-decisions)
+  - [Implementation Patterns & Consistency Rules](./macro-feature-architecture.md#implementation-patterns--consistency-rules)
+  - [Project Structure & Boundaries](./macro-feature-architecture.md#project-structure--boundaries)
+  - [Architecture Validation Results](./macro-feature-architecture.md#architecture-validation-results)

@@ -1,4 +1,4 @@
-# Story 11.1: Add FastLED Library and LED Menu Structure
+# Story 12.1: Add FastLED Library and LED Menu Structure
 
 Status: ready-for-dev
 
@@ -52,10 +52,10 @@ so that **I can access all LED settings from one place**.
 
 - [ ] **Task 3: Create LED Submenu Array** (AC: 3, 4)
   - [ ] Define `ledSubmenu` array with 4 items:
-    - [ ] "Power" (action = nullptr initially, filled in Story 11.2)
-    - [ ] "Brightness" (action = nullptr initially, filled in Story 11.3)
-    - [ ] "Mode" (action = nullptr initially, filled in Story 11.4)
-    - [ ] "Color" (action = nullptr initially, filled in Story 11.5)
+    - [ ] "Power" (action = nullptr initially, filled in Story 12.2)
+    - [ ] "Brightness" (action = nullptr initially, filled in Story 12.3)
+    - [ ] "Mode" (action = nullptr initially, filled in Story 12.4)
+    - [ ] "Color" (action = nullptr initially, filled in Story 12.5)
   - [ ] Ensure array is `static constexpr` or `inline constexpr` for compile-time initialization
 
 - [ ] **Task 4: Add LED Item to Main Menu** (AC: 2, 3)
@@ -73,7 +73,7 @@ so that **I can access all LED settings from one place**.
 - [ ] **Task 6: Create Placeholder Action Initialization** (AC: 4)
   - [ ] Create `initLedActions()` function (or add to existing init function)
   - [ ] Initialize all LED actions as nullptr for now
-  - [ ] These will be filled in Stories 11.2-11.5
+  - [ ] These will be filled in Stories 12.2-12.5
 
 - [ ] **Task 7: Build and Verify** (AC: all)
   - [ ] Build with `pio run -e use_nimble`
@@ -123,10 +123,10 @@ struct MenuItem {
 ```cpp
 // src/Menu/Model/MenuTree.h
 inline constexpr MenuItem ledSubmenu[] = {
-    {"Power", nullptr, nullptr, 0, nullptr},      // Action filled in 11.2
-    {"Brightness", nullptr, nullptr, 0, nullptr},  // Action filled in 11.3
-    {"Mode", nullptr, nullptr, 0, nullptr},        // Action filled in 11.4
-    {"Color", nullptr, nullptr, 0, nullptr}         // Action filled in 11.5
+    {"Power", nullptr, nullptr, 0, nullptr},      // Action filled in 12.2
+    {"Brightness", nullptr, nullptr, 0, nullptr},  // Action filled in 12.3
+    {"Mode", nullptr, nullptr, 0, nullptr},        // Action filled in 12.4
+    {"Color", nullptr, nullptr, 0, nullptr}         // Action filled in 12.5
 };
 
 inline constexpr MenuItem mainMenu[] = {
@@ -236,7 +236,7 @@ Display 4 options:
     ↓
 User selects option
     ↓
-Execute action (Stories 11.2-11.5)
+Execute action (Stories 12.2-12.5)
 ```
 
 ### References
@@ -244,7 +244,7 @@ Execute action (Stories 11.2-11.5)
 - [Source: architecture/core-architectural-decisions.md#Component Architecture (Menu System)] - Menu tree structure and parent pointer pattern
 - [Source: architecture/implementation-patterns-consistency-rules.md#Structure Patterns] - Directory organization
 - [Source: project-context.md#Menu System Gotchas] - Menu intercept order and exit behavior
-- [Source: epics.md#Story 11.1] - Original acceptance criteria
+- [Source: epics.md#Story 12.1] - Original acceptance criteria
 
 ## Dev Agent Record
 

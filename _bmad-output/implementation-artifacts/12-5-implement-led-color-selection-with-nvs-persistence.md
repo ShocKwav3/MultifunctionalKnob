@@ -1,4 +1,4 @@
-# Story 11.5: Implement LED Color Selection with NVS Persistence
+# Story 12.5: Implement LED Color Selection with NVS Persistence
 
 Status: ready-for-dev
 
@@ -376,7 +376,7 @@ void LedController::setColor(LedColor newColor) {
 - [Source: architecture/core-architectural-decisions.md#Command Pattern for Actions] - Action class structure
 - [Source: architecture/implementation-patterns-consistency-rules.md#Format Patterns] - Error return pattern
 - [Source: project-context.md#Configuration Persistence Gotchas] - NVS write validation
-- [Source: epics.md#Story 11.5] - Original acceptance criteria
+- [Source: epics.md#Story 12.5] - Original acceptance criteria
 
 ## Dev Agent Record
 

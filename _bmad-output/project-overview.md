@@ -4,21 +4,23 @@
 
 **Type:** Embedded/IoT - ESP32-C3 Bluetooth HID Device
 
-**Last Updated:** 2025-12-14
+**Last Updated:** 2026-01-22
 
 ## Executive Summary
 
-This project implements a Bluetooth HID rotary encoder input device using an ESP32-C3 microcontroller. The device acts as a wireless USB knob that can function as a mouse scroll wheel or volume control, with an integrated OLED display for visual feedback. It leverages FreeRTOS for event-driven architecture and supports multiple encoder modes that can be switched dynamically.
+This project implements a Bluetooth HID rotary encoder input device using an ESP32-C3 microcontroller. The device acts as a wireless USB knob that can function as a mouse scroll wheel, volume control, or zoom control, with an integrated 128x32 OLED display for visual feedback. It features a comprehensive menu system for configuration, power management with deep sleep, and Bluetooth pairing controls. The system leverages FreeRTOS for event-driven architecture and supports multiple encoder modes that can be switched dynamically.
 
 ## Purpose
 
 Create a versatile Bluetooth HID input device that provides:
 
-- Rotary encoder input for scroll or volume control
+- Rotary encoder input for scroll, volume, or zoom control
 - Mode switching between different input behaviors
 - Visual feedback via OLED display
-- Wireless Bluetooth connectivity
-- Low-power ESP32-C3 implementation
+- Complete menu system for device configuration
+- Wireless Bluetooth connectivity with pairing controls
+- Power management with automatic deep sleep
+- Configurable button behaviors for media control
 
 ## Quick Reference
 
@@ -30,7 +32,7 @@ Create a versatile Bluetooth HID input device that provides:
 | **Framework** | Arduino | PlatformIO |
 | **RTOS** | FreeRTOS | Built-in ESP32 |
 | **Bluetooth** | NimBLE | 2.2.3 |
-| **Display** | SSD1306 OLED | 128x64, I2C (Adafruit lib 2.5.15) |
+| **Display** | SSD1306 OLED | 128x32, I2C (Adafruit lib 2.5.15) |
 | **Encoder** | Rotary Encoder | ai-esp32-rotary-encoder 1.7 |
 | **HID** | BLE Keyboard/Mouse | ESP32-BLE-Keyboard |
 | **Build System** | PlatformIO | - |
@@ -39,16 +41,17 @@ Create a versatile Bluetooth HID input device that provides:
 
 **Event-Driven Architecture** with:
 - FreeRTOS task-based concurrency
-- Queue-based event dispatching
+- Queue-based event dispatching (encoder, button, app, menu events)
 - Handler pattern for encoder modes
-- Singleton pattern for hardware drivers
+- Static allocation for embedded constraints
+- Power management with inactivity monitoring
 
 ### Hardware Configuration
 
 **Microcontroller:** ESP32-C3 Super Mini (nologo variant)
 
 **Peripherals:**
-- **OLED Display:** SSD1306 128x64 (I2C @ 0x3C)
+- **OLED Display:** SSD1306 128x32 (I2C @ 0x3C)
   - SDA: GPIO 6
   - SCL: GPIO 7
 - **Rotary Encoder:**
@@ -56,6 +59,11 @@ Create a versatile Bluetooth HID input device that provides:
   - DT (B): GPIO 0
   - Button (SW): GPIO 2
   - Steps: 4 per detent
+- **Buttons (4 configurable):**
+  - Top Left: GPIO 3
+  - Top Right: GPIO 4
+  - Bottom Left: GPIO 5
+  - Bottom Right: GPIO 9
 - **Bluetooth:** Built-in BLE radio
 - **Serial:** USB CDC (460800 baud)
 
@@ -68,25 +76,45 @@ Create a versatile Bluetooth HID input device that provides:
 ## Key Features
 
 1. **Multi-Mode Encoder**
-   - Scroll Mode: Mouse wheel emulation (horizontal/vertical)
+   - Scroll Mode: Mouse wheel emulation (vertical scrolling)
    - Volume Mode: Media volume control
-   - Mode selection via long press
+   - Zoom Mode: Ctrl+scroll for zoom in/out
+   - Mode selection via menu
+   - Wheel direction reversal option
 
-2. **Bluetooth HID**
+2. **Menu System**
+   - Wheel Behavior: Mode selection, direction reversal
+   - Button Config: Assign actions (None, Mute, Play, Pause, Next, Previous) to each button
+   - Bluetooth: Pair new device, disconnect current device
+   - Display: Turn display on/off
+   - Device Status: Show connection status and settings
+   - About: Device information
+
+3. **Bluetooth HID**
    - Device name: "KnobKoKy"
    - Manufacturer: "KoKy"
    - Acts as HID keyboard and mouse
    - Supports media keys and mouse movements
+   - Pair and disconnect controls via menu
 
-3. **Event-Driven Architecture**
-   - Two separate event queues (encoder input, application events)
+4. **Power Management**
+   - Inactivity detection with configurable timeouts
+   - Warning display at 4 minutes idle
+   - Automatic deep sleep after 5 minutes
+   - Wake via encoder button press
+   - Auto-reconnect Bluetooth after wake
+
+5. **Event-Driven Architecture**
+   - Four event queues (encoder, button, app, menu)
    - Handler registration system for extensibility
    - Clean separation of concerns
 
-4. **Visual Feedback**
-   - 128x64 OLED display
-   - Mode indication
-   - Status messages
+6. **Visual Feedback**
+   - 128x32 OLED display
+   - Normal mode status screen with icons
+   - Bluetooth status icon (solid/flashing/none)
+   - Menu navigation display
+   - Sleep warning display
 
 ## Project Structure
 
@@ -94,17 +122,34 @@ Create a versatile Bluetooth HID input device that provides:
 UtilityButtonsWithKnobUSB/
 ├── src/                    # Main application code
 │   ├── main.cpp           # Entry point and setup
+│   ├── BLE/               # BLE callback handlers
+│   ├── Button/            # Button manager
 │   ├── Component/         # Interface definitions
+│   ├── Config/            # ConfigManager, FactoryReset
+│   ├── Display/           # OLED display implementation
+│   │   ├── Impl/          # OLEDDisplay, SerialDisplay
+│   │   ├── Interface/     # DisplayInterface
+│   │   ├── Model/         # DisplayRequest
+│   │   └── Task/          # DisplayTask
 │   ├── EncoderMode/       # Mode handlers and management
+│   │   ├── Handler/       # Scroll, Volume, Zoom handlers
+│   │   ├── Interface/     # EncoderModeBaseInterface
+│   │   ├── Manager/       # EncoderModeManager
+│   │   └── Selector/      # EncoderModeSelector
 │   ├── Event/             # Event dispatchers and handlers
+│   │   ├── Dispatcher/    # App, Button, Encoder, Menu dispatchers
+│   │   └── Handler/       # App, Button, Encoder, Menu handlers
 │   ├── Helper/            # Utility functions
-│   └── Menu/              # (Future) Menu system
+│   ├── Menu/              # Menu system
+│   │   ├── Action/        # Menu actions (PairAction, DisconnectAction, etc.)
+│   │   ├── Controller/    # MenuController
+│   │   └── Model/         # MenuItem, MenuTree
+│   └── System/            # Power management
 ├── include/               # Header files
-│   ├── Config/           # Device and encoder configuration
+│   ├── Config/           # Device, encoder, button, display, system configs
 │   ├── Type/             # Event type definitions
-│   ├── Enum/             # Enumerations
-│   ├── AppState.h        # Global application state
-│   └── version.h         # Version information
+│   ├── Enum/             # Enumerations (WheelMode, ButtonAction, etc.)
+│   └── state/            # Hardware state definitions
 ├── lib/                   # Custom libraries
 │   ├── EncoderDriver/    # Rotary encoder driver wrapper
 │   └── StatsMonitor/     # Performance monitoring
@@ -121,7 +166,8 @@ UtilityButtonsWithKnobUSB/
 - PlatformIO Core or PlatformIO IDE
 - ESP32-C3 board with USB-C connection
 - Rotary encoder hardware
-- SSD1306 OLED display (128x64, I2C)
+- SSD1306 OLED display (128x32, I2C)
+- 4 tactile buttons (optional)
 
 ### Quick Start
 
@@ -133,12 +179,12 @@ UtilityButtonsWithKnobUSB/
 2. **Clone and Build**
    ```bash
    cd UtilityButtonsWithKnobUSB
-   ./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run
+   ./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -e use_nimble
    ```
 
 3. **Upload to Device**
    ```bash
-   ./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run --target upload
+   ./.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -e use_nimble -t upload
    ```
 
 4. **Monitor Serial Output**
@@ -152,17 +198,22 @@ UtilityButtonsWithKnobUSB/
 2. Look for "KnobKoKy" in Bluetooth settings
 3. Pair as HID device
 4. Rotate encoder to test scroll functionality
+5. Long-press encoder button to access menu
+
+### Factory Reset
+
+Hold encoder button for 5+ seconds during boot to reset all settings to defaults.
 
 ## Documentation Index
 
 ### Generated Documentation
 
 - [Project Overview](./project-overview.md) _(This document)_
-- [Architecture Documentation](./architecture.md) _(To be generated)_
+- [Project Context](./project-context.md) - AI agent implementation guide
+- [Architecture Documentation](./architecture/index.md)
 - [Source Tree Analysis](./source-tree-analysis.md)
-- [Hardware Documentation](./hardware-documentation.md)
-- [Development Guide](./development-guide.md)
-- [Component Inventory](./component-inventory.md) _(To be generated)_
+- [Hardware Documentation](./hardware-documentation/index.md)
+- [Development Guide](./development-guide/index.md)
 
 ### Existing Documentation
 
@@ -171,20 +222,32 @@ UtilityButtonsWithKnobUSB/
 
 ## Project Status
 
-**Current Version:** Development
+**Current Version:** v1.0 (Feature Complete for Sprint 1)
 
-**Functional Features:**
+**Completed Features (Epics 6-10):**
+- ✅ Codebase cleanup and consolidation
 - ✅ Rotary encoder input (rotation, clicks)
 - ✅ Bluetooth HID connectivity
-- ✅ OLED display integration
+- ✅ OLED display integration (128x32)
 - ✅ Event-driven architecture
-- ✅ Multiple encoder modes (Scroll, Volume)
+- ✅ Multiple encoder modes (Scroll, Volume, Zoom)
 - ✅ Mode selection system
+- ✅ Wheel direction control (normal/reversed)
+- ✅ Complete menu system
+- ✅ Button configuration (4 buttons with 6 actions each)
+- ✅ Bluetooth pairing and disconnect via menu
+- ✅ Display power control
+- ✅ Power management with deep sleep
+- ✅ Inactivity warning display
+- ✅ Wake from deep sleep via encoder button
+- ✅ Auto-reconnect Bluetooth after wake
 
-**In Development:**
-- 🔨 Menu system implementation
-- 🔨 Stats monitoring integration
-- 🔨 Additional encoder modes
+**Upcoming (Sprint 2 - Epic 11):**
+- 🔨 LED Strip Control (FastLED integration)
+- 🔨 LED power toggle
+- 🔨 Wheel-controlled brightness
+- 🔨 LED mode selection
+- 🔨 LED color selection
 
 ## Contact & Attribution
 
@@ -193,4 +256,4 @@ UtilityButtonsWithKnobUSB/
 
 ---
 
-*This documentation was generated on 2025-12-14*
+*This documentation was last updated on 2026-01-22*
