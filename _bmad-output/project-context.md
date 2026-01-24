@@ -1,10 +1,10 @@
 ---
 project_name: 'UtilityButtonsWithKnobUSB'
 user_name: 'Feroj'
-date: '2025-12-16'
+date: '2026-01-22'
 sections_completed: ['technology_stack', 'language_rules', 'framework_rules', 'code_quality', 'critical_rules']
 status: 'complete'
-rule_count: 80
+rule_count: 93
 optimized_for_llm: true
 ---
 
@@ -77,6 +77,7 @@ Command examples (using the wrapper):
 - **Queue Sizes:** Use 10 items for event queues (established pattern)
 - **Handler Registration:** Register handlers with Manager before use in setup()
 - **Menu Interception:** Menu system intercepts events BEFORE mode handlers when active
+- **Macro Interception:** Priority order is Menu > Macro > Normal Mode (macro intercepts when button held)
 - **Non-Blocking:** Never block in event handlers - use queues for async work
 - **Event Payloads:** Use union-based struct for AppEvent data - access correct union member based on event type (wrong member = undefined behavior)
 - **Zero-Initialize:** Always zero-initialize event structs before populating fields
@@ -233,9 +234,35 @@ if (bleKeyboard.isConnected()) {  // Correct
 - **Exit on config change:** Menu auto-exits after selection - don't manually exit twice
 - **Long press from root:** Exits menu entirely - handle this state transition
 
+### Macro System Rules
+
+- **GPIO 10:** Reserved for macro button (active-low with internal pull-up)
+- **Priority order:** Always check menu first, then macro mode, then normal handling
+- **Macro button is modifier-only:** Holding it doesn't trigger action, only modifies other inputs
+- **Empty macro check:** `MacroDefinition.isEmpty()` returns true when modifiers=0 AND keycode=0
+- **BLE check required:** Always verify `bleKeyboard->isConnected()` before executing macro
+- **MacroInput enum:** Maps to NVS index directly (WHEEL_BUTTON=0, WHEEL_LEFT=1, ..., BUTTON_4=6)
+
+```cpp
+// ✅ Correct macro interception order
+if (menuController.isActive()) {
+    menuController.handleEvent(event);
+    return;
+}
+if (macroManager.isMacroModeActive()) {
+    if (macroManager.executeMacro(input)) return;
+}
+normalModeHandler->handleEvent(event);
+
+// ❌ Wrong - checking macro before menu
+if (macroManager.isMacroModeActive()) { ... }
+if (menuController.isActive()) { ... }  // Menu must be checked FIRST
+```
+
 ### Configuration Persistence Gotchas
 
 - **NVS namespace:** Use single namespace `"knobkoky"` with prefixed keys
+- **Macro NVS keys:** Use `"macro.0"` through `"macro.6"` format (packed uint16_t: modifiers << 8 | keycode)
 - **Enum corruption:** Always validate stored enum values against max valid
 - **First boot:** Check for uninitialized NVS and apply defaults
 - **Factory reset:** Hold encoder button 5+ seconds on boot triggers reset
@@ -298,5 +325,5 @@ This ESP32-C3 has **400KB SRAM, single-core RISC-V @ 160MHz**. Design patterns h
 
 ---
 
-_Last Updated: 2025-12-16_
+_Last Updated: 2026-01-22_
 

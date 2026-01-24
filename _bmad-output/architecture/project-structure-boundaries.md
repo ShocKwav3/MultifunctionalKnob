@@ -1,36 +1,46 @@
 # Project Structure & Boundaries
 
+*Last Updated: 2026-01-22*
+
 ## Complete Project Directory Structure
 
 ```
 UtilityButtonsWithKnobUSB/
-├── platformio.ini                      # Build configuration (existing)
+├── platformio.ini                      # Build configuration
 ├── README.md                           # Project readme
 │
-├── boards/                             # Custom board definitions (existing)
+├── boards/                             # Custom board definitions
 │   └── nologo_esp32c3_super_mini.json
 │
 ├── include/                            # Header files
-│   ├── AppState.h                      # (existing) Global state, queues
-│   ├── version.h                       # (existing) Version info
+│   ├── README                          # Include directory readme
+│   ├── version.h                       # Version info
+│   │
 │   ├── Config/
-│   │   ├── device_config.h             # (existing) BLE name, manufacturer
-│   │   ├── encoder_config.h            # (existing) Encoder GPIO pins
-│   │   ├── button_config.h              # (implemented) Button GPIO array, labels, debounce config
-│   │   ├── menu_config.h               # (new) Menu depth, timeout, defaults
-│   │   ├── display_config.h            # (new) Display dimensions, addresses
-│   │   └── log_config.h                # (new) Logging macros and levels
+│   │   ├── device_config.h             # Device identity, BLE name, NVS namespace
+│   │   ├── encoder_config.h            # Encoder GPIO pins
+│   │   ├── button_config.h             # Button GPIO array, labels, actions
+│   │   ├── display_config.h            # Display dimensions, I2C config (128x32)
+│   │   ├── system_config.h             # Power management timeouts
+│   │   └── log_config.h                # Logging macros and levels
+│   │
 │   ├── Enum/
-│   │   ├── EventEnum.h                 # (existing + extend) Event types
-│   │   ├── WheelModeEnum.h             # (new) Wheel mode values
-│   │   ├── ButtonActionEnum.h          # (new) Button action values
-│   │   └── ErrorEnum.h                 # (new) Error return codes
-│   └── Type/
-│       ├── MenuEvent.h                 # (new) Menu-specific events
-│       ├── SystemEvent.h               # (new) System-specific events
-│       └── EncoderInputEvent.h         # (existing) Encoder input struct
+│   │   ├── EventEnum.h                 # Event types (encoder, menu, app)
+│   │   ├── WheelModeEnum.h             # Wheel mode values (Scroll, Volume, Zoom)
+│   │   ├── WheelDirection.h            # Wheel direction (Normal, Reversed)
+│   │   ├── ButtonActionEnum.h          # Button actions (None, Mute, Play, etc.)
+│   │   ├── PowerStateEnum.h            # Power states (Active, Warning, Sleep)
+│   │   └── ErrorEnum.h                 # Error return codes
+│   │
+│   ├── Type/
+│   │   ├── AppEvent.h                  # App event struct with union payload
+│   │   ├── ButtonEvent.h               # Button event struct
+│   │   └── EncoderInputEvent.h         # Encoder input struct
+│   │
+│   └── state/
+│       └── HardwareState.h             # Global hardware state (BLE, display, mode)
 │
-├── lib/                                # Custom libraries (existing)
+├── lib/                                # Custom libraries
 │   ├── EncoderDriver/
 │   │   ├── EncoderDriver.h
 │   │   └── EncoderDriver.cpp
@@ -38,108 +48,151 @@ UtilityButtonsWithKnobUSB/
 │       └── StatsMonitor.h
 │
 ├── src/                                # Main application source
-│   ├── main.cpp                        # (existing + modify) Entry point, initialization
+│   ├── main.cpp                        # Entry point, initialization, wiring
 │   │
-│   ├── Component/                      # (existing) Interface definitions
+│   ├── BLE/                            # Bluetooth callback handling
+│   │   ├── BleCallbackHandler.cpp
+│   │   └── BleCallbackHandler.h
+│   │
+│   ├── Button/                         # Button management
+│   │   ├── ButtonManager.cpp
+│   │   └── ButtonManager.h
+│   │
+│   ├── Component/                      # Shared interfaces
 │   │   └── Interface/
 │   │       └── EncoderInputHandlerInterface.h
 │   │
-│   ├── EncoderMode/                    # (existing) Mode handlers
+│   ├── Config/                         # Configuration management
+│   │   ├── ConfigManager.cpp           # NVS read/write, defaults
+│   │   ├── ConfigManager.h
+│   │   ├── FactoryReset.cpp            # Factory reset detection and execution
+│   │   └── FactoryReset.h
+│   │
+│   ├── Display/                        # Display system
+│   │   ├── Bitmaps.h                   # Icon bitmaps (BT, battery, etc.)
+│   │   ├── DisplayFactory.cpp          # Display instance factory
+│   │   ├── DisplayFactory.h
+│   │   │
+│   │   ├── Interface/
+│   │   │   └── DisplayInterface.h      # Abstract display interface
+│   │   │
+│   │   ├── Impl/
+│   │   │   ├── OLEDDisplay.cpp         # SSD1306 128x32 OLED implementation
+│   │   │   ├── OLEDDisplay.h
+│   │   │   ├── SerialDisplay.cpp       # Serial output implementation (debug)
+│   │   │   └── SerialDisplay.h
+│   │   │
+│   │   ├── Model/
+│   │   │   └── DisplayRequest.h        # Display request types
+│   │   │
+│   │   └── Task/
+│   │       ├── DisplayTask.cpp         # Display arbitration FreeRTOS task
+│   │       └── DisplayTask.h
+│   │
+│   ├── EncoderMode/                    # Encoder mode handlers
 │   │   ├── Handler/
-│   │   │   ├── EncoderModeHandlerAbstract.cpp/.h
+│   │   │   ├── EncoderModeHandlerAbstract.cpp
 │   │   │   ├── EncoderModeHandlerAbstract.h
-│   │   │   ├── EncoderModeHandlerScroll.cpp/.h
-│   │   │   ├── EncoderModeHandlerVolume.cpp/.h
-│   │   │   └── EncoderModeHandlerZoom.cpp/.h    # (new) Zoom mode
+│   │   │   ├── EncoderModeHandlerInterface.h
+│   │   │   ├── EncoderModeHandlerScroll.cpp
+│   │   │   ├── EncoderModeHandlerScroll.h
+│   │   │   ├── EncoderModeHandlerVolume.cpp
+│   │   │   ├── EncoderModeHandlerVolume.h
+│   │   │   ├── EncoderModeHandlerZoom.cpp
+│   │   │   └── EncoderModeHandlerZoom.h
+│   │   │
 │   │   ├── Interface/
 │   │   │   └── EncoderModeBaseInterface.h
+│   │   │
 │   │   ├── Manager/
-│   │   │   └── EncoderModeManager.cpp/.h
+│   │   │   ├── EncoderModeManager.cpp
+│   │   │   └── EncoderModeManager.h
+│   │   │
 │   │   └── Selector/
-│   │       └── EncoderModeSelector.cpp/.h
+│   │       ├── EncoderModeSelector.cpp
+│   │       └── EncoderModeSelector.h
 │   │
-│   ├── Event/                          # (existing) Event system
+│   ├── Event/                          # Event system
 │   │   ├── Dispatcher/
-│   │   │   ├── MenuEventDispatcher.cpp/.h       # (new) Menu events
-│   │   │   ├── SystemEventDispatcher.cpp/.h     # (new) System events
-│   │   │   └── EncoderEventDispatcher.cpp/.h
+│   │   │   ├── AppEventDispatcher.cpp
+│   │   │   ├── AppEventDispatcher.h
+│   │   │   ├── ButtonEventDispatcher.cpp
+│   │   │   ├── ButtonEventDispatcher.h
+│   │   │   ├── EncoderEventDispatcher.cpp
+│   │   │   ├── EncoderEventDispatcher.h
+│   │   │   ├── MenuEventDispatcher.cpp
+│   │   │   └── MenuEventDispatcher.h
+│   │   │
 │   │   └── Handler/
-│   │       ├── MenuEventHandler.cpp/.h          # (new) Menu logic formatting
-│   │       ├── SystemEventHandler.cpp/.h        # (new) System state formatting
-│   │       └── EncoderEventHandler.cpp/.h       # (modify) Add menu interception
+│   │       ├── Interface/
+│   │       │   └── EventHandlerInterface.h
+│   │       ├── AppEventHandler.cpp
+│   │       ├── AppEventHandler.h
+│   │       ├── ButtonEventHandler.cpp
+│   │       ├── ButtonEventHandler.h
+│   │       ├── EncoderEventHandler.cpp
+│   │       ├── EncoderEventHandler.h
+│   │       ├── MenuEventHandler.cpp
+│   │       └── MenuEventHandler.h
 │   │
-│   ├── Helper/                         # (existing) Utilities
-│   │   └── EncoderModeHelper.cpp/.h
+│   ├── Helper/                         # Utilities
+│   │   ├── EncoderModeHelper.cpp
+│   │   └── EncoderModeHelper.h
 │   │
-│   ├── Menu/                           # (new) Menu system
+│   ├── Menu/                           # Menu system
+│   │   ├── Action/
+│   │   │   ├── MenuAction.h            # Abstract action base class
+│   │   │   ├── DisconnectAction.cpp    # BLE disconnect
+│   │   │   ├── DisconnectAction.h
+│   │   │   ├── DisplayPowerAction.cpp  # Display on/off
+│   │   │   ├── DisplayPowerAction.h
+│   │   │   ├── PairAction.cpp          # BLE pairing
+│   │   │   ├── PairAction.h
+│   │   │   ├── SelectWheelDirectionAction.cpp
+│   │   │   ├── SelectWheelDirectionAction.h
+│   │   │   ├── SelectWheelModeAction.cpp
+│   │   │   ├── SelectWheelModeAction.h
+│   │   │   ├── SetButtonBehaviorAction.cpp
+│   │   │   ├── SetButtonBehaviorAction.h
+│   │   │   ├── ShowAboutAction.cpp
+│   │   │   ├── ShowAboutAction.h
+│   │   │   ├── ShowStatusAction.cpp
+│   │   │   └── ShowStatusAction.h
+│   │   │
 │   │   ├── Controller/
-│   │   │   └── MenuController.cpp/.h            # Menu state machine, event interception
-│   │   ├── Model/
-│   │   │   ├── MenuItem.h                       # Menu item struct with tree pointers
-│   │   │   └── MenuTree.h                       # Static menu tree (HEADER-ONLY, constexpr)
-│   │   └── Action/
-│   │       ├── MenuAction.h                     # Abstract action base class
-│   │       ├── SelectWheelModeAction.cpp/.h     # Select wheel mode
-│   │       ├── SetButtonBehaviorAction.cpp/.h   # Change button behavior
-│   │       ├── ShowStatusAction.cpp/.h          # Display device status
-│   │       └── ShowAboutAction.cpp/.h           # Display about info
+│   │   │   ├── MenuController.cpp      # Menu state machine
+│   │   │   └── MenuController.h
+│   │   │
+│   │   └── Model/
+│   │       ├── MenuItem.h              # Menu item struct
+│   │       └── MenuTree.h              # Static menu tree definition
 │   │
-│   ├── Display/                        # (new) Display abstraction
-│   │   ├── Interface/
-│   │   │   └── DisplayInterface.h               # Abstract display interface
-│   │   ├── Task/
-│   │   │   └── DisplayTask.cpp/.h               # (new) Arbitration Task
-│   │   └── Impl/
-│   │       ├── SerialDisplay.cpp/.h             # Serial output implementation
-│   │       └── OLEDDisplay.cpp/.h               # OLED implementation (future)
-│   │
-│   ├── Config/                         # (new) Configuration management
-│   │   ├── ConfigManager.cpp/.h                 # NVS read/write, defaults (DI-enabled)
-│   │   └── FactoryReset.cpp/.h                  # Factory reset detection and execution
-│   │
-│   ├── System/                         # (new) System components
-│   │   └── State/
-│   │       └── SystemState.h                    # Global system state
-│   │
-│   └── Button/                         # (new) Button management
-│       └── ButtonManager.cpp/.h                 # GPIO setup, button event dispatch
-│
-├── test/                               # (Deferred) Test files
-│   ├── unit/
-│   │   ├── test_ConfigManager.cpp
-│   │   ├── test_MenuController.cpp
-│   │   └── test_MenuItem.cpp
-│   └── mocks/
-│       ├── MockDisplay.h
-│       └── MockPreferences.h
+│   └── System/                         # System components
+│       ├── PowerManager.cpp            # Inactivity detection, deep sleep
+│       └── PowerManager.h
 │
 └── _bmad-output/                       # Documentation
     ├── index.md
-    ├── architecture.md                 # This document
-    ├── prd.md
-    └── ...
+    ├── project-overview.md
+    ├── project-context.md
+    ├── architecture/
+    └── development-guide/
 ```
 
 ## Design Clarifications
 
-**MenuTree as Header-Only (constexpr):**
+**MenuTree Implementation:**
+The menu system uses inline arrays (not constexpr) because parent pointers create circular references that cannot be resolved at compile time. Action pointers are set at runtime via dependency injection.
+
 ```cpp
 // src/Menu/Model/MenuTree.h
-#pragma once
-#include "MenuItem.h"
-
-// All menu items defined as constexpr - no runtime initialization
-constexpr MenuItem WHEEL_MODE_ITEMS[] = {
-    {"Scroll", nullptr, nullptr, 0, &setScrollModeAction},
-    {"Volume", nullptr, nullptr, 0, &setVolumeModeAction},
-    {"Zoom", nullptr, nullptr, 0, &setZoomModeAction}
-};
-
-constexpr MenuItem MAIN_MENU_ITEMS[] = {
-    {"Wheel Behavior", nullptr, WHEEL_MODE_ITEMS, 3, nullptr},
-    {"Button Config", nullptr, BUTTON_CONFIG_ITEMS, BUTTON_COUNT, nullptr},
-    {"Device Status", nullptr, nullptr, 0, &showStatusAction},
-    {"About", nullptr, nullptr, 0, &showAboutAction}
+inline MenuItem mainMenu[] = {
+    { "Wheel Behavior", nullptr, wheelBehaviorSubmenu, WHEEL_BEHAVIOR_COUNT, nullptr },
+    { "Button Config",  nullptr, buttonConfigSubmenu, BUTTON_COUNT, nullptr },
+    { "Bluetooth",      nullptr, bluetoothSubmenu, BLUETOOTH_SUBMENU_COUNT, nullptr },
+    { "Display Off",    nullptr, nullptr, 0, nullptr },
+    { "Device Status",  nullptr, nullptr, 0, nullptr },
+    { "About",          nullptr, nullptr, 0, nullptr }
 };
 ```
 
@@ -147,28 +200,28 @@ constexpr MenuItem MAIN_MENU_ITEMS[] = {
 ```cpp
 // src/Config/ConfigManager.h
 class ConfigManager {
-    Preferences* prefs;  // Injected, not global
+    Preferences prefs;  // Internal, opened with NVS_NAMESPACE
 public:
-    // Production: pass &Preferences instance
-    // Testing: pass MockPreferences*
-    explicit ConfigManager(Preferences* preferences);
+    ConfigManager();  // Opens NVS namespace
 
     Error saveWheelMode(WheelMode mode);
     WheelMode loadWheelMode();
+    Error saveWheelDirection(WheelDirection dir);
+    WheelDirection loadWheelDirection();
+    Error saveButtonAction(uint8_t buttonIndex, ButtonAction action);
+    ButtonAction loadButtonAction(uint8_t buttonIndex);
+    void resetToDefaults();
 };
 ```
 
 **Factory Reset Trigger:**
 ```cpp
-// src/Config/FactoryReset.cpp/.h
 // Checked in main.cpp setup() BEFORE normal initialization
+// Hold encoder button for 5+ seconds during boot triggers reset
 
 class FactoryReset {
 public:
-    // Check if encoder button held during boot (5+ seconds)
-    static bool isResetRequested();
-
-    // Clear all NVS config, restore defaults
+    static bool isResetRequested(uint8_t buttonPin);
     static void execute(ConfigManager& config, DisplayInterface& display);
 };
 ```
@@ -189,21 +242,17 @@ public:
 │    ├── MenuController.isActive() ? Emit MenuEvent               │
 │    └── else → EncoderModeManager → Emit Mode Action             │
 │                                                                 │
-│  ButtonEventHandler (logs button events for MVP)                │
+│  ButtonEventHandler → Execute configured ButtonAction            │
 │                                                                 │
-│  System Components ──→ SystemEventDispatcher ──→ SystemEventQueue│
+│  MenuEventHandler → Process menu navigation events               │
+│                                                                 │
+│  PowerManager → Monitor inactivity, trigger sleep warnings       │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Output Processing Layer                      │
-│  MenuEventQueue ──→ MenuEventHandler                             │
-│                      ↓ (Emits Draw Command)                     │
-│  SystemEventQueue ──→ SystemEventHandler                         │
-│                      ↓ (Emits Draw Command)                     │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│                     Hardware Layer                               │
+│  AppEventQueue ──→ AppEventHandler                               │
+│                      ↓ (Mode changes, BLE events)               │
 │  DisplayRequestQueue ──→ DisplayTask ──→ DisplayInterface       │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -212,75 +261,40 @@ public:
 
 | Boundary | Owner | Consumers | Communication |
 |----------|-------|-----------|---------------|
-| Display Hardware | DisplayTask | Handlers (Menu/System) | Via DisplayRequestQueue |
+| Display Hardware | DisplayTask | All Handlers | Via DisplayRequestQueue |
 | Menu Logic | MenuController | EncoderEventHandler | Direct call (interception) |
-| Menu Output | MenuEventHandler | MenuController | Via MenuEventQueue |
-| System State | SystemEventHandler | Various components | Via SystemEventQueue |
-| Config Persistence | ConfigManager | MenuAction classes | Direct method calls (DI) |
-
-## Build Order Dependencies
-
-Components must be built/implemented in this order due to compile-time dependencies:
-
-```
-Phase 1: Foundation
-├── include/Config/log_config.h
-├── include/Enum/ErrorEnum.h
-├── include/Enum/WheelModeEnum.h
-├── include/Enum/ButtonActionEnum.h
-└── include/Config/button_config.h
-
-Phase 2: Interfaces
-├── src/Display/Interface/DisplayInterface.h
-└── src/Menu/Model/MenuItem.h
-
-Phase 3: Core Implementations
-├── src/Display/Impl/SerialDisplay.cpp/.h
-├── src/Config/ConfigManager.cpp/.h
-├── src/Button/ButtonManager.cpp/.h
-├── src/Menu/Action/MenuAction.h
-
-Phase 4: Display Arbitration (NEW)
-├── src/Display/Model/DisplayRequest.h
-└── src/Display/Task/DisplayTask.cpp/.h
-
-Phase 5: Menu System
-├── src/Menu/Action/*Action.cpp/.h
-├── src/Menu/Model/MenuTree.h
-├── src/Menu/Controller/MenuController.cpp/.h
-
-Phase 6: Integration (Distributed Events)
-├── src/Event/Dispatcher/MenuEventDispatcher.cpp/.h
-├── src/Event/Handler/MenuEventHandler.cpp/.h
-├── src/Event/Dispatcher/SystemEventDispatcher.cpp/.h
-├── src/Event/Handler/SystemEventHandler.cpp/.h
-└── src/main.cpp (wire everything together)
-```
+| BLE State | BleCallbackHandler | Display, Menu | Via HardwareState updates |
+| Config Persistence | ConfigManager | MenuAction classes | Direct method calls |
+| Power State | PowerManager | Display, main loop | Via PowerState enum |
 
 ## Requirements to Structure Mapping
 
 | FR Category | Component Location | Key Files |
 |-------------|-------------------|-----------|
-| Menu System (FR1-FR8) | src/Menu/ | MenuController, MenuItem, MenuTree |
-| Wheel Config (FR9-FR14) | src/Menu/Action/ | SelectWheelModeAction |
-| Button Config (FR15-FR19) | src/Menu/Action/, src/Button/ | SetButtonBehaviorAction, ButtonManager |
-| Device Status (FR20-FR23) | src/Menu/Action/ | ShowStatusAction |
-| About Screen (FR24-FR25) | src/Menu/Action/ | ShowAboutAction |
-| Config Persistence (FR26-FR29) | src/Config/ | ConfigManager, FactoryReset |
-| Display Interface (FR35-FR37) | src/Display/ | DisplayInterface, SerialDisplay |
-| Input Handling (FR38-FR42) | src/Button/ | ButtonManager |
-| BLE Handling (FR30-FR34) | src/Event/Handler/ | AppEventHandler (BLE_DISCONNECTED) |
+| Menu System | src/Menu/ | MenuController, MenuItem, MenuTree |
+| Wheel Config | src/Menu/Action/ | SelectWheelModeAction, SelectWheelDirectionAction |
+| Button Config | src/Menu/Action/, src/Button/ | SetButtonBehaviorAction, ButtonManager |
+| Bluetooth Control | src/Menu/Action/, src/BLE/ | PairAction, DisconnectAction, BleCallbackHandler |
+| Display Control | src/Menu/Action/, src/Display/ | DisplayPowerAction, OLEDDisplay |
+| Device Status | src/Menu/Action/ | ShowStatusAction |
+| About Screen | src/Menu/Action/ | ShowAboutAction |
+| Config Persistence | src/Config/ | ConfigManager, FactoryReset |
+| Display Interface | src/Display/ | DisplayInterface, OLEDDisplay, DisplayTask |
+| Input Handling | src/Button/, lib/EncoderDriver/ | ButtonManager, EncoderDriver |
+| Power Management | src/System/ | PowerManager |
 
-## File Modification Summary
+## Implementation Status
 
-**Existing Files to Modify:**
+**Completed (Epics 6-10):**
+- ✅ Complete menu system with hierarchical navigation
+- ✅ Wheel mode selection (Scroll, Volume, Zoom)
+- ✅ Wheel direction control (Normal, Reversed)
+- ✅ Button configuration (4 buttons × 6 actions)
+- ✅ Bluetooth pairing and disconnect
+- ✅ OLED display (128x32) with status screens
+- ✅ Display power control
+- ✅ Power management with deep sleep
+- ✅ Factory reset functionality
 
-| File | Changes |
-|------|---------|
-| `src/main.cpp` | Add ConfigManager, ButtonManager, DisplayHandler init; factory reset check |
-| `src/Event/Handler/EncoderEventHandler.cpp` | Add MenuController interception check |
-| `src/Event/Handler/AppEventHandler.cpp` | Add DisplayHandler routing, BLE disconnect handling |
-| `include/Enum/EventEnum.h` | Add MENU_*, CONFIG_CHANGED, BLE_DISCONNECTED |
-| `include/Type/AppEvent.h` | Add union-based data payload |
-
-**New Files to Create:** 23 files across 6 new directories
+**Upcoming (Sprint 2 - Epic 11):**
+- 🔨 LED Strip Control integration
