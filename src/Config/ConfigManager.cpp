@@ -158,6 +158,57 @@ ButtonAction ConfigManager::loadButtonAction(uint8_t index) {
     return action;
 }
 
+Error ConfigManager::loadMacro(uint8_t index, MacroDefinition& out) {
+    if (index >= MACRO_INPUT_COUNT) {
+        LOG_ERROR(TAG, "Invalid macro index: %d (max: %d)", index, MACRO_INPUT_COUNT - 1);
+        return Error::INVALID_PARAM;
+    }
+
+    if (!ensureInitialized()) {
+        LOG_ERROR(TAG, "NVS not initialized, returning empty macro");
+        out = MacroDefinition{0, 0};  // Return empty macro
+        return Error::NVS_READ_FAIL;
+    }
+
+    char key[16];
+    snprintf(key, sizeof(key), "macro.%d", index);
+
+    // Load from NVS (default to 0x0000 if key doesn't exist)
+    uint16_t packed = prefs->getUShort(key, 0x0000);
+    out = MacroDefinition::fromPacked(packed);
+
+    if (packed == 0x0000) {
+        LOG_DEBUG(TAG, "Macro %d is empty (key: %s)", index, key);
+    } else {
+        LOG_DEBUG(TAG, "Loaded macro %d: 0x%04X (key: %s)", index, packed, key);
+    }
+
+    return Error::OK;
+}
+
+Error ConfigManager::saveMacro(uint8_t index, uint16_t packed) {
+    if (index >= MACRO_INPUT_COUNT) {
+        LOG_ERROR(TAG, "Invalid macro index: %d (max: %d)", index, MACRO_INPUT_COUNT - 1);
+        return Error::INVALID_PARAM;
+    }
+
+    if (!ensureInitialized()) {
+        return Error::NVS_WRITE_FAIL;
+    }
+
+    char key[16];
+    snprintf(key, sizeof(key), "macro.%d", index);
+
+    size_t written = prefs->putUShort(key, packed);
+    if (written == 0) {
+        LOG_ERROR(TAG, "Failed to write macro to NVS for key: %s", key);
+        return Error::NVS_WRITE_FAIL;
+    }
+
+    LOG_INFO(TAG, "Saved macro %d: 0x%04X", index, packed);
+    return Error::OK;
+}
+
 Error ConfigManager::clearAll() {
     if (!ensureInitialized()) {
         return Error::NVS_WRITE_FAIL;

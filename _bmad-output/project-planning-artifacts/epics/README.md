@@ -5,7 +5,7 @@ description: "Navigation hub for UtilityButtonsWithKnobUSB Iteration 2 epic docu
 
 # 📚 Epic Shards Directory
 
-Welcome to the modular epic documentation for **UtilityButtonsWithKnobUSB Iteration 2**. This folder contains 6 focused epic documents plus navigation and reference materials.
+Welcome to the modular epic documentation for **UtilityButtonsWithKnobUSB Iteration 2**. This folder contains 7 focused epic documents plus navigation and reference materials.
 
 ---
 
@@ -21,7 +21,7 @@ Welcome to the modular epic documentation for **UtilityButtonsWithKnobUSB Iterat
 
 2. **[epics-index.md](./epics-index.md)** ← For Overview
    - Master navigation hub
-   - All 6 epics listed with details
+   - All 7 epics listed with details
    - Implementation sequence
    - Dependency mapping
 
@@ -41,7 +41,8 @@ Welcome to the modular epic documentation for **UtilityButtonsWithKnobUSB Iterat
 | [8](#epic-8) | [Bluetooth Menu Control](./epic-8-bluetooth-menu-control.md) | Medium | 3 | Planning |
 | [9](#epic-9) | [Physical OLED Display](./epic-9-physical-oled-display.md) | High | 6 | Planning |
 | [10](#epic-10) | [Power Management & Deep Sleep](./epic-10-power-management-deep-sleep.md) | Medium | 5 | Planning |
-| [11](#epic-11) | [LED Strip Control](./epic-11-led-strip-control.md) | Medium-High | 5 | Planning |
+| [11](#epic-11) | [Macro Activation System](./epic-11-macro-activation-system.md) | Low | 4 | In Progress |
+| [12](#epic-12) | [LED Strip Control](./epic-12-led-strip-control.md) | Medium-High | 5 | Planning |
 
 ---
 
@@ -94,7 +95,15 @@ Depends on Phase 2:
 ### Phase 4: Independent Features
 Can run in parallel with other phases:
 
-- **[Epic 11: LED Strip Control](./epic-11-led-strip-control.md)**
+- **[Epic 11: Macro Activation System](./epic-11-macro-activation-system.md)**
+  - Macro button (GPIO 10) activation
+  - 7 macro slots (wheel + 4 buttons)
+  - Key combination storage
+  - Menu-based configuration
+  - NVS persistence
+  - ⏱️ Low complexity, 4 stories
+
+- **[Epic 12: LED Strip Control](./epic-12-led-strip-control.md)**
   - LED menu structure
   - Power toggle
   - Brightness control (wheel)
@@ -110,10 +119,10 @@ Can run in parallel with other phases:
 
 | Metric | Value |
 |--------|-------|
-| **Total Epics** | 6 |
-| **Total Stories** | 25 |
-| **Total FRs** | 28 |
-| **Total Lines** | 1,714 (detailed & actionable) |
+| **Total Epics** | 7 |
+| **Total Stories** | 29 |
+| **Total FRs** | 34 |
+| **Total Lines** | ~2,000 (detailed & actionable) |
 | **Avg Epic Size** | ~130 lines |
 | **Phases** | 4 sequential (with parallelization) |
 
@@ -134,10 +143,11 @@ Can run in parallel with other phases:
    └─ Epic 10 (needs Epic 9 for Story 10.2 warning display)
          ↓
 ✅ Phase 4 (Independent, can run anytime)
-   └─ Epic 11 (no dependencies)
+   ├─ Epic 11 (no dependencies - Macro System)
+   └─ Epic 12 (no dependencies - LED Strip)
 ```
 
-**Key:** Epics 6-8 can run in parallel. Epic 9 must complete before Story 10.2. Epic 11 independent.
+**Key:** Epics 6-8 can run in parallel. Epic 9 must complete before Story 10.2. Epics 11-12 independent.
 
 ---
 
@@ -247,7 +257,7 @@ And     after power cycle, the direction setting is restored
 🎯 **Tip 5:** Leverage dependencies wisely
 - Phase 1 can run in parallel (use feature branches)
 - Don't start Epic 10 before Epic 9 Story 9.6
-- Epic 11 can be interleaved with other phases
+- Epics 11-12 can be interleaved with other phases
 
 ---
 
@@ -264,7 +274,8 @@ epics/                              (you are here!)
 ├── epic-8-bluetooth-menu-control.md
 ├── epic-9-physical-oled-display.md
 ├── epic-10-power-management-deep-sleep.md
-└── epic-11-led-strip-control.md
+├── epic-11-macro-activation-system.md
+└── epic-12-led-strip-control.md
 ```
 
 ---
@@ -311,7 +322,7 @@ epics/                              (you are here!)
 A: Check dependencies in [epics-index.md](./epics-index.md). Phase 1 is fully parallel-safe.
 
 **Q: How long per epic?**
-A: Epics 6-8: 2-4 sprints | Epic 9: 4-6 sprints | Epic 10: 2-3 sprints | Epic 11: 2-4 sprints
+A: Epics 6-8: 2-4 sprints | Epic 9: 4-6 sprints | Epic 10: 2-3 sprints | Epic 11: 1-2 sprints | Epic 12: 2-4 sprints
 
 **Q: Should I modify these documents as I implement?**
 A: Yes! Update as you learn. Document changes in commit messages.
@@ -324,10 +335,11 @@ A: Add it to the epic document, document in commit message.
 ## 📋 Version Information
 
 - **Sharding Date:** 2026-01-03
-- **Total Epics:** 6
-- **Total Stories:** 25
-- **Total FRs:** 28
-- **Status:** ✅ Ready for Implementation
+- **Last Updated:** 2026-01-24 (Epic 11/12 correction)
+- **Total Epics:** 7
+- **Total Stories:** 29
+- **Total FRs:** 34
+- **Status:** ✅ In Progress (Epic 11 active)
 - **Location:** `_bmad-output/project-planning-artifacts/epics/`
 
 ---
