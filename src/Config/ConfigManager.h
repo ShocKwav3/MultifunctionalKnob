@@ -6,6 +6,8 @@
 #include "Enum/WheelDirection.h"
 #include "Enum/ButtonActionEnum.h"
 #include "Config/device_config.h"
+#include "Config/macro_config.h"
+#include "Type/MacroDefinition.h"
 
 class ConfigManager {
 public:
@@ -19,6 +21,22 @@ public:
 
     Error saveButtonAction(uint8_t index, ButtonAction action);
     ButtonAction loadButtonAction(uint8_t index);
+
+    /**
+     * @brief Load a macro definition from NVS
+     * @param index Macro slot index (0 to MACRO_INPUT_COUNT-1)
+     * @param out Output parameter to store loaded macro (empty macro if key doesn't exist)
+     * @return Error::OK on success, Error::INVALID_PARAM if index out of range, Error::NVS_READ_FAIL if NVS not initialized
+     */
+    Error loadMacro(uint8_t index, MacroDefinition& out);
+
+    /**
+     * @brief Save a macro definition to NVS
+     * @param index Macro slot index (0 to MACRO_INPUT_COUNT-1)
+     * @param packed Packed macro value (modifiers << 8 | keycode)
+     * @return Error::OK on success, Error::INVALID_PARAM if index out of range, Error::NVS_WRITE_FAIL on failure
+     */
+    Error saveMacro(uint8_t index, uint16_t packed);
 
     /**
      * @brief Clear all configuration data from NVS
