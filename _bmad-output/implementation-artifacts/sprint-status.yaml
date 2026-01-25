@@ -35,3 +35,6 @@ development_status:
   12-4-implement-led-mode-selection-with-nvs-persistence: ready-for-dev
   12-5-implement-led-color-selection-with-nvs-persistence: ready-for-dev
   epic-12-retrospective: optional
+
+  # Ad-hoc Tasks
+  button-action-mapping-refactor: done
