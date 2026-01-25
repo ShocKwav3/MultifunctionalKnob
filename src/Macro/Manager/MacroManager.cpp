@@ -73,15 +73,16 @@ void MacroManager::loadFromNVS(ConfigManager& config) {
         MacroDefinition macro;
         Error result = config.loadMacro(i, macro);
 
-        if (result == Error::OK) {
-            macros[i] = macro;
-            if (!macro.isEmpty()) {
-                loadedCount++;
-            }
-        } else {
+        if (result != Error::OK) {
             // NVS error - set to empty macro
             LOG_ERROR(TAG, "Failed to load macro %d, setting to empty", i);
             macros[i] = MacroDefinition{0, 0};
+            continue;
+        }
+
+        macros[i] = macro;
+        if (!macro.isEmpty()) {
+            loadedCount++;
         }
     }
 

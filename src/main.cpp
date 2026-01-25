@@ -39,16 +39,18 @@
 #include "state/AppState.h"
 #include "state/HardwareState.h"
 #include "BLE/BleCallbackHandler.h"
+#include "BLE/BleKeyboardService.h"
 #include "System/PowerManager.h"
 
 BleKeyboard bleKeyboard(BLUETOOTH_DEVICE_NAME, BLUETOOTH_DEVICE_MANUFACTURER, BLUETOOTH_DEVICE_BATTERY_LEVEL_DEFAULT);
+BleKeyboardService bleKeyboardService(&bleKeyboard);
 EncoderDriver* encoderDriver;
 AppState appState;
 HardwareState hardwareState;  // Global hardware state instance
 
 // Configuration management
 Preferences preferences;
-ConfigManager configManager(&preferences);
+ConfigManager configManager(&preferences, &bleKeyboardService);
 
 /**
  * @brief Check if device is waking from deep sleep
@@ -142,7 +144,7 @@ void setup()
 
     // Initialize button event system
     static ButtonEventDispatcher buttonEventDispatcher(appState.buttonEventQueue);
-    static ButtonEventHandler buttonEventHandler(appState.buttonEventQueue, &configManager, &bleKeyboard, &powerManager);
+    static ButtonEventHandler buttonEventHandler(appState.buttonEventQueue, &configManager, &bleKeyboardService, &powerManager);
     buttonEventHandler.start();
 
     // Create BT flash timer for pairing animation (500ms period = 1Hz blink rate)
@@ -175,14 +177,15 @@ void setup()
 
     // Initialize menu system
     static MenuController menuController(&DisplayFactory::getDisplay());
+    MenuTree::initButtonBehaviorMenuItems(&bleKeyboardService);
     MenuTree::initMenuTree();
     MenuTree::initWheelBehaviorActions(&configManager, &encoderModeManager, appState.displayRequestQueue, &hardwareState);
-    MenuTree::initButtonBehaviorActions(&configManager, &buttonEventHandler);
+    MenuTree::initButtonBehaviorActions(&configManager, &buttonEventHandler, &bleKeyboardService);
     MenuTree::initBluetoothActions(&bleKeyboard, appState.displayRequestQueue);
     MenuTree::initDisplayActions(&DisplayFactory::getDisplay(), &menuController);
 
     // Initialize Device Status and About actions
-    static ShowStatusAction showStatusAction(&configManager, &bleKeyboard, &DisplayFactory::getDisplay());
+    static ShowStatusAction showStatusAction(&configManager, &bleKeyboardService, &DisplayFactory::getDisplay());
     static ShowAboutAction showAboutAction(&DisplayFactory::getDisplay());
     MenuTree::setDeviceStatusAction(&showStatusAction);
     MenuTree::setAboutAction(&showAboutAction);

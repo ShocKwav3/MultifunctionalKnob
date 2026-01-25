@@ -1,10 +1,10 @@
 #pragma once
 
 #include "MenuAction.h"
-#include "BleKeyboard.h"
 
 // Forward declarations
 class ConfigManager;
+class BleKeyboardService;
 class DisplayInterface;
 
 /**
@@ -19,10 +19,10 @@ public:
      * @brief Construct a ShowStatusAction
      *
      * @param config ConfigManager to read wheel mode and button actions
-     * @param keyboard BleKeyboard to check connection status
+     * @param bleService BLE keyboard service to check connection status and get action names
      * @param display DisplayInterface to show status information
      */
-    explicit ShowStatusAction(ConfigManager* config, BleKeyboard* keyboard, DisplayInterface* display);
+    explicit ShowStatusAction(ConfigManager* config, BleKeyboardService* bleService, DisplayInterface* display);
 
     /**
      * @brief Execute the status display
@@ -45,6 +45,6 @@ public:
 
 private:
     ConfigManager* configManager;
-    BleKeyboard* bleKeyboard;
+    BleKeyboardService* bleKeyboardService;
     DisplayInterface* displayInterface;
 };

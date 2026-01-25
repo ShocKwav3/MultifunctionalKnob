@@ -19,4 +19,5 @@ struct MenuItem {
     const MenuItem* children;       ///< Array of child menu items (nullptr for leaf)
     uint8_t childCount;             ///< Number of children (0 for leaf nodes)
     MenuAction* action;             ///< Action to execute (nullptr for branch nodes)
+    void* userData;                 ///< Optional context data (e.g., button index, decouples logic from labels)
 };

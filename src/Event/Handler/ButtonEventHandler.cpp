@@ -2,23 +2,23 @@
 #include "Config/log_config.h"
 #include "Config/ConfigManager.h"
 #include "Config/button_config.h"
-#include "Enum/ButtonActionEnum.h"
+#include "BLE/BleKeyboardService.h"
 #include "System/PowerManager.h"
 
-ButtonEventHandler::ButtonEventHandler(QueueHandle_t queue, ConfigManager* config, BleKeyboard* keyboard, PowerManager* pm)
+ButtonEventHandler::ButtonEventHandler(QueueHandle_t queue, ConfigManager* config, BleKeyboardService* bleService, PowerManager* pm)
     : eventQueue(queue)
     , configManager(config)
-    , bleKeyboard(keyboard)
+    , bleKeyboardService(bleService)
     , powerManager(pm)
     , cacheValid(false) {
     // Dependencies are required - validate they are not null
-    if (!config || !keyboard) {
+    if (!config || !bleService) {
         LOG_ERROR("ButtonEventHandler", "Constructor called with null dependencies");
     }
     
-    // Initialize cache to NONE (safe default)
+    // Initialize cache to NONE (safe default - ID 0)
     for (uint8_t i = 0; i < BUTTON_COUNT; i++) {
-        actionCache[i] = ButtonAction::NONE;
+        actionCache[i] = 0;  // ID 0 = NONE action
     }
 }
 
@@ -33,9 +33,9 @@ void ButtonEventHandler::start() {
         LOG_ERROR("ButtonEventHandler", "Cannot start task: configManager is null");
         return;
     }
-    
-    if (!bleKeyboard) {
-        LOG_ERROR("ButtonEventHandler", "Cannot start task: bleKeyboard is null");
+
+    if (!bleKeyboardService) {
+        LOG_ERROR("ButtonEventHandler", "Cannot start task: bleKeyboardService is null");
         return;
     }
     
@@ -92,40 +92,12 @@ void ButtonEventHandler::executeButtonAction(uint8_t buttonIndex) {
     if (!cacheValid) {
         loadCache();
     }
-    
-    // Get action from RAM cache (fast: <100ns vs ~1-5ms NVS read)
-    ButtonAction action = actionCache[buttonIndex];
 
-    // Execute the action if BLE is connected
-    if (!bleKeyboard->isConnected()) {
-        LOG_DEBUG("ButtonEventHandler", "Button %d: BLE not connected, skipping action", buttonIndex);
-        return;
-    }
+    // Get action ID from RAM cache (fast: <100ns vs ~1-5ms NVS read)
+    ButtonActionId actionId = actionCache[buttonIndex];
 
-    // Map ButtonAction to HID command
-    switch (action) {
-        case ButtonAction::MUTE:
-            bleKeyboard->write(KEY_MEDIA_MUTE);
-            LOG_INFO("ButtonEventHandler", "Button %d: Mute", buttonIndex);
-            break;
-        case ButtonAction::PLAY:
-        case ButtonAction::PAUSE:
-            bleKeyboard->write(KEY_MEDIA_PLAY_PAUSE);
-            LOG_INFO("ButtonEventHandler", "Button %d: Play/Pause", buttonIndex);
-            break;
-        case ButtonAction::NEXT:
-            bleKeyboard->write(KEY_MEDIA_NEXT_TRACK);
-            LOG_INFO("ButtonEventHandler", "Button %d: Next Track", buttonIndex);
-            break;
-        case ButtonAction::PREVIOUS:
-            bleKeyboard->write(KEY_MEDIA_PREVIOUS_TRACK);
-            LOG_INFO("ButtonEventHandler", "Button %d: Previous Track", buttonIndex);
-            break;
-        case ButtonAction::NONE:
-            LOG_DEBUG("ButtonEventHandler", "Button %d: No action assigned", buttonIndex);
-            break;
-        default:
-            LOG_ERROR("ButtonEventHandler", "Button %d: Unknown action %d", buttonIndex, static_cast<int>(action));
-            break;
+    // Execute via service - service handles connection check, validation, and execution
+    if (!bleKeyboardService->executeMediaKey(actionId)) {
+        LOG_DEBUG("ButtonEventHandler", "Button %d: Action %d execution failed or skipped", buttonIndex, actionId);
     }
 }
