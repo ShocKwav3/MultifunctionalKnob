@@ -4,14 +4,15 @@
 #include "Type/ButtonEvent.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
-#include "BleKeyboard.h"
 #include "Config/button_config.h"
-#include "Enum/ButtonActionEnum.h"
 #include "Event/Handler/Interface/EventHandlerInterface.h"
 
 // Forward declarations
 class ConfigManager;
 class PowerManager;
+class BleKeyboardService;
+
+using ButtonActionId = uint8_t;
 
 class ButtonEventHandler : public EventHandlerInterface {
 public:
@@ -19,10 +20,10 @@ public:
      * @brief Constructor with dependency injection
      * @param queue Event queue for button events
      * @param config ConfigManager instance to read button action configuration
-     * @param keyboard BleKeyboard instance to send HID commands
+     * @param bleService BLE keyboard service to execute actions
      * @param pm PowerManager instance to reset activity timer
      */
-    ButtonEventHandler(QueueHandle_t queue, ConfigManager* config, BleKeyboard* keyboard, PowerManager* pm);
+    ButtonEventHandler(QueueHandle_t queue, ConfigManager* config, BleKeyboardService* bleService, PowerManager* pm);
 
     void start();
 
@@ -38,12 +39,12 @@ public:
 private:
     QueueHandle_t eventQueue;
     ConfigManager* configManager;
-    BleKeyboard* bleKeyboard;
+    BleKeyboardService* bleKeyboardService;
     PowerManager* powerManager;
 
     // RAM cache for button actions (avoid NVS read latency on every button press)
     // Size automatically syncs with BUTTON_COUNT from button_config.h (compile-time constant)
-    ButtonAction actionCache[BUTTON_COUNT];
+    ButtonActionId actionCache[BUTTON_COUNT];
     bool cacheValid;
 
     static void taskEntry(void* param);

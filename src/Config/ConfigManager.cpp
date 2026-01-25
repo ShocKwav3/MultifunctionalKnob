@@ -1,11 +1,13 @@
 #include "ConfigManager.h"
 #include "Config/log_config.h"
 #include "Config/button_config.h"
+#include "BLE/BleKeyboardService.h"
 
 static const char* TAG = "ConfigManager";
 
-ConfigManager::ConfigManager(Preferences* preferences)
+ConfigManager::ConfigManager(Preferences* preferences, BleKeyboardService* bleService)
     : prefs(preferences)
+    , bleKeyboardService(bleService)
     , initialized(false) {
 }
 
@@ -106,14 +108,15 @@ WheelDirection ConfigManager::getWheelDirection() const {
     return direction;
 }
 
-Error ConfigManager::saveButtonAction(uint8_t index, ButtonAction action) {
+Error ConfigManager::saveButtonAction(uint8_t index, ButtonActionId action) {
     if (index >= BUTTON_COUNT) {
         LOG_ERROR(TAG, "Invalid button index: %d (max: %d)", index, BUTTON_COUNT - 1);
         return Error::INVALID_PARAM;
     }
 
-    if (static_cast<uint8_t>(action) > ButtonAction_MAX) {
-        LOG_ERROR(TAG, "Invalid button action: %d", static_cast<uint8_t>(action));
+    // Validate action ID via service
+    if (bleKeyboardService && !bleKeyboardService->isValidActionId(action)) {
+        LOG_ERROR(TAG, "Invalid button action ID: %d", action);
         return Error::INVALID_PARAM;
     }
 
@@ -123,39 +126,41 @@ Error ConfigManager::saveButtonAction(uint8_t index, ButtonAction action) {
 
     char key[BUTTON_KEY_BUFFER_SIZE];
     getButtonKey(index, key, sizeof(key));
-    size_t written = prefs->putUChar(key, static_cast<uint8_t>(action));
+    size_t written = prefs->putUChar(key, action);
     if (written == 0) {
         LOG_ERROR(TAG, "Failed to write button action to NVS for key: %s", key);
         return Error::NVS_WRITE_FAIL;
     }
 
-    LOG_INFO(TAG, "Saved button %d action: %s", index, buttonActionToString(action));
+    const char* actionName = bleKeyboardService ? bleKeyboardService->getActionIdentifier(action) : "UNKNOWN";
+    LOG_INFO(TAG, "Saved button %d action: %s", index, actionName);
     return Error::OK;
 }
 
-ButtonAction ConfigManager::loadButtonAction(uint8_t index) {
+ButtonActionId ConfigManager::loadButtonAction(uint8_t index) {
     if (index >= BUTTON_COUNT) {
         LOG_ERROR(TAG, "Invalid button index: %d, returning default NONE", index);
-        return ButtonAction::NONE;
+        return 0;  // ID 0 = NONE
     }
 
     if (!ensureInitialized()) {
         LOG_ERROR(TAG, "NVS not initialized, returning default NONE");
-        return ButtonAction::NONE;
+        return 0;  // ID 0 = NONE
     }
 
     char key[BUTTON_KEY_BUFFER_SIZE];
     getButtonKey(index, key, sizeof(key));
-    uint8_t stored = prefs->getUChar(key, static_cast<uint8_t>(ButtonAction::NONE));
+    uint8_t stored = prefs->getUChar(key, 0);  // Default to ID 0 (NONE)
 
-    if (stored > ButtonAction_MAX) {
-        LOG_ERROR(TAG, "Invalid stored button action: %d for key: %s, returning default NONE", stored, key);
-        return ButtonAction::NONE;
+    // Validate loaded ID via service
+    if (bleKeyboardService && !bleKeyboardService->isValidActionId(stored)) {
+        LOG_ERROR(TAG, "Invalid stored button action ID: %d for key: %s, returning default NONE", stored, key);
+        return 0;  // ID 0 = NONE
     }
 
-    ButtonAction action = static_cast<ButtonAction>(stored);
-    LOG_DEBUG(TAG, "Loaded button %d action: %s", index, buttonActionToString(action));
-    return action;
+    const char* actionName = bleKeyboardService ? bleKeyboardService->getActionIdentifier(stored) : "UNKNOWN";
+    LOG_DEBUG(TAG, "Loaded button %d action: %s", index, actionName);
+    return stored;
 }
 
 Error ConfigManager::loadMacro(uint8_t index, MacroDefinition& out) {

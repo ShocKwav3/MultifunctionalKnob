@@ -4,10 +4,10 @@
 #include "Config/log_config.h"
 #include "Menu/Model/MenuItem.h"
 #include "Event/Handler/ButtonEventHandler.h"
-#include <string.h>
+#include "BLE/BleKeyboardService.h"
 
-SetButtonBehaviorAction::SetButtonBehaviorAction(ButtonAction action, ConfigManager* config, ButtonEventHandler* buttonHandler)
-    : action(action), configManager(config), buttonEventHandler(buttonHandler) {
+SetButtonBehaviorAction::SetButtonBehaviorAction(ButtonActionId actionId, ConfigManager* config, ButtonEventHandler* buttonHandler, BleKeyboardService* bleService)
+    : action(actionId), configManager(config), buttonEventHandler(buttonHandler), bleKeyboardService(bleService) {
 }
 
 void SetButtonBehaviorAction::execute(const MenuItem* context) {
@@ -33,52 +33,35 @@ void SetButtonBehaviorAction::execute(const MenuItem* context) {
         LOG_DEBUG("SetButtonBehavior", "Invalidated button action cache");
     }
     
-    LOG_INFO("SetButtonBehavior", "%s set to: %s", BUTTONS[buttonIndex].label, buttonActionToString(action));
+    const char* actionName = bleKeyboardService ? bleKeyboardService->getActionDisplayName(action) : "Unknown";
+    LOG_INFO("SetButtonBehavior", "%s set to: %s", BUTTONS[buttonIndex].label, actionName);
 }
 
 int8_t SetButtonBehaviorAction::extractButtonIndex(const MenuItem* context) const {
     // Context is the parent branch (currentItem from MenuController)
-    // It should be one of the button submenu items with labels from BUTTONS[].label
-    
+    // It should be one of the button submenu items with button index stored in userData
+
     // Null pointer validation
     if (!context) {
         LOG_ERROR("SetButtonBehavior", "Null menu context - returning invalid index");
         return -1;
     }
-    
-    if (!context->label) {
-        LOG_ERROR("SetButtonBehavior", "Menu context has null label - returning invalid index");
+
+    // Extract button index from userData field (set in MenuTree.h initMenuTree())
+    // userData decouples logic from label strings, enabling localization without breaking functionality
+    int8_t buttonIndex = static_cast<int8_t>(reinterpret_cast<uintptr_t>(context->userData));
+
+    // Validate index is within valid range
+    if (buttonIndex < 0 || buttonIndex >= static_cast<int8_t>(BUTTON_COUNT)) {
+        LOG_ERROR("SetButtonBehavior", "Invalid button index %d from userData (valid: 0-%d)", buttonIndex, BUTTON_COUNT - 1);
         return -1;
     }
-    
-    // Match label against BUTTONS[].label to find button index
-    for (uint8_t i = 0; i < BUTTON_COUNT; i++) {
-        if (strcmp(context->label, BUTTONS[i].label) == 0) {
-            LOG_DEBUG("SetButtonBehavior", "Matched button index %d from label: %s", i, context->label);
-            return i;
-        }
-    }
-    
-    // No match found - log error and return invalid index
-    LOG_ERROR("SetButtonBehavior", "Label '%s' does not match any button label - returning invalid index", context->label);
-    return -1;
+
+    LOG_DEBUG("SetButtonBehavior", "Extracted button index %d from userData (label: %s)", buttonIndex, context->label ? context->label : "null");
+    return buttonIndex;
 }
 
 const char* SetButtonBehaviorAction::getConfirmationMessage() {
-    switch (action) {
-        case ButtonAction::MUTE:
-            return "Mute Assigned";
-        case ButtonAction::PLAY:
-            return "Play Assigned";
-        case ButtonAction::PAUSE:
-            return "Pause Assigned";
-        case ButtonAction::NEXT:
-            return "Next Assigned";
-        case ButtonAction::PREVIOUS:
-            return "Previous Assigned";
-        case ButtonAction::NONE:
-            return "Button Cleared";
-        default:
-            return "Action Assigned";
-    }
+    // Lookup confirmation message from service (data-driven)
+    return bleKeyboardService ? bleKeyboardService->getActionConfirmation(action) : "Unknown Action";
 }

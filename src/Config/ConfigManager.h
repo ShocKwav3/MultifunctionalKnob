@@ -4,14 +4,18 @@
 #include "Enum/ErrorEnum.h"
 #include "Enum/WheelModeEnum.h"
 #include "Enum/WheelDirection.h"
-#include "Enum/ButtonActionEnum.h"
 #include "Config/device_config.h"
 #include "Config/macro_config.h"
 #include "Type/MacroDefinition.h"
 
+// Forward declarations
+class BleKeyboardService;
+
+using ButtonActionId = uint8_t;
+
 class ConfigManager {
 public:
-    explicit ConfigManager(Preferences* preferences);
+    ConfigManager(Preferences* preferences, BleKeyboardService* bleService);
 
     Error saveWheelMode(WheelMode mode);
     WheelMode loadWheelMode();
@@ -19,8 +23,8 @@ public:
     Error setWheelDirection(WheelDirection direction);
     WheelDirection getWheelDirection() const;
 
-    Error saveButtonAction(uint8_t index, ButtonAction action);
-    ButtonAction loadButtonAction(uint8_t index);
+    Error saveButtonAction(uint8_t index, ButtonActionId action);
+    ButtonActionId loadButtonAction(uint8_t index);
 
     /**
      * @brief Load a macro definition from NVS
@@ -48,6 +52,7 @@ private:
     static constexpr uint8_t BUTTON_KEY_BUFFER_SIZE = 16;
 
     Preferences* prefs;
+    BleKeyboardService* bleKeyboardService;
     bool initialized;
 
     bool ensureInitialized();

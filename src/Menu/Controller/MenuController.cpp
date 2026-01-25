@@ -124,11 +124,12 @@ void MenuController::handleSelect() {
         if (confirmation == nullptr) {
             viewing = true;
             LOG_DEBUG(TAG, "Entered viewing mode");
-        } else {
-            // Action completed with confirmation: redraw menu to refresh status bar
-            // This ensures any state changes (like wheel mode selection) are immediately visible
-            emitNavigationChanged();
+            return;
         }
+
+        // Action completed with confirmation: redraw menu to refresh status bar
+        // This ensures any state changes (like wheel mode selection) are immediately visible
+        emitNavigationChanged();
     }
 }
 
@@ -148,25 +149,26 @@ void MenuController::handleBack() {
     if (currentItem == nullptr || currentItem->parent == nullptr) {
         // At root or no parent: exit menu
         deactivate();
-    } else {
-        // Navigate to parent
-        const MenuItem* parent = currentItem->parent;
+        return;
+    }
 
-        // Find index of current item in parent's children for cursor position
-        selectedIndex = 0;
-        if (parent->children != nullptr) {
-            for (uint8_t i = 0; i < parent->childCount; i++) {
-                if (&parent->children[i] == currentItem) {
-                    selectedIndex = i;
-                    break;
-                }
+    // Navigate to parent
+    const MenuItem* parent = currentItem->parent;
+
+    // Find index of current item in parent's children for cursor position
+    selectedIndex = 0;
+    if (parent->children != nullptr) {
+        for (uint8_t i = 0; i < parent->childCount; i++) {
+            if (&parent->children[i] == currentItem) {
+                selectedIndex = i;
+                break;
             }
         }
-
-        currentItem = parent;
-        LOG_DEBUG(TAG, "Back to parent: %s", currentItem->label);
-        emitNavigationChanged();
     }
+
+    currentItem = parent;
+    LOG_DEBUG(TAG, "Back to parent: %s", currentItem->label);
+    emitNavigationChanged();
 }
 
 const MenuItem* MenuController::getCurrentItem() const {

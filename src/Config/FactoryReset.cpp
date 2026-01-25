@@ -42,14 +42,14 @@ void FactoryReset::execute(ConfigManager& configManager, DisplayInterface& displ
 
     Error result = configManager.clearAll();
 
-    if (result == Error::OK) {
-        LOG_INFO(TAG, "Factory reset completed successfully");
-        display.showMessage("Complete");
-    } else {
+    if (result != Error::OK) {
         LOG_ERROR(TAG, "Factory reset failed with error: %d", static_cast<int>(result));
         display.showMessage("Reset Failed!");
+        delay(2000);
+        return;
     }
 
-    // Brief delay to allow user to see the message
+    LOG_INFO(TAG, "Factory reset completed successfully");
+    display.showMessage("Complete");
     delay(2000);
 }

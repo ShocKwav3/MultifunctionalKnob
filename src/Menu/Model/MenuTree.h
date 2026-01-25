@@ -10,6 +10,7 @@
 #include "Menu/Action/DisconnectAction.h"
 #include "Menu/Action/DisplayPowerAction.h"
 #include "Config/button_config.h"
+#include "BLE/BleKeyboardService.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 
@@ -70,9 +71,9 @@ extern MenuItem buttonBehaviorItems[];
 // Wheel Mode submenu items (leaf nodes with actions set at runtime)
 // Labels derived from WheelMode enum to ensure alignment
 inline MenuItem wheelModeSubmenu[] = {
-    { wheelModeToDisplayString(WheelMode::SCROLL),  nullptr, nullptr, 0, nullptr },
-    { wheelModeToDisplayString(WheelMode::VOLUME),  nullptr, nullptr, 0, nullptr },
-    { wheelModeToDisplayString(WheelMode::ZOOM),    nullptr, nullptr, 0, nullptr }
+    { wheelModeToDisplayString(WheelMode::SCROLL),  nullptr, nullptr, 0, nullptr, nullptr },
+    { wheelModeToDisplayString(WheelMode::VOLUME),  nullptr, nullptr, 0, nullptr, nullptr },
+    { wheelModeToDisplayString(WheelMode::ZOOM),    nullptr, nullptr, 0, nullptr, nullptr }
 };
 
 inline constexpr uint8_t WHEEL_MODE_COUNT = 3;
@@ -80,66 +81,60 @@ inline constexpr uint8_t WHEEL_MODE_COUNT = 3;
 // Wheel Direction submenu items (leaf nodes with actions set at runtime)
 // Labels derived from WheelDirection enum to ensure alignment
 inline MenuItem wheelDirectionSubmenu[] = {
-    { wheelDirectionToDisplayString(WheelDirection::NORMAL),    nullptr, nullptr, 0, nullptr },
-    { wheelDirectionToDisplayString(WheelDirection::REVERSED),  nullptr, nullptr, 0, nullptr }
+    { wheelDirectionToDisplayString(WheelDirection::NORMAL),    nullptr, nullptr, 0, nullptr, nullptr },
+    { wheelDirectionToDisplayString(WheelDirection::REVERSED),  nullptr, nullptr, 0, nullptr, nullptr }
 };
 
 inline constexpr uint8_t WHEEL_DIRECTION_COUNT = 2;
 
 // Wheel Behavior submenu (branch nodes - parent menu)
 inline MenuItem wheelBehaviorSubmenu[] = {
-    { "Wheel Mode",      nullptr, wheelModeSubmenu,      WHEEL_MODE_COUNT,      nullptr },
-    { "Wheel Direction", nullptr, wheelDirectionSubmenu, WHEEL_DIRECTION_COUNT, nullptr }
+    { "Wheel Mode",      nullptr, wheelModeSubmenu,      WHEEL_MODE_COUNT,      nullptr, nullptr },
+    { "Wheel Direction", nullptr, wheelDirectionSubmenu, WHEEL_DIRECTION_COUNT, nullptr, nullptr }
 };
 
 inline constexpr uint8_t WHEEL_BEHAVIOR_COUNT = 2;
 
-// Shared button behavior items - all buttons have the same 6 options
-// Labels derived from ButtonAction enum to ensure alignment
+// Shared button behavior items - dynamically generated from button action mapping
+// Labels populated at runtime from BUTTON_ACTION_DEFINITIONS in initButtonBehaviorMenuItems()
 // Parent pointers set at runtime in initMenuTree() based on which button submenu references this
-inline MenuItem buttonBehaviorItems[] = {
-    { buttonActionToDisplayString(ButtonAction::NONE),     nullptr, nullptr, 0, nullptr },
-    { buttonActionToDisplayString(ButtonAction::MUTE),     nullptr, nullptr, 0, nullptr },
-    { buttonActionToDisplayString(ButtonAction::PLAY),     nullptr, nullptr, 0, nullptr },
-    { buttonActionToDisplayString(ButtonAction::PAUSE),    nullptr, nullptr, 0, nullptr },
-    { buttonActionToDisplayString(ButtonAction::NEXT),     nullptr, nullptr, 0, nullptr },
-    { buttonActionToDisplayString(ButtonAction::PREVIOUS), nullptr, nullptr, 0, nullptr }
-};
+inline MenuItem buttonBehaviorItems[BUTTON_ACTION_COUNT];
 
-inline constexpr uint8_t BUTTON_BEHAVIOR_COUNT = 6;
+inline constexpr uint8_t BUTTON_BEHAVIOR_COUNT = BUTTON_ACTION_COUNT;
 
 // Bluetooth submenu items (leaf nodes with actions set at runtime - Stories 8.2 and 8.3)
 inline MenuItem bluetoothSubmenu[] = {
-    { "Pair",       nullptr, nullptr, 0, nullptr },  // Action filled in Story 8.2
-    { "Disconnect", nullptr, nullptr, 0, nullptr }   // Action filled in Story 8.3
+    { "Pair",       nullptr, nullptr, 0, nullptr, nullptr },  // Action filled in Story 8.2
+    { "Disconnect", nullptr, nullptr, 0, nullptr, nullptr }   // Action filled in Story 8.3
 };
 
 inline constexpr uint8_t BLUETOOTH_SUBMENU_COUNT = 2;
 
 // Button Config submenu (branch nodes - all reference the same shared buttonBehaviorItems)
 // Labels set at runtime from BUTTONS[].label in initMenuTree()
+// userData stores button index to decouple logic from label strings
 // Array size matches BUTTON_COUNT to prevent overflow if button count changes
 inline MenuItem buttonConfigSubmenu[BUTTON_COUNT] = {
-    { nullptr, nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr },
-    { nullptr, nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr },
-    { nullptr, nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr },
-    { nullptr, nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr }
+    { nullptr, nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr, nullptr },
+    { nullptr, nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr, nullptr },
+    { nullptr, nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr, nullptr },
+    { nullptr, nullptr, buttonBehaviorItems, BUTTON_BEHAVIOR_COUNT, nullptr, nullptr }
 };
 
 // Main menu items
 inline MenuItem mainMenu[] = {
-    { "Wheel Behavior", nullptr, wheelBehaviorSubmenu, WHEEL_BEHAVIOR_COUNT, nullptr },
-    { "Button Config",   nullptr, buttonConfigSubmenu, BUTTON_COUNT, nullptr },
-    { "Bluetooth",      nullptr, bluetoothSubmenu, BLUETOOTH_SUBMENU_COUNT, nullptr },
-    { "Display Off",    nullptr, nullptr, 0, nullptr },
-    { "Device Status",  nullptr, nullptr, 0, nullptr },
-    { "About",          nullptr, nullptr, 0, nullptr }
+    { "Wheel Behavior", nullptr, wheelBehaviorSubmenu, WHEEL_BEHAVIOR_COUNT, nullptr, nullptr },
+    { "Button Config",   nullptr, buttonConfigSubmenu, BUTTON_COUNT, nullptr, nullptr },
+    { "Bluetooth",      nullptr, bluetoothSubmenu, BLUETOOTH_SUBMENU_COUNT, nullptr, nullptr },
+    { "Display Off",    nullptr, nullptr, 0, nullptr, nullptr },
+    { "Device Status",  nullptr, nullptr, 0, nullptr, nullptr },
+    { "About",          nullptr, nullptr, 0, nullptr, nullptr }
 };
 
 inline constexpr uint8_t MAIN_MENU_COUNT = 6;
 
 // Root node representing the main menu container
-inline MenuItem root = { "Menu", nullptr, mainMenu, MAIN_MENU_COUNT, nullptr };
+inline MenuItem root = { "Menu", nullptr, mainMenu, MAIN_MENU_COUNT, nullptr, nullptr };
 
 // Menu item indices for action assignment
 namespace Index {
@@ -158,7 +153,30 @@ namespace Index {
  * and set button labels from button_config.h as single source of truth.
  * Parent pointers cannot be constexpr due to circular reference limitations.
  */
+/**
+ * @brief Initialize button behavior menu items from BLE keyboard service
+ *
+ * Populates buttonBehaviorItems labels dynamically from service.
+ * This enables data-driven menu generation - adding new actions to the service
+ * automatically adds them to the menu.
+ *
+ * Must be called before initMenuTree() to ensure items are initialized.
+ *
+ * @param bleService BLE keyboard service to query action display names
+ */
+inline void initButtonBehaviorMenuItems(BleKeyboardService* bleService) {
+    for (uint8_t i = 0; i < BUTTON_ACTION_COUNT; i++) {
+        ButtonActionId actionId = bleService->getActionIdByIndex(i);
+        buttonBehaviorItems[i].label = bleService->getActionDisplayName(actionId);
+        buttonBehaviorItems[i].parent = nullptr;  // Set later in initMenuTree
+        buttonBehaviorItems[i].children = nullptr;
+        buttonBehaviorItems[i].childCount = 0;
+        buttonBehaviorItems[i].action = nullptr;  // Set later in initButtonBehaviorActions
+    }
+}
+
 inline void initMenuTree() {
+    // NOTE: initButtonBehaviorMenuItems() must be called BEFORE this function (requires BleKeyboardService)
     // Set parent for main menu items
     for (uint8_t i = 0; i < MAIN_MENU_COUNT; i++) {
         mainMenu[i].parent = &root;
@@ -181,9 +199,11 @@ inline void initMenuTree() {
 
     // Set parent and labels for button config submenu items
     // Labels come from BUTTONS[].label (single source of truth)
+    // userData stores button index to decouple SetButtonBehaviorAction logic from label strings
     for (uint8_t i = 0; i < BUTTON_COUNT; i++) {
         buttonConfigSubmenu[i].parent = &mainMenu[Index::BUTTON_CONFIG];
         buttonConfigSubmenu[i].label = BUTTONS[i].label;
+        buttonConfigSubmenu[i].userData = reinterpret_cast<void*>(static_cast<uintptr_t>(i));
     }
 
     // Set parent for bluetooth submenu items (Pair, Disconnect)
@@ -354,33 +374,37 @@ inline void initDisplayActions(DisplayInterface* display, MenuController* menuCt
  * The button index is determined dynamically at runtime by analyzing the menu navigation context
  * (which button submenu the user navigated through).
  *
- * Must be called after DI objects (ConfigManager, ButtonEventHandler) are created.
+ * Must be called after DI objects (ConfigManager, ButtonEventHandler, BleKeyboardService) are created.
  *
  * @param config ConfigManager instance for NVS persistence
  * @param buttonHandler ButtonEventHandler instance for cache invalidation
+ * @param bleService BLE keyboard service to get action IDs
  */
-inline void initButtonBehaviorActions(ConfigManager* config, ButtonEventHandler* buttonHandler) {
-    // Button action types in order matching menu items
-    static constexpr ButtonAction actions[] = {
-        ButtonAction::NONE,
-        ButtonAction::MUTE,
-        ButtonAction::PLAY,
-        ButtonAction::PAUSE,
-        ButtonAction::NEXT,
-        ButtonAction::PREVIOUS
-    };
+inline void initButtonBehaviorActions(ConfigManager* config, ButtonEventHandler* buttonHandler, BleKeyboardService* bleService) {
+    // Static storage buffer for action instances (must outlive menu)
+    // Using aligned byte array + placement new to avoid hardcoded count
+    // This enables true "single source of truth" - adding actions to service auto-scales
+    alignas(SetButtonBehaviorAction) static uint8_t actionStorage[BUTTON_ACTION_COUNT * sizeof(SetButtonBehaviorAction)];
+    static bool initialized = false;
 
-    // Create static context-aware action instances for the shared button behavior items
-    // Button index is extracted from menu context at runtime (no hard-coded button index)
-    // buttonHandler enables cache invalidation when config changes
-    static SetButtonBehaviorAction buttonActions[BUTTON_BEHAVIOR_COUNT] = {
-        SetButtonBehaviorAction(actions[0], config, buttonHandler),
-        SetButtonBehaviorAction(actions[1], config, buttonHandler),
-        SetButtonBehaviorAction(actions[2], config, buttonHandler),
-        SetButtonBehaviorAction(actions[3], config, buttonHandler),
-        SetButtonBehaviorAction(actions[4], config, buttonHandler),
-        SetButtonBehaviorAction(actions[5], config, buttonHandler)
-    };
+    if (!initialized) {
+        // Construct each action in place using placement new
+        // Iterates over service actions dynamically - no hardcoded indices
+        for (uint8_t i = 0; i < BUTTON_ACTION_COUNT; i++) {
+            ButtonActionId actionId = bleService->getActionIdByIndex(i);
+            // Placement new: construct object at specific memory location
+            new (&actionStorage[i * sizeof(SetButtonBehaviorAction)]) SetButtonBehaviorAction(
+                actionId,
+                config,
+                buttonHandler,
+                bleService
+            );
+        }
+        initialized = true;
+    }
+
+    // Cast storage to action pointer for use
+    auto* buttonActions = reinterpret_cast<SetButtonBehaviorAction*>(actionStorage);
 
     // Assign actions to shared button behavior items
     for (uint8_t i = 0; i < BUTTON_BEHAVIOR_COUNT; i++) {

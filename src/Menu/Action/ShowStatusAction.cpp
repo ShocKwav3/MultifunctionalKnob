@@ -1,20 +1,18 @@
 #include "ShowStatusAction.h"
 
-#include <cstdint>
+#include <stdint.h>
 
-#include "BleKeyboard.h"
-
+#include "BLE/BleKeyboardService.h"
 #include "Config/ConfigManager.h"
 #include "Config/button_config.h"
 #include "Config/log_config.h"
 #include "Display/Interface/DisplayInterface.h"
-#include "Enum/ButtonActionEnum.h"
 #include "Enum/WheelModeEnum.h"
 #include "Menu/Model/MenuItem.h"
 
-ShowStatusAction::ShowStatusAction(ConfigManager* config, BleKeyboard* keyboard, DisplayInterface* display)
+ShowStatusAction::ShowStatusAction(ConfigManager* config, BleKeyboardService* bleService, DisplayInterface* display)
     : configManager(config)
-    , bleKeyboard(keyboard)
+    , bleKeyboardService(bleService)
     , displayInterface(display) {
 }
 
@@ -34,13 +32,14 @@ void ShowStatusAction::execute(const MenuItem* context) {
     displayInterface->showStatus("Wheel Mode", wheelModeToString(currentMode));
     
     // Show BLE connection status
-    const char* bleStatus = (bleKeyboard && bleKeyboard->isConnected()) ? "Connected" : "Disconnected";
+    const char* bleStatus = (bleKeyboardService && bleKeyboardService->isConnected()) ? "Connected" : "Disconnected";
     displayInterface->showStatus("BLE", bleStatus);
-    
+
     // Show button assignments
     for (uint8_t i = 0; i < BUTTON_COUNT; i++) {
-        ButtonAction action = configManager->loadButtonAction(i);
-        displayInterface->showStatus(BUTTONS[i].label, buttonActionToString(action));
+        ButtonActionId actionId = configManager->loadButtonAction(i);
+        const char* actionName = bleKeyboardService ? bleKeyboardService->getActionDisplayName(actionId) : "Unknown";
+        displayInterface->showStatus(BUTTONS[i].label, actionName);
     }
     
     LOG_INFO("ShowStatus", "Status displayed");

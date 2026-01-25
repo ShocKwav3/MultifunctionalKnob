@@ -1,12 +1,14 @@
 #pragma once
 
 #include "MenuAction.h"
-#include "Enum/ButtonActionEnum.h"
-#include <cstdint>
+#include <stdint.h>
 
 // Forward declarations
 class ConfigManager;
 class ButtonEventHandler;
+class BleKeyboardService;
+
+using ButtonActionId = uint8_t;
 
 /**
  * @brief Menu action to assign a behavior to a button
@@ -28,11 +30,12 @@ public:
     /**
      * @brief Construct a SetButtonBehaviorAction
      *
-     * @param action The ButtonAction to assign (MUTE, PLAY, PAUSE, etc.)
+     * @param actionId The ButtonActionId to assign
      * @param config ConfigManager instance for NVS persistence
      * @param buttonHandler ButtonEventHandler instance to invalidate cache (optional)
+     * @param bleService BLE keyboard service for action display/confirmation strings
      */
-    explicit SetButtonBehaviorAction(ButtonAction action, ConfigManager* config, ButtonEventHandler* buttonHandler = nullptr);
+    explicit SetButtonBehaviorAction(ButtonActionId actionId, ConfigManager* config, ButtonEventHandler* buttonHandler, BleKeyboardService* bleService);
 
     /**
      * @brief Execute the button action assignment
@@ -58,9 +61,10 @@ public:
     const char* getConfirmationMessage() override;
 
 private:
-    ButtonAction action;
+    ButtonActionId action;
     ConfigManager* configManager;
     ButtonEventHandler* buttonEventHandler;  // Optional: for cache invalidation
+    BleKeyboardService* bleKeyboardService;
 
     /**
      * @brief Extract button index from menu navigation context
