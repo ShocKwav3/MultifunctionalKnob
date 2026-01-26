@@ -21,7 +21,7 @@
 development_status:
   # Epic 11: Macro Key Infrastructure
   epic-11: in-progress
-  11-1-macro-infrastructure: done  # [PENDING MODIFICATION] Interface refactor for toggle behavior (minimal scope)
+  11-1-macro-infrastructure: done  # Interface refactor complete, ready for review
   11-2-hardware-layer: ready-for-dev
   11-3-user-configuration: ready-for-dev
   11-4-system-integration: ready-for-dev
