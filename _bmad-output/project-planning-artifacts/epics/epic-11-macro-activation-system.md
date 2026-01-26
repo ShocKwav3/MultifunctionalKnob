@@ -13,11 +13,17 @@ sourceDocuments:
 
 # Epic 11: Macro Activation System
 
-**Goal:** Enable users to assign key combination macros to existing inputs, triggered by holding a dedicated macro button.
+**Goal:** Enable users to toggle macro mode on/off via long-press of a dedicated macro button, allowing key combination macros to be triggered on existing inputs.
 
-**FRs covered:** FR-1 (macro button), FR-2 (7 slots), FR-3 (key combos), FR-4 (NVS), FR-5 (menu config), FR-6 (modifier behavior)
+**FRs covered:** FR-10 (toggle activation), FR-11 (mode execution), FR-12 (state persistence)
 
 **NFRs covered:** NFR-1 (no latency), NFR-2 (memory constraints), NFR-3 (pattern consistency)
+
+**Story Status Update:**
+- Story 11.1: ✅ DONE (infrastructure complete; pending toggle interface refactoring)
+- Story 11.2: 📋 READY-FOR-DEV (updated for long-press toggle behavior)
+- Story 11.3: 📋 READY-FOR-DEV (menu config; no changes from toggle behavior)
+- Story 11.4: 📋 READY-FOR-DEV (system integration; simplified by toggle pattern)
 
 **User Outcome:** User holds macro button, presses any input (wheel button/rotation, buttons 1-4), and a pre-configured key combination (e.g., Ctrl+C) is sent via BLE. Macros are configured through the menu and persist across power cycles.
 
@@ -27,12 +33,12 @@ sourceDocuments:
 
 ## Functional Requirements
 
-- FR-1: New macro button (GPIO 10) provides modifier-style activation
+- FR-1: New macro button (GPIO 10) enables toggle-based macro mode activation
 - FR-2: 7 configurable macro slots (wheel button, wheel left/right, buttons 1-4)
 - FR-3: Macros are key combinations (modifier keys + keycode)
 - FR-4: Macros persist to NVS across power cycles
 - FR-5: Menu-based configuration for each macro slot
-- FR-6: While macro button held, inputs execute macro; released = normal behavior
+- FR-6: Long-press and release macro button activates macro mode; inputs execute assigned macros. Long-press again deactivates macro mode; inputs return to normal behavior
 
 ## Non-Functional Requirements
 

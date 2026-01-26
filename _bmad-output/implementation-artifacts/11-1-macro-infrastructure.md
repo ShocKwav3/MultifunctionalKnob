@@ -73,11 +73,11 @@ So that **macro definitions can be stored, loaded, and executed**.
   - [x] Create `src/Macro/Manager/MacroManager.h`:
     - [x] Class MacroManager with private members:
       - [x] `BleKeyboard* bleKeyboard` (injected)
-      - [x] `bool macroButtonHeld` (state)
+      - [x] `bool macroModeActive` (toggle state - not button state)
       - [x] `MacroDefinition macros[MACRO_INPUT_COUNT]` (static array)
     - [x] Public methods:
       - [x] Constructor `MacroManager(BleKeyboard* ble)`
-      - [x] `void setMacroButtonState(bool held)`
+      - [x] `void toggleMacroMode()` (toggle on/off)
       - [x] `bool isMacroModeActive() const`
       - [x] `bool executeMacro(MacroInput input)`
       - [x] `void loadFromNVS(ConfigManager& config)`
@@ -151,15 +151,15 @@ Default: 0x0000 if key not found
 MacroManager macroManager(&bleKeyboard);
 macroManager.loadFromNVS(configManager);
 
-// Macro button held/released
-macroManager.setMacroButtonState(true);
+// Toggle macro mode on/off (long-press detected in ButtonEventHandler)
+macroManager.toggleMacroMode();  // Activates macro mode
 
 // Check if macro mode active
 if (macroManager.isMacroModeActive()) {
     macroManager.executeMacro(MacroInput::WHEEL_LEFT);
 }
 
-macroManager.setMacroButtonState(false);
+macroManager.toggleMacroMode();  // Deactivates macro mode
 
 // Save new macro
 MacroDefinition newMacro{KEY_LEFT_CTRL, 'C'};
@@ -206,10 +206,15 @@ bleKeyboard->press(keycode);  // Must check isConnected() first
 // ❌ WRONG - Redefining modifier constants
 #define CTRL 0x01  // Use BleKeyboard's KEY_LEFT_CTRL
 
+// ❌ WRONG - Tracking button state instead of toggle state
+bool macroButtonHeld;  // Old pattern - don't use
+void setMacroButtonState(bool held) { ... }  // Old pattern - use toggleMacroMode() instead
+
 // ✅ CORRECT
 MacroDefinition macros[MACRO_INPUT_COUNT];  // Static allocation
 config.saveMacro(0, packed);  // Numeric key index
 if (bleKeyboard->isConnected()) { ... }  // Check first
+void toggleMacroMode() { macroModeActive = !macroModeActive; }  // Toggle pattern
 ```
 
 ### References
@@ -253,6 +258,10 @@ if (bleKeyboard->isConnected()) { ... }  // Check first
 - Used `constexpr` for constants per project standard
 - MacroManager executes macros via press/release sequence for proper HID behavior
 - Empty macros (0x0000) are gracefully skipped during execution
+- **[UPDATE FOR TOGGLE BEHAVIOR]** Interface refactored to use toggle pattern:
+  - Renamed `macroButtonHeld` → `macroModeActive` (clarifies toggle state vs. button state)
+  - Replaced `setMacroButtonState(bool held)` → `toggleMacroMode()` (toggle on/off instead of tracking GPIO)
+  - This change enables long-press detection in Story 11.2 without modifying core macro logic
 
 **Architecture Compliance:**
 - ✅ Static allocation only (MacroDefinition array[7])
@@ -308,6 +317,14 @@ if (bleKeyboard->isConnected()) { ... }  // Check first
 
 ## Change Log
 
+- **2026-01-26 (PM)**: Pending modifications for toggle-based macro activation
+  - **[SCHEDULED]** Refactor MacroManager interface:
+    - Rename `macroButtonHeld` → `macroModeActive`
+    - Replace `setMacroButtonState(bool held)` → `toggleMacroMode()`
+    - Update logging for toggle behavior
+  - **[RATIONALE]** Supports long-press detection pattern in Story 11.2
+  - **[SCOPE]** ~10 lines changed, 3 files touched; all macro logic reused
+  - **[RISK]** Minimal - interface change only, data layer untouched
 - **2026-01-24 (PM)**: Code review fixes applied
   - Fixed multi-modifier execution bug (bitmask iteration for HID compliance)
   - Fixed include order violations in MacroManager.h

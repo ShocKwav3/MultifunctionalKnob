@@ -28,12 +28,12 @@ _This document extends the existing architecture with decisions specific to the 
 ### Requirements Overview
 
 **Functional Requirements:**
-- FR-1: New macro button provides modifier-style activation
+- FR-1: New macro button enables toggle-based macro mode activation
 - FR-2: 7 configurable macro slots (wheel button, wheel left/right, buttons 1-4)
 - FR-3: Macros are key combinations (modifier keys + keycode)
 - FR-4: Macros persist to NVS across power cycles
 - FR-5: Menu-based configuration for each macro slot
-- FR-6: While macro button held, inputs execute macro; released = normal behavior
+- FR-6: Long-press and release macro button activates macro mode; inputs execute assigned macros. Long-press again deactivates macro mode; inputs return to normal behavior
 
 **Non-Functional Requirements:**
 - NFR-1: No additional latency on normal input path when macro not active
@@ -204,8 +204,9 @@ constexpr uint8_t MACRO_INPUT_COUNT = 7;
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| State Pattern | Simple boolean flag | Macro button = held/released state |
-| Responsibility | State + lookup + execute | Single class, no over-abstraction |
+| State Pattern | Toggle state machine | Macro mode = active/inactive toggle (long-press to transition) |
+| Long-Press Detection | In ButtonEventHandler | 500ms hold time threshold |
+| Responsibility | State toggle + lookup + execute | Single class manages macro mode state and execution |
 | BLE Dependency | Injected BleKeyboard* | Matches existing handler pattern |
 
 **MacroManager Interface:**
@@ -213,14 +214,14 @@ constexpr uint8_t MACRO_INPUT_COUNT = 7;
 // src/Macro/Manager/MacroManager.h
 class MacroManager {
     BleKeyboard* bleKeyboard;
-    bool macroButtonHeld;
+    bool macroModeActive;  // Toggle state (not button state)
     MacroDefinition macros[MACRO_INPUT_COUNT];
 
 public:
     explicit MacroManager(BleKeyboard* ble);
 
-    void setMacroButtonState(bool held);
-    bool isMacroModeActive() const { return macroButtonHeld; }
+    void toggleMacroMode();  // Toggle on/off
+    bool isMacroModeActive() const { return macroModeActive; }
 
     bool executeMacro(MacroInput input);  // Returns true if macro executed
 
@@ -247,7 +248,7 @@ void handleEncoderEvent(EncoderInputEvent& event) {
         return;
     }
 
-    // Priority 2: Macro mode intercepts
+    // Priority 2: Macro mode active (toggled by long-press)
     if (macroManager.isMacroModeActive()) {
         MacroInput input = mapEncoderEventToMacroInput(event);
         if (macroManager.executeMacro(input)) {
@@ -258,13 +259,28 @@ void handleEncoderEvent(EncoderInputEvent& event) {
     // Priority 3: Normal mode handling
     currentModeHandler->handleEvent(event);
 }
+
+// In ButtonEventHandler (updated) - Macro button long-press detection
+if (event.pin == MACRO_BUTTON_PIN) {
+    if (event.pressed) {
+        macroPressStart = millis();
+    } else {
+        uint32_t duration = millis() - macroPressStart;
+        if (duration >= 500) {
+            macroManager->toggleMacroMode();  // Toggle on/off
+        }
+    }
+    return;  // Don't process as normal button
+}
 ```
 
-**Macro Button State Flow:**
+**Macro Button State Flow (Long-Press Toggle):**
 ```
-ButtonEventHandler receives macro button event
-  → macroManager.setMacroButtonState(pressed)
-  → No further action (modifier doesn't trigger anything itself)
+ButtonEventHandler receives macro button GPIO event
+  → Checks hold duration (long-press ≥ 500ms?)
+    ├─ YES (long-press released) → macroManager.toggleMacroMode()
+    └─ NO (short-press) → Ignored, no action
+  → No further action (toggle control only, doesn't trigger macros directly)
 ```
 
 ### Decision Impact Analysis
@@ -467,6 +483,14 @@ encoderModeManager.handleEvent(event);
 
 **Anti-Patterns to Avoid:**
 ```cpp
+// ❌ Wrong: Tracking button state instead of toggle state
+void setMacroButtonState(bool held) { }  // Use toggleMacroMode() instead
+
+// ❌ Wrong: Not detecting long-press duration
+if (event.pin == MACRO_BUTTON_PIN && event.pressed) {
+    macroManager->toggleMacroMode();  // Should check duration on release
+}
+
 // ❌ Wrong NVS key format
 config.saveMacro("macros_0", value);  // Should be "macro.0"
 
@@ -479,6 +503,19 @@ bleKeyboard->press(keycode);  // Must check isConnected() first
 // ❌ Wrong priority order
 if (macroManager.isMacroModeActive()) { ... }
 if (menuController.isActive()) { ... }  // Menu should be checked FIRST
+
+// ✅ Correct: Long-press detection with toggle
+if (event.pin == MACRO_BUTTON_PIN) {
+    if (event.pressed) {
+        macroPressStart = millis();
+    } else {
+        uint32_t duration = millis() - macroPressStart;
+        if (duration >= 500) {
+            macroManager->toggleMacroMode();  // Toggle on/off
+        }
+    }
+    return;
+}
 ```
 
 ## Project Structure & Boundaries
@@ -753,16 +790,24 @@ Create `include/Config/macro_config.h` with GPIO definition
 
 ### Implementation Sequence
 
-1. `include/Config/macro_config.h` - GPIO definition
-2. `include/Enum/MacroInputEnum.h` - Input enum
-3. `include/Type/MacroDefinition.h` - Data struct
-4. `src/Config/ConfigManager.cpp/.h` - NVS methods
-5. `src/Macro/Manager/MacroManager.cpp/.h` - Core logic
-6. `src/Event/Handler/ButtonEventHandler.cpp` - Macro button handling
+**PHASE 0: Story 11.1 Refactoring (Toggle Behavior Support)**
+- [MODIFY] `src/Macro/Manager/MacroManager.h` - Rename `macroButtonHeld` → `macroModeActive`
+- [MODIFY] `src/Macro/Manager/MacroManager.cpp` - Replace `setMacroButtonState()` → `toggleMacroMode()`
+- [REBUILD] Verify compilation with `pio run -e use_nimble`
+
+**PHASE 1: Original Implementation (Completed in Story 11.1)**
+1. `include/Config/macro_config.h` - GPIO definition ✅
+2. `include/Enum/MacroInputEnum.h` - Input enum ✅
+3. `include/Type/MacroDefinition.h` - Data struct ✅
+4. `src/Config/ConfigManager.cpp/.h` - NVS methods ✅
+5. `src/Macro/Manager/MacroManager.cpp/.h` - Core logic ✅ (with pending Phase 0 modifications)
+
+**PHASE 2: Story 11.2+ Implementation (Ready for Development)**
+6. `src/Event/Handler/ButtonEventHandler.cpp` - Long-press detection + toggle
 7. `src/Event/Handler/EncoderEventHandler.cpp` - Macro interception
 8. `src/Menu/Model/MenuTree.h` - Macros submenu
 9. `src/Menu/Action/SetMacroAction.cpp/.h` - Configuration action
-10. `src/main.cpp` - Initialization
+10. `src/main.cpp` - Initialization with toggle pattern
 11. `src/Config/FactoryReset.cpp` - Clear on reset
 
 ### Quality Assurance Checklist

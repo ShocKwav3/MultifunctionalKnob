@@ -143,41 +143,47 @@ Later, he forgets the device for 4 minutes. A warning appears: "Sleep in 1 min."
 - FR8: System persists wheel mode and direction to NVS
 - FR9: System applies wheel direction setting to encoder input
 
+### Macro Control
+
+- FR10: User can activate/deactivate macro mode by long-pressing the macro button (toggle)
+- FR11: When macro mode is active, inputs execute assigned macros; when deactivated, inputs return to normal behavior
+- FR12: Macro mode state persists across menu navigation
+
 ### Bluetooth Connectivity
 
-- FR10: User can initiate Bluetooth pairing from menu
-- FR11: User can disconnect current Bluetooth connection from menu
-- FR12: System auto-reconnects to paired device after wake
-- FR13: Display shows Bluetooth connection status (connected, pairing, disconnected)
+- FR13: User can initiate Bluetooth pairing from menu
+- FR14: User can disconnect current Bluetooth connection from menu
+- FR15: System auto-reconnects to paired device after wake
+- FR16: Display shows Bluetooth connection status (connected, pairing, disconnected)
 
 ### Display System
 
-- FR14: System displays status information in normal mode (BT status, wheel mode, direction)
-- FR15: System displays menu interface when menu is active
-- FR16: User can wake display via wheel button press
-- FR17: System supports 128x32 OLED hardware
+- FR17: System displays status information in normal mode (BT status, wheel mode, direction)
+- FR18: System displays menu interface when menu is active
+- FR19: User can wake display via wheel button press
+- FR20: System supports 128x32 OLED hardware
 
 ### Power Management
 
-- FR18: System enters deep sleep after 5 minutes of inactivity
-- FR19: System displays sleep warning 1 minute before sleep
-- FR20: User can wake device via wheel button
-- FR21: User input resets inactivity timer
+- FR21: System enters deep sleep after 5 minutes of inactivity
+- FR22: System displays sleep warning 1 minute before sleep
+- FR23: User can wake device via wheel button
+- FR24: User input resets inactivity timer
 
 ### LED Strip Control
 
-- FR22: User can toggle LED strip power via menu
-- FR23: User can adjust LED brightness via menu (wheel-controlled)
-- FR24: User can select LED mode via menu
-- FR25: User can select LED color via menu
-- FR26: System persists all LED settings to NVS
+- FR25: User can toggle LED strip power via menu
+- FR26: User can adjust LED brightness via menu (wheel-controlled)
+- FR27: User can select LED mode via menu
+- FR28: User can select LED color via menu
+- FR29: System persists all LED settings to NVS
 
 ### Menu Navigation
 
-- FR27: User can access menu via long-press on wheel button
-- FR28: User can navigate menu items using wheel rotation
-- FR29: User can select menu items using wheel button press
-- FR30: User can return to parent menu or exit menu
+- FR30: User can access menu via long-press on wheel button
+- FR31: User can navigate menu items using wheel rotation
+- FR32: User can select menu items using wheel button press
+- FR33: User can return to parent menu or exit menu
 
 ## Non-Functional Requirements
 
