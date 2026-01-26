@@ -6,7 +6,7 @@
  *
  * MacroManager handles:
  * - Loading/saving macro definitions from/to NVS
- * - Tracking macro button state (held/released)
+ * - Tracking macro mode state (toggle ON/OFF)
  * - Executing macros via BleKeyboard when macro mode is active
  */
 
@@ -26,7 +26,7 @@
  * Usage:
  * 1. Construct with BleKeyboard pointer
  * 2. Load macros from NVS: loadFromNVS(configManager)
- * 3. Track macro button: setMacroButtonState(held)
+ * 3. Toggle macro mode: toggleMacroMode()
  * 4. Execute on input: if (isMacroModeActive()) executeMacro(input)
  */
 class MacroManager {
@@ -38,14 +38,13 @@ public:
     explicit MacroManager(BleKeyboard* ble);
 
     /**
-     * @brief Update macro button state (held/released)
-     * @param held true if button is pressed, false if released
+     * @brief Toggle macro mode ON/OFF
      */
-    void setMacroButtonState(bool held);
+    void toggleMacroMode();
 
     /**
      * @brief Check if macro mode is currently active
-     * @return true if macro button is held
+     * @return true if macro mode is toggled ON
      */
     bool isMacroModeActive() const;
 
@@ -73,6 +72,6 @@ public:
 
 private:
     BleKeyboard* bleKeyboard;              // BLE HID interface (injected)
-    bool macroButtonHeld;                  // Macro button state
+    bool macroModeActive;                  // Macro mode state (toggle)
     MacroDefinition macros[MACRO_INPUT_COUNT];  // Macro definitions array (static allocation)
 };

@@ -5,17 +5,18 @@ static const char* TAG = "MacroManager";
 
 MacroManager::MacroManager(BleKeyboard* ble)
     : bleKeyboard(ble)
-    , macroButtonHeld(false)
+    , macroModeActive(false)
     , macros{} {  // Zero-initialize array
     LOG_INFO(TAG, "MacroManager initialized");
 }
 
-void MacroManager::setMacroButtonState(bool held) {
-    macroButtonHeld = held;
+void MacroManager::toggleMacroMode() {
+    macroModeActive = !macroModeActive;
+    LOG_INFO(TAG, "Macro mode toggled: %s", macroModeActive ? "ON" : "OFF");
 }
 
 bool MacroManager::isMacroModeActive() const {
-    return macroButtonHeld;
+    return macroModeActive;
 }
 
 bool MacroManager::executeMacro(MacroInput input) {
