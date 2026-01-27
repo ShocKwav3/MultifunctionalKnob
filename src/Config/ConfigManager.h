@@ -5,7 +5,6 @@
 #include "Enum/WheelModeEnum.h"
 #include "Enum/WheelDirection.h"
 #include "Config/device_config.h"
-#include "Config/macro_config.h"
 #include "Type/MacroDefinition.h"
 
 // Forward declarations

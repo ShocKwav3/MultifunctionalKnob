@@ -14,7 +14,6 @@
 #include <stdint.h>
 
 #include "Config/ConfigManager.h"
-#include "Config/macro_config.h"
 #include "Enum/ErrorEnum.h"
 #include "Enum/MacroInputEnum.h"
 #include "Type/MacroDefinition.h"
@@ -73,5 +72,5 @@ public:
 private:
     BleKeyboard* bleKeyboard;              // BLE HID interface (injected)
     bool macroModeActive;                  // Macro mode state (toggle)
-    MacroDefinition macros[MACRO_INPUT_COUNT];  // Macro definitions array (static allocation)
+    MacroDefinition macros[static_cast<uint8_t>(MacroInput::COUNT)];  // Macro definitions array (static allocation)
 };

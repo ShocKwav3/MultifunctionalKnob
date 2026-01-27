@@ -75,12 +75,13 @@ void ButtonEventHandler::taskLoop() {
             notifyUserActivity();
 
             switch (evt.type) {
-                case EventEnum::ButtonEventTypes::BUTTON_PRESSED:
-                    LOG_DEBUG("ButtonEventHandler", "Button %d pressed", evt.buttonIndex);
+                case EventEnum::ButtonEventTypes::SHORT_PRESS:
+                    LOG_DEBUG("ButtonEventHandler", "Button %d short press", evt.buttonIndex);
                     executeButtonAction(evt.buttonIndex);
                     break;
-                case EventEnum::ButtonEventTypes::BUTTON_RELEASED:
-                    LOG_DEBUG("ButtonEventHandler", "Button %d released", evt.buttonIndex);
+                case EventEnum::ButtonEventTypes::LONG_PRESS:
+                    LOG_DEBUG("ButtonEventHandler", "Button %d long press", evt.buttonIndex);
+                    // Long press handling will be added in Part 2 (macro toggle)
                     break;
             }
         }

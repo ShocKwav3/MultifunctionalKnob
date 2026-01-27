@@ -22,7 +22,7 @@ bool MacroManager::isMacroModeActive() const {
 bool MacroManager::executeMacro(MacroInput input) {
     uint8_t index = static_cast<uint8_t>(input);
 
-    if (index >= MACRO_INPUT_COUNT) {
+    if (index >= static_cast<uint8_t>(MacroInput::COUNT)) {
         LOG_ERROR(TAG, "Invalid macro input: %d", index);
         return false;
     }
@@ -70,7 +70,7 @@ bool MacroManager::executeMacro(MacroInput input) {
 void MacroManager::loadFromNVS(ConfigManager& config) {
     uint8_t loadedCount = 0;
 
-    for (uint8_t i = 0; i < MACRO_INPUT_COUNT; i++) {
+    for (uint8_t i = 0; i < static_cast<uint8_t>(MacroInput::COUNT); i++) {
         MacroDefinition macro;
         Error result = config.loadMacro(i, macro);
 
@@ -93,7 +93,7 @@ void MacroManager::loadFromNVS(ConfigManager& config) {
 Error MacroManager::saveMacro(ConfigManager& config, MacroInput input, MacroDefinition macro) {
     uint8_t index = static_cast<uint8_t>(input);
 
-    if (index >= MACRO_INPUT_COUNT) {
+    if (index >= static_cast<uint8_t>(MacroInput::COUNT)) {
         LOG_ERROR(TAG, "Invalid macro index: %d", index);
         return Error::INVALID_PARAM;
     }

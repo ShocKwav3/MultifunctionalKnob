@@ -30,7 +30,7 @@
 #include "Menu/Model/MenuTree.h"
 #include "Menu/Action/ShowStatusAction.h"
 #include "Menu/Action/ShowAboutAction.h"
-#include "Button/ButtonManager.h"
+#include "ButtonDriver.h"
 #include "Display/Task/DisplayTask.h"
 #include "Display/Model/DisplayRequest.h"
 #include "Event/Handler/MenuEventHandler.h"
@@ -195,8 +195,21 @@ void setup()
     static AppEventHandler appEventHandler(appState.appEventQueue, &encoderModeManager);
     appEventHandler.start();
 
-    static ButtonManager buttonManagerInstance(&buttonEventDispatcher);
-    buttonManagerInstance.init();
+    // Initialize ButtonDriver with callbacks for short/long press events
+    ButtonDriver* buttonDriver = ButtonDriver::getInstance();
+
+    // Set up callbacks for each button to dispatch events
+    for (uint8_t i = 0; i < BUTTON_COUNT; i++) {
+        buttonDriver->setOnShortPress(i, [i, &buttonEventDispatcher]() {
+            buttonEventDispatcher.onButtonShortPress(i);
+        });
+
+        buttonDriver->setOnLongPress(i, [i, &buttonEventDispatcher]() {
+            buttonEventDispatcher.onButtonLongPress(i);
+        });
+    }
+
+    buttonDriver->begin();
 
     static EncoderEventDispatcher encoderEventDispatcher(appState.encoderInputEventQueue, &configManager);
     encoderDriver = EncoderDriver::getInstance(
