@@ -1,4 +1,5 @@
 #include "EncoderDriver.h"
+#include "Config/encoder_config.h"
 
 EncoderDriver* EncoderDriver::encoderDriverInstance = nullptr;
 AiEsp32RotaryEncoder* EncoderDriver::encoderInstance = nullptr;
@@ -69,8 +70,6 @@ void EncoderDriver::runLoop() {
 void EncoderDriver::handleButton() {
     static unsigned long lastTimeButtonDown = 0;
     static bool wasButtonDown = false;
-    const unsigned long shortPressAfterMs = 50;
-    const unsigned long longPressAfterMs = 1000;
 
     bool isDown = encoderInstance->isEncoderButtonDown();
 
@@ -84,9 +83,9 @@ void EncoderDriver::handleButton() {
 
     if (wasButtonDown) {
         unsigned long pressDuration = millis() - lastTimeButtonDown;
-        if (pressDuration >= longPressAfterMs) {
+        if (pressDuration >= ENCODER_LONG_PRESS_MIN_MS) {
             onLongClick();
-        } else if (pressDuration >= shortPressAfterMs) {
+        } else if (pressDuration >= ENCODER_SHORT_PRESS_MIN_MS) {
             onShortClick();
         }
     }
