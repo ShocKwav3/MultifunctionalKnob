@@ -2,6 +2,25 @@
 
 Status: backlog
 
+## Implementation Approach
+
+**CRITICAL: This story must be implemented in TWO parts with a mandatory code review checkpoint.**
+
+### Part 1: ButtonDriver Refactoring (Architectural Foundation)
+- Migrate ButtonManager logic to new ButtonDriver (lib/)
+- Add duration tracking capability (short/long press detection)
+- Mirror EncoderDriver pattern for architectural consistency
+- Update event types to include SHORT_PRESS/LONG_PRESS
+- **STOP after Part 1 implementation**
+- **Request code review from user**
+- **Do NOT proceed to Part 2 until review is complete**
+
+### Part 2: Macro Mode Integration (After Code Review)
+- Implement macro button toggle logic using ButtonDriver
+- Add macro interception to event handlers
+- Implement priority-based routing (Menu > Macro > Normal)
+- Add HardwareState.macroModeActive synchronization
+
 ## Story
 
 As a **user wanting single-hand macro control**,
@@ -48,99 +67,271 @@ So that **I can execute macros with a simple press-and-release gesture**.
 
 ## Tasks
 
-- [ ] **Task 1: Implement Long-Press Detection for Macro Button** (AC: 1, 2, 3, 7)
+### PART 1: ButtonDriver Refactoring (IMPLEMENT FIRST, THEN STOP FOR REVIEW)
+
+- [x] **Task 1.1: Create ButtonDriver Class Structure** (Foundation)
+  - [ ] Create `lib/ButtonDriver/ButtonDriver.h`:
+    - [ ] Class declaration with Singleton pattern (mirror EncoderDriver)
+    - [ ] Constructor: accept pin configuration (BUTTONS array from button_config.h)
+    - [ ] Static `getInstance()` method
+    - [ ] `void begin()` - initialize pins and start FreeRTOS task
+    - [ ] Callback setters:
+      - [ ] `setOnShortPress(uint8_t buttonIndex, std::function<void()> callback)`
+      - [ ] `setOnLongPress(uint8_t buttonIndex, std::function<void()> callback)`
+    - [ ] Private members:
+      - [ ] `static ButtonDriver* instance`
+      - [ ] `std::function<void()> shortPressCallbacks[BUTTON_COUNT]`
+      - [ ] `std::function<void()> longPressCallbacks[BUTTON_COUNT]`
+      - [ ] `struct ButtonState { bool pressed; bool lastReading; uint32_t lastChangeTime; uint32_t pressStartTime; }`
+      - [ ] `ButtonState buttonStates[BUTTON_COUNT]`
+    - [ ] Private methods:
+      - [ ] `static void buttonTask(void* pvParameters)` - FreeRTOS task
+      - [ ] `void runLoop()` - main polling loop
+      - [ ] `void handleButton(uint8_t index)` - process single button
+      - [ ] `bool readButton(uint8_t index)` - GPIO read
+      - [ ] `bool isDebounced(uint8_t index, uint32_t currentTime)` - debounce check
+
+  - [ ] Create `lib/ButtonDriver/ButtonDriver.cpp`:
+    - [ ] Implement constructor (initialize buttonStates array, clear callbacks)
+    - [ ] Implement `getInstance()` (lazy Singleton creation)
+    - [ ] Implement `begin()`:
+      - [ ] Configure GPIO pins (INPUT_PULLUP/INPUT_PULLDOWN per BUTTONS config)
+      - [ ] Create FreeRTOS task with `xTaskCreate(buttonTask, "ButtonDriverTask", 2048, nullptr, 1, nullptr)`
+    - [ ] Implement `buttonTask()` (static wrapper calling `runLoop()`)
+    - [ ] Implement `runLoop()`:
+      - [ ] Loop through all buttons (0 to BUTTON_COUNT-1)
+      - [ ] Call `handleButton(i)` for each
+      - [ ] `vTaskDelay(pdMS_TO_TICKS(10))` at end
+    - [ ] Implement `handleButton(uint8_t index)`:
+      - [ ] Read current state: `bool reading = readButton(index)`
+      - [ ] If reading != lastReading: restart debounce timer, update lastReading, return
+      - [ ] If not debounced: return
+      - [ ] If state changed after debounce:
+        - [ ] If pressed: record `pressStartTime = millis()`
+        - [ ] If released:
+          - [ ] Calculate duration: `millis() - pressStartTime`
+          - [ ] If duration >= 1000ms: call `longPressCallbacks[index]()` if set
+          - [ ] Else if duration >= 50ms: call `shortPressCallbacks[index]()` if set
+        - [ ] Update `buttonStates[index].pressed = reading`
+    - [ ] Implement `readButton(uint8_t index)` (mirror ButtonManager logic)
+    - [ ] Implement `isDebounced(uint8_t index, uint32_t currentTime)` (mirror ButtonManager logic)
+    - [ ] Implement callback setters (store in arrays)
+
+- [x] **Task 1.2: Update ButtonEventDispatcher for Duration Events**
+  - [ ] Update `include/Enum/EventEnum.h`:
+    - [ ] Add to `ButtonEventTypes` enum:
+      - [ ] `SHORT_PRESS` (< 1000ms)
+      - [ ] `LONG_PRESS` (>= 1000ms)
+    - [ ] Keep existing `BUTTON_PRESSED` and `BUTTON_RELEASED` for compatibility
+
+  - [ ] Update `src/Event/Dispatcher/ButtonEventDispatcher.h`:
+    - [ ] Add methods:
+      - [ ] `void onButtonShortPress(uint8_t buttonIndex)`
+      - [ ] `void onButtonLongPress(uint8_t buttonIndex)`
+
+  - [ ] Update `src/Event/Dispatcher/ButtonEventDispatcher.cpp`:
+    - [ ] Implement `onButtonShortPress()`: Queue SHORT_PRESS event
+    - [ ] Implement `onButtonLongPress()`: Queue LONG_PRESS event
+
+- [x] **Task 1.3: Integrate ButtonDriver in main.cpp**
+  - [ ] Update `src/main.cpp`:
+    - [ ] Replace `#include "Button/ButtonManager.h"` with `#include "ButtonDriver.h"`
+    - [ ] Replace `ButtonManager buttonManager(&buttonEventDispatcher);` with:
+      - [ ] `ButtonDriver* buttonDriver = ButtonDriver::getInstance();`
+    - [ ] In `setup()`:
+      - [ ] Replace `buttonManager.init();` with:
+        - [ ] `buttonDriver->begin();`
+        - [ ] For each button (0 to BUTTON_COUNT-1):
+          - [ ] `buttonDriver->setOnShortPress(i, [i, &buttonEventDispatcher]() { buttonEventDispatcher.onButtonShortPress(i); });`
+          - [ ] `buttonDriver->setOnLongPress(i, [i, &buttonEventDispatcher]() { buttonEventDispatcher.onButtonLongPress(i); });`
+
+- [x] **Task 1.4: Remove Old ButtonManager Files**
+  - [ ] Delete `src/Button/ButtonManager.h`
+  - [ ] Delete `src/Button/ButtonManager.cpp`
+  - [ ] Delete `src/Button/` directory if empty
+
+- [x] **Task 1.5: Build and Test ButtonDriver Refactoring**
+  - [x] Compile with `.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -e use_nimble`
+  - [x] Verify no compile errors
+  - [x] Verify no warnings
+  - [ ] Manual test: Press each button (1-4), verify SHORT_PRESS events dispatched
+  - [ ] Manual test: Hold each button >=1000ms, verify LONG_PRESS events dispatched
+  - [ ] Check logs for event dispatching
+
+- [x] **🛑 CHECKPOINT: STOP HERE - REQUEST CODE REVIEW FROM USER**
+  - [x] Do NOT proceed to Part 2 until user reviews Part 1
+  - [x] User will review ButtonDriver implementation
+  - [ ] Wait for approval before continuing
+
+---
+
+### PART 2: Macro Mode Integration (IMPLEMENT AFTER CODE REVIEW)
+
+- [ ] **Task 2.1: Add macroModeActive to HardwareState**
+  - [ ] Update `include/state/HardwareState.h`:
+    - [ ] Add `bool macroModeActive = false;` member
+
+- [ ] **Task 2.2: Implement Macro Button Toggle Logic**
   - [ ] Update `src/Event/Handler/ButtonEventHandler.h`:
-    - [ ] Add member `MacroManager* macroManager`
-    - [ ] Add member `uint32_t macroPressStart` (timestamp of press)
-    - [ ] Update constructor to accept `MacroManager*`
-    - [ ] Import `MacroInputEnum.h` and `macro_config.h`
+    - [ ] Add member `HardwareState* hardwareState` (injected via constructor)
+    - [ ] Add member `MacroManager* macroManager` (injected via constructor)
+    - [ ] Update constructor signature to accept both pointers
+    - [ ] Import `include/Config/macro_config.h`, `include/Macro/MacroManager.h`, `include/state/HardwareState.h`
+
   - [ ] Update `src/Event/Handler/ButtonEventHandler.cpp`:
-    - [ ] In handleEvent() or taskLoop():
-      - [ ] Check if `event.pin == MACRO_BUTTON_PIN`
-      - [ ] **If pressed:** Record `macroPressStart = millis()`
-      - [ ] **If released:**
-        - [ ] Calculate hold duration = `millis() - macroPressStart`
-        - [ ] If duration ≥ 500ms: call `macroManager->toggleMacroMode()`
-        - [ ] If duration < 500ms: Ignore (no action)
-      - [ ] Return (do not process as normal button)
-      - [ ] If not macro button: continue with normal button handling
+    - [ ] Update constructor to accept and store both pointers
+    - [ ] In `taskLoop()`, add macro button check at start:
+      - [ ] Check if `event.buttonIndex == MACRO_BUTTON_INDEX` (index 4 per macro_config.h)
+      - [ ] AND `event.type == EventEnum::ButtonEventTypes::LONG_PRESS`
+      - [ ] If true:
+        - [ ] Call `macroManager->toggleMacroMode()`
+        - [ ] Update `hardwareState->macroModeActive = macroManager->isMacroModeActive()`
+        - [ ] Log with LOG_INFO: "Macro mode toggled to [ON/OFF]"
+        - [ ] Return (event consumed)
+      - [ ] If macro button SHORT_PRESS: ignore, return
+      - [ ] Otherwise: continue to normal button handling
 
-- [ ] **Task 2: Add Macro Interception to EncoderEventHandler** (AC: 4, 6, 7)
+- [ ] **Task 2.3: Add Macro Interception to EncoderEventHandler** (AC: 4, 6, 7)
   - [ ] Update `src/Event/Handler/EncoderEventHandler.h`:
-    - [ ] Add member `MacroManager* macroManager`
-    - [ ] Update constructor to accept `MacroManager*`
-    - [ ] Import `MacroInputEnum.h` and `MacroManager.h`
+    - [ ] Add member `HardwareState* hardwareState` (injected via constructor)
+    - [ ] Add member `MacroManager* macroManager` (injected via constructor)
+    - [ ] Update constructor to accept both pointers
+    - [ ] Import `include/Enum/MacroInputEnum.h`, `include/Macro/MacroManager.h`, `include/state/HardwareState.h`
+
   - [ ] Update `src/Event/Handler/EncoderEventHandler.cpp`:
-    - [ ] In handleEvent() or taskLoop():
-      - [ ] **Priority 1:** Check if menu is active
-        - [ ] If yes: `menuController.handleEvent(event)` and return
-      - [ ] **Priority 2:** Check if macro mode active
-        - [ ] If yes: call `MacroInput input = mapEncoderEventToMacroInput(event)`
-        - [ ] If yes: call `macroManager->executeMacro(input)`
-        - [ ] If macro executed (returned true): return (event consumed)
-        - [ ] If no macro (returned false): fall through to Priority 3
-      - [ ] **Priority 3:** Normal mode handling
-        - [ ] Call `currentModeHandler->handleEvent(event)`
-  - [ ] Create helper function `MacroInput mapEncoderEventToMacroInput(const EncoderInputEvent& event)`:
-    - [ ] Wheel rotation left → MacroInput::WHEEL_LEFT
-    - [ ] Wheel rotation right → MacroInput::WHEEL_RIGHT
-    - [ ] Wheel button press → MacroInput::WHEEL_BUTTON
+    - [ ] Update constructor to accept and store both pointers
+    - [ ] In `taskLoop()`, implement priority routing:
+      - [ ] **Priority 1:** If `menuController->isActive()`: handle menu, return
+      - [ ] **Priority 2:** If `hardwareState->macroModeActive`:
+        - [ ] Convert event to MacroInput: `MacroInput input = mapEncoderEventToMacroInput(event)`
+        - [ ] If `macroManager->executeMacro(input)` returns true: return (consumed)
+        - [ ] Else: fall through to Priority 3
+      - [ ] **Priority 3:** Normal mode handling: `currentModeHandler->handleEvent(event)`
 
-- [ ] **Task 3: Add Macro Interception to ButtonEventHandler** (AC: 5, 6, 7)
-  - [ ] In `src/Event/Handler/ButtonEventHandler.cpp` handleEvent() or taskLoop():
-    - [ ] After macro button check (Task 1)
-    - [ ] **Priority 1:** Check if menu is active
-      - [ ] If yes: `menuController.handleEvent(event)` and return
-    - [ ] **Priority 2:** Check if macro mode active
-      - [ ] If yes: call `MacroInput input = mapButtonEventToMacroInput(event)`
-      - [ ] If yes: call `macroManager->executeMacro(input)`
-      - [ ] If macro executed (returned true): return (event consumed)
-      - [ ] If no macro (returned false): fall through to Priority 3
-    - [ ] **Priority 3:** Normal button action
-      - [ ] Call existing button action handler (SelectWheelModeAction, etc.)
-  - [ ] Create helper function `MacroInput mapButtonEventToMacroInput(const ButtonEvent& event)`:
-    - [ ] Button 1 (GPIO 3) → MacroInput::BUTTON_1
-    - [ ] Button 2 (GPIO 4) → MacroInput::BUTTON_2
-    - [ ] Button 3 (GPIO 5) → MacroInput::BUTTON_3
-    - [ ] Button 4 (GPIO 9) → MacroInput::BUTTON_4
+    - [ ] Create helper function `MacroInput mapEncoderEventToMacroInput(const EncoderInputEvent& event)`:
+      - [ ] ROTATE_LEFT (delta < 0) → MacroInput::WHEEL_LEFT
+      - [ ] ROTATE_RIGHT (delta > 0) → MacroInput::WHEEL_RIGHT
+      - [ ] SHORT_CLICK → MacroInput::WHEEL_BUTTON
+      - [ ] Default: MacroInput::WHEEL_BUTTON
 
-- [ ] **Task 4: Add Logging for Macro Mode Toggle** (AC: 1, 2, 4, 5, 6, 7)
-  - [ ] In ButtonEventHandler macro button handling:
-    - [ ] Log long-press detection with LOG_DEBUG
-    - [ ] Log macro mode toggle with LOG_INFO (state change)
-    - [ ] Log short-press ignored with LOG_DEBUG
-  - [ ] In macro interception points:
-    - [ ] Log menu consumed event with LOG_DEBUG
-    - [ ] Log macro executed with LOG_DEBUG
-    - [ ] Log normal mode fallback with LOG_DEBUG
-  - [ ] Use format: `LOG_DEBUG("ButtonEventHandler", "Macro long-press detected, toggling macro mode")`
+- [ ] **Task 2.4: Add Macro Interception to ButtonEventHandler** (AC: 5, 6, 7)
+  - [ ] In `src/Event/Handler/ButtonEventHandler.cpp` taskLoop():
+    - [ ] After macro button check from Task 2.2
+    - [ ] Implement priority routing for regular buttons (1-4):
+      - [ ] **Priority 1:** If menu active: let menu handle (existing logic)
+      - [ ] **Priority 2:** If `hardwareState->macroModeActive && event.type == SHORT_PRESS`:
+        - [ ] Convert to MacroInput: `MacroInput input = mapButtonIndexToMacroInput(event.buttonIndex)`
+        - [ ] If `macroManager->executeMacro(input)` returns true: return (consumed)
+        - [ ] Else: fall through to Priority 3
+      - [ ] **Priority 3:** Normal button action: `executeButtonAction(event.buttonIndex)`
 
-- [ ] **Task 5: Build and Verify Toggle Behavior** (AC: 1, 2, 3, 7)
-  - [ ] Compile with `pio run -e use_nimble`
+    - [ ] Create helper function `MacroInput mapButtonIndexToMacroInput(uint8_t buttonIndex)`:
+      - [ ] 0 → MacroInput::BUTTON_1
+      - [ ] 1 → MacroInput::BUTTON_2
+      - [ ] 2 → MacroInput::BUTTON_3
+      - [ ] 3 → MacroInput::BUTTON_4
+      - [ ] Default: MacroInput::BUTTON_1
+
+- [ ] **Task 2.5: Update main.cpp to Wire Dependencies**
+  - [ ] Update `src/main.cpp`:
+    - [ ] Pass `&hardwareState` and `&macroManager` to EncoderEventHandler constructor
+    - [ ] Pass `&hardwareState` and `&macroManager` to ButtonEventHandler constructor
+
+- [ ] **Task 2.6: Add Logging for Macro Events**
+  - [ ] In ButtonEventHandler (Task 2.2):
+    - [ ] LOG_INFO when macro mode toggled
+    - [ ] LOG_DEBUG when macro button short-press ignored
+  - [ ] In EncoderEventHandler (Task 2.3):
+    - [ ] LOG_DEBUG when macro executed
+    - [ ] LOG_DEBUG when falling through to normal mode
+  - [ ] In ButtonEventHandler (Task 2.4):
+    - [ ] LOG_DEBUG when macro executed
+    - [ ] LOG_DEBUG when falling through to normal mode
+
+- [ ] **Task 2.7: Build and Test Full Macro Integration**
+  - [ ] Compile with `.claude/skills/pio-wrapper/scripts/pio-wrapper.py run -e use_nimble`
   - [ ] Verify no compile errors
   - [ ] Verify no warnings
-  - [ ] Manual test: Long-press macro button (≥500ms), verify mode toggles on
-  - [ ] Manual test: Long-press again, verify mode toggles off
-  - [ ] Manual test: Short-press macro button (<500ms), verify ignored (no action)
-  - [ ] Manual test: With macro mode active, rotate wheel, check logs for priority order
-  - [ ] Manual test: With menu active, long-press macro button, check menu consumes event
-  - [ ] Manual test: Verify macro mode persists across menu navigation
+  - [ ] Manual test: Long-press macro button (GPIO 10), verify mode toggles ON
+  - [ ] Manual test: Long-press again, verify mode toggles OFF
+  - [ ] Manual test: Short-press macro button, verify ignored (no toggle)
+  - [ ] Manual test: With macro mode ON, rotate wheel, check macro execution logs
+  - [ ] Manual test: With macro mode ON, press button 1-4, check macro execution
+  - [ ] Manual test: Priority order - menu > macro > normal
+  - [ ] Manual test: Fallback - macro mode ON but no macro assigned → normal action
 
 ## Dev Notes
+
+### Architectural Decision: ButtonDriver Pattern
+
+**Problem:** Original story had ButtonEventHandler tracking `macroPressStart` timestamp and calculating duration on release. This violates Single Responsibility Principle (SRP) - handler should route events, not manage hardware timing state.
+
+**Solution:** Mirror the existing EncoderDriver pattern by creating ButtonDriver in `lib/`:
+
+**EncoderDriver Pattern (existing):**
+```
+EncoderDriver (lib/)
+├─ Hardware polling (GPIO reads)
+├─ Duration detection (short/long press in handleButton())
+└─ Callbacks → EncoderEventDispatcher
+                └─ Queues SHORT_CLICK/LONG_CLICK
+                    └─ EncoderEventHandler processes
+```
+
+**ButtonDriver Pattern (new):**
+```
+ButtonDriver (lib/)
+├─ Hardware polling (GPIO reads)
+├─ Debouncing
+├─ Duration tracking (pressStartTime → calculate on release)
+└─ Callbacks → ButtonEventDispatcher
+                └─ Queues SHORT_PRESS/LONG_PRESS
+                    └─ ButtonEventHandler processes
+```
+
+**Benefits:**
+1. ✅ **SRP Maintained** - Handler focuses on routing, driver handles hardware timing
+2. ✅ **Consistency** - Matches EncoderDriver pattern exactly
+3. ✅ **Testability** - Duration logic isolated in driver
+4. ✅ **Reusability** - Any button can have short/long press detection
+5. ✅ **Low Overhead** - Static arrays, ~200 bytes (5 buttons × 2 fields × 4 bytes)
+
+**Migration Path:**
+- Part 1: Refactor ButtonManager → ButtonDriver with duration tracking
+- Part 2: Use ButtonDriver's LONG_PRESS events for macro toggle
+
+### Architecture: HardwareState as Single Source of Truth
+
+**Key Principle:** The macro mode state lives in `HardwareState`, NOT in `MacroManager`.
+
+- `HardwareState::macroModeActive` is the canonical state (initialized to false)
+- `MacroManager` handles toggle logic and macro execution, but doesn't own the state
+- Handlers get `HardwareState*` injected and check `hardwareState->macroModeActive`
+- Any module can see macro mode state by checking `HardwareState` (consistent with encoder wheel mode, BLE state, etc.)
+
+**Flow:** When macro button long-pressed:
+1. ButtonEventHandler detects long-press ≥500ms
+2. Calls `macroManager->toggleMacroMode()` (toggle logic)
+3. **Immediately updates** `hardwareState->macroModeActive = macroManager->isMacroModeActive()`
+4. Now all modules see the new state via `hardwareState`
 
 ### Event Handling Priority
 
 ```
 Input Event Arrives
     ↓
-[Macro Button Long-Press?] → If yes: toggleMacroMode(), return
+[Macro Button Long-Press (GPIO 10)?] → If yes (≥500ms):
+    ├─ Call macroManager->toggleMacroMode()
+    ├─ Sync state: hardwareState->macroModeActive = macroManager->isMacroModeActive()
+    └─ Return (event consumed)
     ↓ (No / Short-press)
 [Menu Active?] → If yes: Menu handles, return
     ↓ (No)
-[Macro Mode Active?] → If yes: Try macro
-    ├─ Macro exists? → Execute, return
-    └─ No macro? → Fall through
-    ↓ (Fall through)
+[Macro Mode Active?] → Check hardwareState->macroModeActive:
+    ├─ If true: Try to execute macro
+    │   ├─ Macro exists? → Execute, return
+    │   └─ No macro? → Fall through
+    ↓ (Fall through or mode inactive)
 [Normal Mode Handler] → Process normally
 ```
 
@@ -148,13 +339,15 @@ Input Event Arrives
 
 - GPIO 10, active low with pull-up (per macro_config.h)
 - **Long-press detection:** Minimum 500ms hold time
-- **When long-pressed + released:** `macroManager->toggleMacroMode()`
-  - Transitions macro mode from OFF→ON or ON→OFF
-  - Logs/displays confirmation
+- **When long-pressed + released:**
+  - Call `macroManager->toggleMacroMode()`
+  - Update `hardwareState->macroModeActive` to reflect new state
+  - Transitions from OFF→ON or ON→OFF
+  - Logs confirmation
 - **When short-pressed (< 500ms):** Ignored, no action
 - Does NOT trigger any macro itself (toggle control only)
 - Does NOT prevent menu access during active macro mode
-- MacroManager state: `macroModeActive` boolean (toggle state, not button state)
+- State source: `HardwareState.macroModeActive` (handlers check this, not MacroManager)
 
 ### Encoder Event Mapping
 
@@ -188,22 +381,35 @@ Without this order:
 - Macro mode can't be toggled (menu intercepts button)
 - User experience broken
 
-### Files to Modify
+### Files to Create/Modify
 
+**Part 1 (ButtonDriver Refactoring):**
 ```
-src/Event/Handler/EncoderEventHandler.h (add MacroManager*)
-src/Event/Handler/EncoderEventHandler.cpp (add macro interception)
-src/Event/Handler/ButtonEventHandler.h (add MacroManager*)
-src/Event/Handler/ButtonEventHandler.cpp (add macro button + interception)
+lib/ButtonDriver/ButtonDriver.h (create - driver class definition)
+lib/ButtonDriver/ButtonDriver.cpp (create - driver implementation)
+include/Enum/EventEnum.h (update - add SHORT_PRESS/LONG_PRESS to ButtonEventTypes)
+src/Event/Dispatcher/ButtonEventDispatcher.h (update - add short/long press methods)
+src/Event/Dispatcher/ButtonEventDispatcher.cpp (update - implement short/long press methods)
+src/main.cpp (update - replace ButtonManager with ButtonDriver)
+src/Button/ButtonManager.h (delete)
+src/Button/ButtonManager.cpp (delete)
+```
+
+**Part 2 (Macro Integration):**
+```
+include/state/HardwareState.h (update - add macroModeActive field)
+src/Event/Handler/EncoderEventHandler.h (update - add HardwareState*, MacroManager*)
+src/Event/Handler/EncoderEventHandler.cpp (update - add macro interception with priority)
+src/Event/Handler/ButtonEventHandler.h (update - add HardwareState*, MacroManager*)
+src/Event/Handler/ButtonEventHandler.cpp (update - add macro button toggle + interception)
+src/main.cpp (update - wire HardwareState and MacroManager to handlers)
 ```
 
 ### Helper Functions Location
 
 Place in same file as handler:
 - `mapEncoderEventToMacroInput()` in EncoderEventHandler.cpp
-- `mapButtonEventToMacroInput()` in ButtonEventHandler.cpp
-
-Or in shared header if multiple files need them.
+- `mapButtonIndexToMacroInput()` in ButtonEventHandler.cpp
 
 ### Key Implementation Points
 
@@ -215,61 +421,84 @@ Or in shared header if multiple files need them.
 ### Anti-Patterns to Avoid
 
 ```cpp
-// ❌ WRONG - Not detecting long-press duration
-if (event.pin == MACRO_BUTTON_PIN && event.pressed) {
-    macroManager->toggleMacroMode();  // Should wait for release + duration check
+// ❌ WRONG - Storing state in MacroManager instead of HardwareState
+class MacroManager {
+    bool macroModeActive;  // Wrong! State should be in HardwareState
+};
+
+// ❌ WRONG - Handler checking MacroManager state directly
+if (macroManager->isMacroModeActive()) {  // Don't use this
+    macroManager->executeMacro(input);
 }
 
-// ❌ WRONG - Tracking button state instead of toggle state
-bool macroButtonHeld;  // Wrong! Use macroModeActive toggle state instead
-if (event.pin == MACRO_BUTTON_PIN) {
-    macroButtonHeld = event.pressed;
+// ✅ CORRECT - Handler checks HardwareState
+if (hardwareState->macroModeActive) {  // Read from HardwareState
+    if (macroManager->executeMacro(input)) {
+        return;
+    }
 }
+
+// ❌ WRONG - Handler tracking duration (violates SRP)
+class ButtonEventHandler {
+    uint32_t macroPressStart;  // Wrong! Handler should not manage hardware timing
+
+    void taskLoop() {
+        if (event.type == BUTTON_PRESSED) {
+            macroPressStart = millis();  // Handler doing driver's job
+        } else {
+            uint32_t duration = millis() - macroPressStart;
+            if (duration >= 500) { /* ... */ }
+        }
+    }
+};
+
+// ✅ CORRECT - Driver handles duration, handler receives LONG_PRESS event
+// ButtonDriver calculates duration internally, dispatches LONG_PRESS event
+// ButtonEventHandler simply checks event type
+if (event.buttonIndex == MACRO_BUTTON_INDEX && event.type == LONG_PRESS) {
+    macroManager->toggleMacroMode();
+    hardwareState->macroModeActive = macroManager->isMacroModeActive();
+    LOG_INFO("ButtonEventHandler", "Macro mode toggled");
+    return;
+}
+
+// ❌ WRONG - Forgetting to sync state after toggle
+macroManager->toggleMacroMode();
+// Missing: hardwareState->macroModeActive = macroManager->isMacroModeActive();
 
 // ❌ WRONG - Wrong priority order
-if (macroManager.isMacroModeActive()) {
-    macroManager.executeMacro(input);
+if (hardwareState->macroModeActive) {
+    macroManager->executeMacro(input);
 }
-if (menuController.isActive()) {  // Should be FIRST
-    menuController.handleEvent(event);
+if (menuController->isActive()) {  // Should be FIRST
+    menuController->handleEvent(event);
+    return;
 }
 
 // ❌ WRONG - Consuming all events when macro not assigned
-if (macroManager.isMacroModeActive()) {
+if (hardwareState->macroModeActive) {
     // Consume event even if no macro assigned
+    return;  // Should fall through if executeMacro returns false
+}
+
+// ✅ CORRECT - Event priority order (Menu > Macro > Normal)
+// Priority 1: Menu
+if (menuController->isActive()) {
+    // Menu handles everything when active
     return;
 }
 
-// ❌ WRONG - Checking BLE in handler instead of manager
-if (macroManager.isMacroModeActive() && bleKeyboard.isConnected()) {
-    macroManager.executeMacro(input);  // Should check inside executeMacro()
-}
-
-// ✅ CORRECT - Long-press detection with toggle
-if (event.pin == MACRO_BUTTON_PIN) {
-    if (event.pressed) {
-        macroPressStart = millis();
-    } else {
-        uint32_t duration = millis() - macroPressStart;
-        if (duration >= 500) {
-            macroManager->toggleMacroMode();
-        }
-    }
-    return;
-}
-
-// ✅ CORRECT - Event priority order
-if (menuController.isActive()) {
-    menuController.handleEvent(event);
-    return;
-}
-if (macroManager.isMacroModeActive()) {
-    MacroInput input = mapButtonEventToMacroInput(event);
-    if (macroManager.executeMacro(input)) {
+// Priority 2: Macro mode
+if (hardwareState->macroModeActive) {  // Check HardwareState
+    MacroInput input = mapButtonIndexToMacroInput(event.buttonIndex);
+    if (macroManager->executeMacro(input)) {
         return;  // Event consumed by macro
     }
+    // Fall through if no macro assigned
 }
-// Normal handling only if no macro or no macro mode
+
+// Priority 3: Normal handling
+executeButtonAction(event.buttonIndex);
 ```
 
 ### Testing Approach
@@ -317,14 +546,39 @@ if (macroManager.isMacroModeActive()) {
 
 Status: backlog - ready for implementation
 
-**Story 11.2 covers:** Macro button GPIO handling, event interception logic, priority order enforcement.
+**CRITICAL IMPLEMENTATION FLOW:**
+1. **Implement Part 1 (ButtonDriver refactoring)**
+2. **STOP - Request code review from user**
+3. **Wait for approval**
+4. **Then implement Part 2 (Macro integration)**
 
-**Key Components:**
-- ButtonEventHandler: Detect GPIO 10, call setMacroButtonState()
-- EncoderEventHandler: Priority check (Menu → Macro → Normal)
-- ButtonEventHandler: Priority check for buttons 1-4
+**Part 1 - ButtonDriver Refactoring:**
+- Create lib/ButtonDriver mirroring EncoderDriver pattern
+- Migrate ButtonManager logic with duration tracking added
+- Update ButtonEventDispatcher for SHORT_PRESS/LONG_PRESS event types
+- Wire ButtonDriver in main.cpp with callbacks
+- Test short/long press detection works for all buttons
+
+**Part 2 - Macro Integration:**
+- Add HardwareState.macroModeActive (single source of truth for state)
+- ButtonEventHandler: Detect LONG_PRESS on GPIO 10, toggle mode, sync HardwareState
+- EncoderEventHandler: Priority routing (Menu → Macro → Normal), macro interception
+- ButtonEventHandler: Macro interception for buttons 1-4, priority handling
 - Helper mappers: Convert events to MacroInput enum
 
-**Dependencies:** Requires Story 11.1 (MacroManager complete with toggleMacroMode() interface)
+**Key Architectural Decisions:**
+1. **ButtonDriver Pattern** - Duration tracking lives in driver (not handler), maintains SRP
+2. **HardwareState Ownership** - Macro mode state in HardwareState (not MacroManager)
+3. **Priority Routing** - Menu > Macro > Normal (enforced in both handlers)
+4. **Fallback Behavior** - If macro not assigned, fall through to normal action
+
+**Critical Implementation Rules:**
+- Handler NEVER tracks timing - ButtonDriver owns duration detection
+- State ALWAYS in HardwareState - handlers check `hardwareState->macroModeActive`
+- After toggle ALWAYS sync - `hardwareState->macroModeActive = macroManager->isMacroModeActive()`
+- Priority MUST be enforced - menu first, then macro, then normal
+
+**Dependencies:**
+- Requires Story 11.1 (MacroManager complete with toggleMacroMode() interface)
 
 ---
