@@ -26,17 +26,11 @@ private:
     std::function<void()> shortPressCallbacks[MAX_BUTTONS];
     std::function<void()> longPressCallbacks[MAX_BUTTONS];
 
-    struct ButtonState {
-        bool pressed;
-        bool lastReading;
-        uint32_t lastChangeTime;
-        uint32_t pressStartTime;
-    };
-
-    ButtonState buttonStates[MAX_BUTTONS];
+    // Simple state tracking per button (mirrors EncoderDriver pattern)
+    bool wasButtonDown[MAX_BUTTONS];
+    unsigned long lastTimeButtonDown[MAX_BUTTONS];
 
     void runLoop();
     void handleButton(uint8_t index);
-    bool readButton(uint8_t index);
-    bool isDebounced(uint8_t index, uint32_t currentTime);
+    bool isButtonDown(uint8_t index);
 };

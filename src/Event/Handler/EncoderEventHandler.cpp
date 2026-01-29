@@ -77,10 +77,10 @@ void EncoderEventHandler::taskLoop() {
             if (hardwareState->macroModeActive) {
                 MacroInput input = static_cast<MacroInput>(mapEncoderEventToMacroInput(evt));
                 if (macroManager->executeMacro(input)) {
-                    LOG_DEBUG("EncoderEventHandler", "Macro executed for input");
+                    LOG_INFO("EncoderEventHandler", "Macro executed for input");
                     continue;
                 }
-                LOG_DEBUG("EncoderEventHandler", "No macro assigned, falling through");
+                LOG_INFO("EncoderEventHandler", "No macro assigned, falling through");
             }
 
             // Priority 3: Normal mode handling

@@ -1,9 +1,11 @@
 #include "ButtonDriver.h"
 #include "Config/button_config.h"
+#include "Config/log_config.h"
+#include "driver/gpio.h"
 
 ButtonDriver* ButtonDriver::instance = nullptr;
 
-ButtonDriver::ButtonDriver() : buttonStates{}, shortPressCallbacks{}, longPressCallbacks{} {}
+ButtonDriver::ButtonDriver() : shortPressCallbacks{}, longPressCallbacks{}, wasButtonDown{}, lastTimeButtonDown{} {}
 
 ButtonDriver* ButtonDriver::getInstance() {
     if (!instance) {
@@ -13,10 +15,29 @@ ButtonDriver* ButtonDriver::getInstance() {
 }
 
 void ButtonDriver::begin() {
-    // Initialize GPIO pins
+    // Initialize GPIO pins with explicit pull-up configuration
     for (size_t i = 0; i < BUTTON_COUNT; i++) {
-        pinMode(BUTTONS[i].pin, BUTTONS[i].activeLow ? INPUT_PULLUP : INPUT_PULLDOWN);
-        buttonStates[i] = {false, false, 0, 0};
+        uint8_t pin = BUTTONS[i].pin;
+        pinMode(pin, INPUT);
+        if (BUTTONS[i].activeLow) {
+            // Explicitly enable internal pull-up using ESP-IDF
+            gpio_pullup_en((gpio_num_t)pin);
+            gpio_pulldown_dis((gpio_num_t)pin);
+        } else {
+            gpio_pulldown_en((gpio_num_t)pin);
+            gpio_pullup_dis((gpio_num_t)pin);
+        }
+    }
+
+    // Longer delay to let pull-ups charge any parasitic capacitance
+    delay(100);
+
+    // Initialize state to ACTUAL current reading (prevents false press at boot)
+    unsigned long now = millis();
+    for (size_t i = 0; i < BUTTON_COUNT; i++) {
+        wasButtonDown[i] = isButtonDown(i);
+        // If button is DOWN at boot, set start time so we don't get bogus duration
+        lastTimeButtonDown[i] = wasButtonDown[i] ? now : 0;
     }
 
     // Create FreeRTOS task for button polling
@@ -49,56 +70,42 @@ void ButtonDriver::runLoop() {
     }
 }
 
+// Mirrors EncoderDriver::handleButton() pattern exactly
 void ButtonDriver::handleButton(uint8_t index) {
-    uint32_t currentTime = millis();
-    bool reading = readButton(index);
+    bool isDown = isButtonDown(index);
 
-    // Detect change - restart debounce timer
-    if (reading != buttonStates[index].lastReading) {
-        buttonStates[index].lastChangeTime = currentTime;
-        buttonStates[index].lastReading = reading;
-        return;
-    }
-
-    // Not debounced yet - skip
-    if (!isDebounced(index, currentTime)) {
-        return;
-    }
-
-    // State changed after debounce
-    if (reading != buttonStates[index].pressed) {
-        if (reading) {
-            // Button pressed - record start time
-            buttonStates[index].pressStartTime = currentTime;
-        } else {
-            // Button released - calculate duration and dispatch
-            uint32_t duration = currentTime - buttonStates[index].pressStartTime;
-
-            if (duration >= BUTTON_LONG_PRESS_MIN_MS) {
-                // Long press
-                if (longPressCallbacks[index]) {
-                    longPressCallbacks[index]();
-                }
-            } else if (duration >= BUTTON_SHORT_PRESS_MIN_MS) {
-                // Short press
-                if (shortPressCallbacks[index]) {
-                    shortPressCallbacks[index]();
-                }
-            }
-            // Ignore presses shorter than BUTTON_SHORT_PRESS_MIN_MS (noise/bounce)
+    if (isDown) {
+        if (!wasButtonDown[index]) {
+            // First detection of button down - record start time
+            lastTimeButtonDown[index] = millis();
         }
-
-        buttonStates[index].pressed = reading;
+        wasButtonDown[index] = true;
+        return;
     }
+
+    // Button is UP
+    if (wasButtonDown[index]) {
+        // Was down, now up = released - calculate duration and dispatch
+        unsigned long pressDuration = millis() - lastTimeButtonDown[index];
+
+        if (pressDuration >= BUTTON_LONG_PRESS_MIN_MS) {
+            if (longPressCallbacks[index]) {
+                longPressCallbacks[index]();
+            }
+        } else if (pressDuration >= BUTTON_SHORT_PRESS_MIN_MS) {
+            if (shortPressCallbacks[index]) {
+                shortPressCallbacks[index]();
+            }
+        }
+        // Ignore presses shorter than BUTTON_SHORT_PRESS_MIN_MS (noise)
+    }
+
+    wasButtonDown[index] = false;
 }
 
-bool ButtonDriver::readButton(uint8_t index) {
+bool ButtonDriver::isButtonDown(uint8_t index) {
     int pinState = digitalRead(BUTTONS[index].pin);
     return BUTTONS[index].activeLow ? (pinState == LOW) : (pinState == HIGH);
-}
-
-bool ButtonDriver::isDebounced(uint8_t index, uint32_t currentTime) {
-    return (currentTime - buttonStates[index].lastChangeTime) >= DEBOUNCE_MS;
 }
 
 void ButtonDriver::setOnShortPress(uint8_t buttonIndex, std::function<void()> callback) {

@@ -100,13 +100,13 @@ void ButtonEventHandler::taskLoop() {
 
             // Ignore short press on macro button
             if (evt.buttonIndex == MACRO_BUTTON_INDEX && evt.type == EventEnum::ButtonEventTypes::SHORT_PRESS) {
-                LOG_DEBUG("ButtonEventHandler", "Macro button short press ignored");
+                LOG_INFO("ButtonEventHandler", "Macro button short press ignored");
                 continue;
             }
 
             // Only process short press events for regular buttons
             if (evt.type != EventEnum::ButtonEventTypes::SHORT_PRESS) {
-                LOG_DEBUG("ButtonEventHandler", "Button %d long press (no action)", evt.buttonIndex);
+                LOG_INFO("ButtonEventHandler", "Button %d long press (no action)", evt.buttonIndex);
                 continue;
             }
 
@@ -115,16 +115,16 @@ void ButtonEventHandler::taskLoop() {
                 continue;
             }
 
-            LOG_DEBUG("ButtonEventHandler", "Button %d short press", evt.buttonIndex);
+            LOG_INFO("ButtonEventHandler", "Button %d short press", evt.buttonIndex);
 
             // Priority 2: Try macro execution if macro mode active
             if (hardwareState->macroModeActive) {
                 MacroInput input = static_cast<MacroInput>(mapButtonIndexToMacroInput(evt.buttonIndex));
                 if (macroManager->executeMacro(input)) {
-                    LOG_DEBUG("ButtonEventHandler", "Macro executed for button %d", evt.buttonIndex);
+                    LOG_INFO("ButtonEventHandler", "Macro executed for button %d", evt.buttonIndex);
                     continue;
                 }
-                LOG_DEBUG("ButtonEventHandler", "No macro assigned for button %d, falling through", evt.buttonIndex);
+                LOG_INFO("ButtonEventHandler", "No macro assigned for button %d, falling through", evt.buttonIndex);
             }
 
             // Priority 3: Normal button action
@@ -144,7 +144,7 @@ void ButtonEventHandler::executeButtonAction(uint8_t buttonIndex) {
 
     // Execute via service - service handles connection check, validation, and execution
     if (!bleKeyboardService->executeMediaKey(actionId)) {
-        LOG_DEBUG("ButtonEventHandler", "Button %d: Action %d execution failed or skipped", buttonIndex, actionId);
+        LOG_INFO("ButtonEventHandler", "Button %d: Action %d execution failed or skipped", buttonIndex, actionId);
     }
 }
 
