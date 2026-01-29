@@ -2,9 +2,17 @@
 #include "Menu/Controller/MenuController.h"
 #include "Config/log_config.h"
 #include "System/PowerManager.h"
+#include "Macro/Manager/MacroManager.h"
+#include "state/HardwareState.h"
+#include "Enum/MacroInputEnum.h"
 
-EncoderEventHandler::EncoderEventHandler(QueueHandle_t queue, PowerManager* pm)
-    : eventQueue(queue), powerManager(pm) {}
+EncoderEventHandler::EncoderEventHandler(QueueHandle_t queue, PowerManager* pm, HardwareState* hwState, MacroManager* macroMgr)
+    : eventQueue(queue), powerManager(pm), hardwareState(hwState), macroManager(macroMgr) {
+    // Validate dependencies
+    if (!hwState || !macroMgr) {
+        LOG_ERROR("EncoderEventHandler", "Constructor called with null dependencies");
+    }
+}
 
 void EncoderEventHandler::setModeHandler(EncoderModeBaseInterface* handler) {
     if (!handler) {
@@ -43,7 +51,7 @@ void EncoderEventHandler::taskLoop() {
             // Interface-enforced user activity notification
             notifyUserActivity();
 
-            // Menu intercepts events when active
+            // Priority 1: Menu intercepts events when active
             if (menuController && menuController->isActive()) {
                 switch (evt.type) {
                     case EventEnum::EncoderInputEventTypes::ROTATE:
@@ -65,7 +73,17 @@ void EncoderEventHandler::taskLoop() {
                 continue;  // Event consumed
             }
 
-            // Normal mode handling
+            // Priority 2: Try macro execution if macro mode active
+            if (hardwareState->macroModeActive) {
+                MacroInput input = static_cast<MacroInput>(mapEncoderEventToMacroInput(evt));
+                if (macroManager->executeMacro(input)) {
+                    LOG_DEBUG("EncoderEventHandler", "Macro executed for input");
+                    continue;
+                }
+                LOG_DEBUG("EncoderEventHandler", "No macro assigned, falling through");
+            }
+
+            // Priority 3: Normal mode handling
             if (!currentHandler) continue;
 
             switch (evt.type) {
@@ -81,4 +99,21 @@ void EncoderEventHandler::taskLoop() {
             }
         }
     }
+}
+
+uint8_t EncoderEventHandler::mapEncoderEventToMacroInput(const EncoderInputEvent& evt) {
+    if (evt.type == EventEnum::EncoderInputEventTypes::ROTATE && evt.delta < 0) {
+        return static_cast<uint8_t>(MacroInput::WHEEL_LEFT);
+    }
+
+    if (evt.type == EventEnum::EncoderInputEventTypes::ROTATE && evt.delta >= 0) {
+        return static_cast<uint8_t>(MacroInput::WHEEL_RIGHT);
+    }
+
+    if (evt.type == EventEnum::EncoderInputEventTypes::SHORT_CLICK) {
+        return static_cast<uint8_t>(MacroInput::WHEEL_BUTTON);
+    }
+
+    // Default fallback for LONG_CLICK or unknown types
+    return static_cast<uint8_t>(MacroInput::WHEEL_BUTTON);
 }

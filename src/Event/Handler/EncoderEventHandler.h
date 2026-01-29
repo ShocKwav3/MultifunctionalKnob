@@ -10,10 +10,12 @@
 
 class MenuController;
 class PowerManager;
+class MacroManager;
+struct HardwareState;
 
 class EncoderEventHandler : public EventHandlerInterface {
 public:
-    EncoderEventHandler(QueueHandle_t queue, PowerManager* pm);
+    EncoderEventHandler(QueueHandle_t queue, PowerManager* pm, HardwareState* hwState, MacroManager* macroMgr);
 
     void setModeHandler(EncoderModeBaseInterface* handler);
     void setMenuController(MenuController* controller);
@@ -27,7 +29,16 @@ private:
     EncoderModeBaseInterface* currentHandler = nullptr;
     MenuController* menuController = nullptr;
     PowerManager* powerManager;
+    HardwareState* hardwareState;
+    MacroManager* macroManager;
 
     static void taskEntry(void* param);
     void taskLoop();
+
+    /**
+     * @brief Convert EncoderInputEvent to MacroInput enum
+     * @param evt Encoder event to convert
+     * @return Corresponding MacroInput value
+     */
+    static uint8_t mapEncoderEventToMacroInput(const EncoderInputEvent& evt);
 };

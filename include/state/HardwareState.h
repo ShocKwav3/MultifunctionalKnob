@@ -14,6 +14,7 @@
  * - Battery level (placeholder for now)
  * - Bluetooth state (consolidated connection and pairing status)
  * - Display power state (on/off)
+ * - Macro mode state (active/inactive)
  *
  * This structure is independent of AppState and serves as the single
  * source of truth for hardware state.
@@ -23,6 +24,7 @@ struct HardwareState {
     uint8_t batteryPercent;                   ///< Battery level 0-100 (placeholder)
     BleStateType bleState;                    ///< Consolidated BLE state (connection + pairing)
     bool displayPower;                        ///< Display power state (true = on, false = off)
+    bool macroModeActive;                     ///< Macro mode state (true = active, false = inactive)
 };
 
 // Global hardware state instance (defined in main.cpp)

@@ -4,18 +4,23 @@
 #include "Config/button_config.h"
 #include "BLE/BleKeyboardService.h"
 #include "System/PowerManager.h"
+#include "Macro/Manager/MacroManager.h"
+#include "state/HardwareState.h"
+#include "Enum/MacroInputEnum.h"
 
-ButtonEventHandler::ButtonEventHandler(QueueHandle_t queue, ConfigManager* config, BleKeyboardService* bleService, PowerManager* pm)
+ButtonEventHandler::ButtonEventHandler(QueueHandle_t queue, ConfigManager* config, BleKeyboardService* bleService, PowerManager* pm, HardwareState* hwState, MacroManager* macroMgr)
     : eventQueue(queue)
     , configManager(config)
     , bleKeyboardService(bleService)
     , powerManager(pm)
+    , hardwareState(hwState)
+    , macroManager(macroMgr)
     , cacheValid(false) {
     // Dependencies are required - validate they are not null
-    if (!config || !bleService) {
+    if (!config || !bleService || !hwState || !macroMgr) {
         LOG_ERROR("ButtonEventHandler", "Constructor called with null dependencies");
     }
-    
+
     // Initialize cache to NONE (safe default - ID 0)
     for (uint8_t i = 0; i < BUTTON_COUNT; i++) {
         actionCache[i] = 0;  // ID 0 = NONE action
@@ -28,7 +33,7 @@ void ButtonEventHandler::start() {
         LOG_ERROR("ButtonEventHandler", "Cannot start task: eventQueue is null");
         return;
     }
-    
+
     if (!configManager) {
         LOG_ERROR("ButtonEventHandler", "Cannot start task: configManager is null");
         return;
@@ -38,7 +43,17 @@ void ButtonEventHandler::start() {
         LOG_ERROR("ButtonEventHandler", "Cannot start task: bleKeyboardService is null");
         return;
     }
-    
+
+    if (!hardwareState) {
+        LOG_ERROR("ButtonEventHandler", "Cannot start task: hardwareState is null");
+        return;
+    }
+
+    if (!macroManager) {
+        LOG_ERROR("ButtonEventHandler", "Cannot start task: macroManager is null");
+        return;
+    }
+
     xTaskCreate(taskEntry, "ButtonEventTask", 4096, this, 1, nullptr);
     LOG_INFO("ButtonEventHandler", "Task started successfully");
 }
@@ -74,16 +89,46 @@ void ButtonEventHandler::taskLoop() {
             // Interface-enforced user activity notification
             notifyUserActivity();
 
-            switch (evt.type) {
-                case EventEnum::ButtonEventTypes::SHORT_PRESS:
-                    LOG_DEBUG("ButtonEventHandler", "Button %d short press", evt.buttonIndex);
-                    executeButtonAction(evt.buttonIndex);
-                    break;
-                case EventEnum::ButtonEventTypes::LONG_PRESS:
-                    LOG_DEBUG("ButtonEventHandler", "Button %d long press", evt.buttonIndex);
-                    // Long press handling will be added in Part 2 (macro toggle)
-                    break;
+            // Priority 1: Macro button long press toggles macro mode
+            if (evt.buttonIndex == MACRO_BUTTON_INDEX && evt.type == EventEnum::ButtonEventTypes::LONG_PRESS) {
+                macroManager->toggleMacroMode();
+                hardwareState->macroModeActive = macroManager->isMacroModeActive();
+                LOG_INFO("ButtonEventHandler", "Macro mode toggled to %s",
+                         hardwareState->macroModeActive ? "ON" : "OFF");
+                continue;
             }
+
+            // Ignore short press on macro button
+            if (evt.buttonIndex == MACRO_BUTTON_INDEX && evt.type == EventEnum::ButtonEventTypes::SHORT_PRESS) {
+                LOG_DEBUG("ButtonEventHandler", "Macro button short press ignored");
+                continue;
+            }
+
+            // Only process short press events for regular buttons
+            if (evt.type != EventEnum::ButtonEventTypes::SHORT_PRESS) {
+                LOG_DEBUG("ButtonEventHandler", "Button %d long press (no action)", evt.buttonIndex);
+                continue;
+            }
+
+            // Only process regular buttons when NOT in macro button context
+            if (evt.buttonIndex == MACRO_BUTTON_INDEX) {
+                continue;
+            }
+
+            LOG_DEBUG("ButtonEventHandler", "Button %d short press", evt.buttonIndex);
+
+            // Priority 2: Try macro execution if macro mode active
+            if (hardwareState->macroModeActive) {
+                MacroInput input = static_cast<MacroInput>(mapButtonIndexToMacroInput(evt.buttonIndex));
+                if (macroManager->executeMacro(input)) {
+                    LOG_DEBUG("ButtonEventHandler", "Macro executed for button %d", evt.buttonIndex);
+                    continue;
+                }
+                LOG_DEBUG("ButtonEventHandler", "No macro assigned for button %d, falling through", evt.buttonIndex);
+            }
+
+            // Priority 3: Normal button action
+            executeButtonAction(evt.buttonIndex);
         }
     }
 }
@@ -100,5 +145,21 @@ void ButtonEventHandler::executeButtonAction(uint8_t buttonIndex) {
     // Execute via service - service handles connection check, validation, and execution
     if (!bleKeyboardService->executeMediaKey(actionId)) {
         LOG_DEBUG("ButtonEventHandler", "Button %d: Action %d execution failed or skipped", buttonIndex, actionId);
+    }
+}
+
+uint8_t ButtonEventHandler::mapButtonIndexToMacroInput(uint8_t buttonIndex) {
+    switch (buttonIndex) {
+        case 0:
+            return static_cast<uint8_t>(MacroInput::BUTTON_1);
+        case 1:
+            return static_cast<uint8_t>(MacroInput::BUTTON_2);
+        case 2:
+            return static_cast<uint8_t>(MacroInput::BUTTON_3);
+        case 3:
+            return static_cast<uint8_t>(MacroInput::BUTTON_4);
+        default:
+            // Default to BUTTON_1 for safety
+            return static_cast<uint8_t>(MacroInput::BUTTON_1);
     }
 }

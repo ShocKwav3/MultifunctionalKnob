@@ -41,6 +41,7 @@
 #include "BLE/BleCallbackHandler.h"
 #include "BLE/BleKeyboardService.h"
 #include "System/PowerManager.h"
+#include "Macro/Manager/MacroManager.h"
 
 BleKeyboard bleKeyboard(BLUETOOTH_DEVICE_NAME, BLUETOOTH_DEVICE_MANUFACTURER, BLUETOOTH_DEVICE_BATTERY_LEVEL_DEFAULT);
 BleKeyboardService bleKeyboardService(&bleKeyboard);
@@ -116,6 +117,7 @@ void setup()
     hardwareState.bleState.isConnected = false;  // Updated by BLE callbacks
     hardwareState.bleState.isPairingMode = false;
     hardwareState.displayPower = true;  // Display always starts ON after boot (session-only toggle)
+    hardwareState.macroModeActive = false;  // Macro mode starts inactive (toggled by long-press on macro button)
 
     // Initialize display power state (always ON at boot for visual feedback)
     DisplayFactory::getDisplay().setPower(hardwareState.displayPower);
@@ -124,13 +126,17 @@ void setup()
     // Initialize PowerManager with dependencies (now that all deps are ready)
     static PowerManager powerManager(bleKeyboard, DisplayFactory::getDisplay(), appState.displayRequestQueue);
 
+    // Initialize MacroManager for macro mode execution
+    static MacroManager macroManager(&bleKeyboard);
+    macroManager.loadFromNVS(configManager);
+
     static AppEventDispatcher appDispatcher(appState.appEventQueue);
     static EncoderModeHandlerScroll encoderModeHandlerScroll(&appDispatcher, &bleKeyboard);
     static EncoderModeHandlerVolume encoderModeHandlerVolume(&appDispatcher, &bleKeyboard);
     static EncoderModeHandlerZoom encoderModeHandlerZoom(&appDispatcher, &bleKeyboard);
     static EncoderModeSelector encoderModeSelector(&appDispatcher);
 
-    static EncoderEventHandler encoderEventHandler(appState.encoderInputEventQueue, &powerManager);
+    static EncoderEventHandler encoderEventHandler(appState.encoderInputEventQueue, &powerManager, &hardwareState, &macroManager);
     encoderEventHandler.start();
 
     static EncoderModeManager encoderModeManager(&encoderEventHandler, &encoderModeSelector, appState.displayRequestQueue, &hardwareState);
@@ -144,7 +150,7 @@ void setup()
 
     // Initialize button event system
     static ButtonEventDispatcher buttonEventDispatcher(appState.buttonEventQueue);
-    static ButtonEventHandler buttonEventHandler(appState.buttonEventQueue, &configManager, &bleKeyboardService, &powerManager);
+    static ButtonEventHandler buttonEventHandler(appState.buttonEventQueue, &configManager, &bleKeyboardService, &powerManager, &hardwareState, &macroManager);
     buttonEventHandler.start();
 
     // Create BT flash timer for pairing animation (500ms period = 1Hz blink rate)
@@ -200,11 +206,11 @@ void setup()
 
     // Set up callbacks for each button to dispatch events
     for (uint8_t i = 0; i < BUTTON_COUNT; i++) {
-        buttonDriver->setOnShortPress(i, [i, &buttonEventDispatcher]() {
+        buttonDriver->setOnShortPress(i, [i]() {
             buttonEventDispatcher.onButtonShortPress(i);
         });
 
-        buttonDriver->setOnLongPress(i, [i, &buttonEventDispatcher]() {
+        buttonDriver->setOnLongPress(i, [i]() {
             buttonEventDispatcher.onButtonLongPress(i);
         });
     }
