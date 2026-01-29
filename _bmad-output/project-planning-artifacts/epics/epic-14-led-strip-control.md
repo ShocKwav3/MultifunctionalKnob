@@ -31,7 +31,7 @@ stories: 5
 
 ---
 
-## Story 12.1: Add FastLED Library and LED Menu Structure
+## Story 14.1: Add FastLED Library and LED Menu Structure
 
 As a **user wanting to control LED strips**,
 I want **an LED menu item with Power, Brightness, Mode, and Color sub-options**,
@@ -47,7 +47,7 @@ So that **I can access all LED settings from one place**.
 
 ---
 
-## Story 12.2: Implement LED Power Toggle with NVS Persistence
+## Story 14.2: Implement LED Power Toggle with NVS Persistence
 
 As a **user controlling the LED strip**,
 I want **to toggle LED power On/Off from the menu**,
@@ -63,7 +63,7 @@ So that **I can turn the strip on or off and have it remember my choice**.
 
 ---
 
-## Story 12.3: Implement Wheel-Controlled Brightness with Live Preview
+## Story 14.3: Implement Wheel-Controlled Brightness with Live Preview
 
 As a **user adjusting LED brightness**,
 I want **to use the wheel to change brightness and see the result in real-time**,
@@ -82,7 +82,7 @@ So that **I can find the perfect brightness level visually**.
 
 ---
 
-## Story 12.4: Implement LED Mode Selection with NVS Persistence
+## Story 14.4: Implement LED Mode Selection with NVS Persistence
 
 As a **user wanting different LED effects**,
 I want **to select an LED mode from a list**,
@@ -100,7 +100,7 @@ So that **the strip displays my preferred pattern**.
 
 ---
 
-## Story 12.5: Implement LED Color Selection with NVS Persistence
+## Story 14.5: Implement LED Color Selection with NVS Persistence
 
 As a **user wanting to customize LED color**,
 I want **to select a color from a list**,
