@@ -8,8 +8,8 @@ namespace EventEnum {
     };
 
     enum class ButtonEventTypes {
-        BUTTON_PRESSED,
-        BUTTON_RELEASED
+        SHORT_PRESS,
+        LONG_PRESS
     };
 
     enum class EncoderModeEventTypes {

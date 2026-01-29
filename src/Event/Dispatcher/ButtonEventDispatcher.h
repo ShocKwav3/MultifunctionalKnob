@@ -8,8 +8,8 @@ class ButtonEventDispatcher {
 public:
     explicit ButtonEventDispatcher(QueueHandle_t queue);
 
-    void onButtonPressed(uint8_t buttonIndex);
-    void onButtonReleased(uint8_t buttonIndex);
+    void onButtonShortPress(uint8_t buttonIndex);
+    void onButtonLongPress(uint8_t buttonIndex);
 
 private:
     QueueHandle_t eventQueue;

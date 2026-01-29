@@ -55,27 +55,33 @@ So that **the feature works reliably and resets cleanly**.
       - [ ] `macroManager.loadFromNVS(configManager);`
     - [ ] Log initialization: `LOG_INFO("System", "MacroManager initialized")`
 
-- [ ] **Task 2: Inject MacroManager into EncoderEventHandler** (AC: 1, 2)
+- [ ] **Task 2: Inject HardwareState and MacroManager into EncoderEventHandler** (AC: 1, 2)
   - [ ] Update `src/Event/Handler/EncoderEventHandler.h`:
+    - [ ] Add constructor parameter: `HardwareState* hw`
     - [ ] Add constructor parameter: `MacroManager* macroManager`
+    - [ ] Add member: `HardwareState* hardwareState;`
     - [ ] Add member: `MacroManager* macroManager;`
   - [ ] Update `src/Event/Handler/EncoderEventHandler.cpp`:
-    - [ ] Constructor: store passed pointer: `this->macroManager = macroManager;`
+    - [ ] Constructor: store both pointers
+      - [ ] `this->hardwareState = hw;`
+      - [ ] `this->macroManager = macroManager;`
   - [ ] In `src/main.cpp`:
     - [ ] When creating EncoderEventHandler:
-      - [ ] Pass `&macroManager` to constructor
-      - [ ] Example: `encoderEventHandler = new EncoderEventHandler(dispatcher, &macroManager);`
+      - [ ] Pass both dependencies: `encoderEventHandler = new EncoderEventHandler(dispatcher, &hardwareState, &macroManager);`
 
-- [ ] **Task 3: Inject MacroManager into ButtonEventHandler** (AC: 1, 2)
+- [ ] **Task 3: Inject HardwareState and MacroManager into ButtonEventHandler** (AC: 1, 2)
   - [ ] Update `src/Event/Handler/ButtonEventHandler.h`:
+    - [ ] Add constructor parameter: `HardwareState* hw`
     - [ ] Add constructor parameter: `MacroManager* macroManager`
+    - [ ] Add member: `HardwareState* hardwareState;`
     - [ ] Add member: `MacroManager* macroManager;`
   - [ ] Update `src/Event/Handler/ButtonEventHandler.cpp`:
-    - [ ] Constructor: store passed pointer: `this->macroManager = macroManager;`
+    - [ ] Constructor: store both pointers
+      - [ ] `this->hardwareState = hw;`
+      - [ ] `this->macroManager = macroManager;`
   - [ ] In `src/main.cpp`:
     - [ ] When creating ButtonEventHandler:
-      - [ ] Pass `&macroManager` to constructor
-      - [ ] Example: `buttonEventHandler = new ButtonEventHandler(dispatcher, &macroManager);`
+      - [ ] Pass both dependencies: `buttonEventHandler = new ButtonEventHandler(dispatcher, config, bleService, powerManager, &hardwareState, &macroManager);`
 
 - [ ] **Task 4: Update FactoryReset to Clear Macros** (AC: 3, 6)
   - [ ] Update `src/Config/FactoryReset.cpp`:
@@ -176,14 +182,24 @@ void performFactoryReset() {
 
 ```cpp
 // src/main.cpp
+// HardwareState is global and initialized early (already in place)
+extern HardwareState hardwareState;
+
+// Initialize macro system
 MacroManager macroManager(&bleKeyboard);
 macroManager.loadFromNVS(configManager);
 
-// Create handlers with macro injection
-EncoderEventHandler encoderHandler(dispatcher, &macroManager);
-ButtonEventHandler buttonHandler(dispatcher, &macroManager);
+// Initialize hardwareState macro flag
+hardwareState.macroModeActive = false;  // Start inactive
 
-// Both handlers now have access to MacroManager
+// Create handlers with both HardwareState and MacroManager
+EncoderEventHandler encoderHandler(dispatcher, &hardwareState, &macroManager);
+ButtonEventHandler buttonHandler(eventQueue, configManager, bleKeyboardService, powerManager, &hardwareState, &macroManager);
+
+// Handlers now have:
+// - Read access to HardwareState for checking macro mode
+// - Access to MacroManager for executing macros and toggling mode
+// - HardwareState is the single source of truth for macro mode state
 ```
 
 ### Inactivity Timer Integration
@@ -211,8 +227,12 @@ src/Config/FactoryReset.cpp - Clear macro NVS keys
 
 ### Key Design Decisions
 
-- Inject MacroManager via constructor (not global reference)
+- **HardwareState is the single source of truth** for macro mode state (not MacroManager)
+- Handlers get HardwareState injected to check macro mode flag
+- After toggle, handlers sync HardwareState immediately
+- Inject both HardwareState and MacroManager via constructor (not global references)
 - Load all macros immediately after instantiation
+- Initialize hardwareState.macroModeActive = false at boot
 - Clear macros on factory reset (not partial)
 - Macro button also resets inactivity timer (consistency)
 - All logging follows project standards
@@ -220,31 +240,60 @@ src/Config/FactoryReset.cpp - Clear macro NVS keys
 ### Anti-Patterns to Avoid
 
 ```cpp
+// ❌ WRONG - Storing macro mode state in MacroManager only
+class MacroManager {
+    bool macroModeActive;  // This belongs in HardwareState!
+};
+// Problem: Handlers can't see state without calling getter
+
+// ❌ WRONG - Passing only MacroManager to handlers
+EncoderEventHandler handler(dispatcher, &macroManager);
+// Problem: No way for handler to check macro state or for display to show it
+
+// ❌ WRONG - Not syncing HardwareState after toggling
+macroManager->toggleMacroMode();
+// Missing: hardwareState->macroModeActive = macroManager->isMacroModeActive();
+
+// ❌ WRONG - Checking MacroManager state instead of HardwareState
+if (macroManager->isMacroModeActive()) {  // Don't use this in handlers
+    macroManager->executeMacro(input);
+}
+
 // ❌ WRONG - Global static MacroManager
 static MacroManager macroManager(&bleKeyboard);
 
 // ❌ WRONG - Null pointer check after injection
-// Don't inject and then check for null
 EncoderEventHandler handler(nullptr);  // Never pass null
 
 // ❌ WRONG - Clearing non-macro config on factory reset
-// Don't affect other settings
-configManager.clearAllSettings();  // Too broad
+configManager.clearAllSettings();  // Too broad, only clear macro keys
 
-// ❌ WRONG - Forgetting inactivity timer reset on macro button
-if (event.pin == MACRO_BUTTON_PIN) {
-    macroManager->setMacroButtonState(event.pressed);
-    return;  // Missing powerManager->resetActivity()
-}
+// ❌ WRONG - Forgetting to initialize hardwareState macro flag
+// Don't leave it uninitialized at boot
 
-// ✅ CORRECT
+// ✅ CORRECT - HardwareState is source of truth
+extern HardwareState hardwareState;  // Global (initialized early)
+
 MacroManager macroManager(&bleKeyboard);
 macroManager.loadFromNVS(configManager);
+hardwareState.macroModeActive = false;  // Initialize state
 
-EncoderEventHandler encoderHandler(dispatcher, &macroManager);
-ButtonEventHandler buttonHandler(dispatcher, &macroManager);
+// Inject both dependencies
+EncoderEventHandler encoderHandler(dispatcher, &hardwareState, &macroManager);
+ButtonEventHandler buttonHandler(eventQueue, config, ble, pm, &hardwareState, &macroManager);
 
-// And in FactoryReset:
+// In handlers:
+if (hardwareState->macroModeActive) {  // Read from HardwareState
+    if (macroManager->executeMacro(input)) {
+        return;
+    }
+}
+
+// After toggling:
+macroManager->toggleMacroMode();
+hardwareState->macroModeActive = macroManager->isMacroModeActive();  // Sync state
+
+// In FactoryReset:
 for (uint8_t i = 0; i < MACRO_INPUT_COUNT; i++) {
     preferences.remove("macro." + String(i));
 }
@@ -284,14 +333,24 @@ for (uint8_t i = 0; i < MACRO_INPUT_COUNT; i++) {
 
 Status: backlog - ready for implementation
 
-**Story 11.4 covers:** main.cpp initialization, dependency injection to handlers, factory reset integration, inactivity timer integration.
+**Story 11.4 covers:** main.cpp initialization, dependency injection to handlers, HardwareState setup, factory reset integration, inactivity timer integration.
 
 **Key Points:**
+- HardwareState is global and initialized early (pre-existing)
+- Initialize hardwareState.macroModeActive = false at boot
 - MacroManager instantiated in setup() before handlers
-- Both handlers receive MacroManager reference via constructor
+- Both handlers receive BOTH HardwareState and MacroManager references via constructor
+- Handlers read macro state from HardwareState, not MacroManager
+- After macro toggle, handlers sync HardwareState immediately
 - Factory reset selectively clears only macro keys
 - Macro button triggers inactivity timer reset like other inputs
 - All initialization logged for debugging
+
+**Critical Architectural Detail:**
+- HardwareState is the single source of truth for macro mode
+- This makes macro mode visible to all modules (display, other handlers, etc.)
+- No need for MacroManager getters to expose internal state
+- Simpler, more consistent with existing hardware state pattern
 
 **Dependencies:** Requires Stories 11.1, 11.2, and 11.3 (all prior stories complete)
 

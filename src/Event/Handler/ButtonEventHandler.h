@@ -11,6 +11,8 @@
 class ConfigManager;
 class PowerManager;
 class BleKeyboardService;
+class MacroManager;
+struct HardwareState;
 
 using ButtonActionId = uint8_t;
 
@@ -22,8 +24,10 @@ public:
      * @param config ConfigManager instance to read button action configuration
      * @param bleService BLE keyboard service to execute actions
      * @param pm PowerManager instance to reset activity timer
+     * @param hwState HardwareState instance to track macro mode state
+     * @param macroMgr MacroManager instance for macro mode toggle and execution
      */
-    ButtonEventHandler(QueueHandle_t queue, ConfigManager* config, BleKeyboardService* bleService, PowerManager* pm);
+    ButtonEventHandler(QueueHandle_t queue, ConfigManager* config, BleKeyboardService* bleService, PowerManager* pm, HardwareState* hwState, MacroManager* macroMgr);
 
     void start();
 
@@ -41,6 +45,8 @@ private:
     ConfigManager* configManager;
     BleKeyboardService* bleKeyboardService;
     PowerManager* powerManager;
+    HardwareState* hardwareState;
+    MacroManager* macroManager;
 
     // RAM cache for button actions (avoid NVS read latency on every button press)
     // Size automatically syncs with BUTTON_COUNT from button_config.h (compile-time constant)
@@ -60,4 +66,11 @@ private:
      * @param buttonIndex Index of the button (0 to BUTTON_COUNT-1)
      */
     void executeButtonAction(uint8_t buttonIndex);
+
+    /**
+     * @brief Convert button index to MacroInput enum
+     * @param buttonIndex Button index (0-3 for regular buttons)
+     * @return Corresponding MacroInput value
+     */
+    static uint8_t mapButtonIndexToMacroInput(uint8_t buttonIndex);
 };

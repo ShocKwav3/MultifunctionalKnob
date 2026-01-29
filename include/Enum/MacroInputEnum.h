@@ -15,7 +15,7 @@
  * @brief Input sources that can trigger macros
  *
  * Each value maps to a NVS key index: "macro.0" through "macro.6"
- * Total count must match MACRO_INPUT_COUNT from macro_config.h
+ * COUNT value auto-maintains the total number of macro inputs
  */
 enum class MacroInput : uint8_t {
     WHEEL_BUTTON = 0,  // Encoder button press
@@ -24,5 +24,6 @@ enum class MacroInput : uint8_t {
     BUTTON_1 = 3,      // Button 1 press
     BUTTON_2 = 4,      // Button 2 press
     BUTTON_3 = 5,      // Button 3 press
-    BUTTON_4 = 6       // Button 4 press
+    BUTTON_4 = 6,      // Button 4 press
+    COUNT = 7          // Total number of macro inputs (auto-maintained)
 };

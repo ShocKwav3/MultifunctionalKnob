@@ -2,6 +2,7 @@
 #include "Config/log_config.h"
 #include "Config/button_config.h"
 #include "BLE/BleKeyboardService.h"
+#include "Enum/MacroInputEnum.h"
 
 static const char* TAG = "ConfigManager";
 
@@ -164,8 +165,8 @@ ButtonActionId ConfigManager::loadButtonAction(uint8_t index) {
 }
 
 Error ConfigManager::loadMacro(uint8_t index, MacroDefinition& out) {
-    if (index >= MACRO_INPUT_COUNT) {
-        LOG_ERROR(TAG, "Invalid macro index: %d (max: %d)", index, MACRO_INPUT_COUNT - 1);
+    if (index >= static_cast<uint8_t>(MacroInput::COUNT)) {
+        LOG_ERROR(TAG, "Invalid macro index: %d (max: %d)", index, static_cast<uint8_t>(MacroInput::COUNT) - 1);
         return Error::INVALID_PARAM;
     }
 
@@ -192,8 +193,8 @@ Error ConfigManager::loadMacro(uint8_t index, MacroDefinition& out) {
 }
 
 Error ConfigManager::saveMacro(uint8_t index, uint16_t packed) {
-    if (index >= MACRO_INPUT_COUNT) {
-        LOG_ERROR(TAG, "Invalid macro index: %d (max: %d)", index, MACRO_INPUT_COUNT - 1);
+    if (index >= static_cast<uint8_t>(MacroInput::COUNT)) {
+        LOG_ERROR(TAG, "Invalid macro index: %d (max: %d)", index, static_cast<uint8_t>(MacroInput::COUNT) - 1);
         return Error::INVALID_PARAM;
     }
 
