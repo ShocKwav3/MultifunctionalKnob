@@ -33,7 +33,7 @@ Current state requires developer-level intervention for basic configuration chan
 
 ### Proposed Solution
 
-Implement 8 prioritized features that collectively deliver full on-device configurability:
+**Sprint 1:** Implement 8 prioritized features that collectively deliver full on-device configurability:
 
 1. Configurable device name via build flag
 2. Intuitive button naming (Top Left/Right, Bottom Left/Right)
@@ -42,7 +42,15 @@ Implement 8 prioritized features that collectively deliver full on-device config
 5. Bluetooth control from menu (pair, disconnect)
 6. Physical display support with status icons and menu UI
 7. Deep sleep with inactivity warning
-8. LED strip control from menu
+8. LED strip control from menu *(deferred to Epic 14)*
+
+**Sprint 2:** Quality-of-life enhancements for daily usability:
+
+9. Double-press menu exit (instant navigation from any menu level)
+10. Quick mode cycling via macro button (no menu needed)
+11. Configurable sleep timer (1, 5, 10, 30, 60 min, Never)
+12. Configurable display timeout (independent power-saving for OLED)
+13. Live sleep countdown (dynamic MM:SS countdown before sleep)
 
 All configuration changes persist to NVS, enabling true "set once, forget forever" operation.
 
@@ -148,18 +156,28 @@ N/A — No formal KPIs. Success is defined by functional completeness and person
 
 ### Core Features (Priority Order)
 
-All 8 features are in scope for this iteration. Developers should implement in the order listed:
+**Original 8 features (completed or in progress):**
 
-| Priority | Feature | Description |
-|----------|---------|-------------|
-| 1 | Device Name Config | NVS namespace references device name from `device_config.h` |
-| 2 | Button Renaming | Single source of truth for button names (Top Left/Right, Bottom Left/Right) |
-| 3 | Button Poll Investigation | Evaluate whether button polling is necessary vs. event-driven approach like wheel. Outcome may go either way — goal is design validation, not forced change. |
-| 4 | Wheel Direction | Menu option to reverse wheel direction, persisted to NVS |
-| 5 | Bluetooth Menu | Pair and Disconnect options accessible from menu |
-| 6 | Physical Display | 128x32 OLED support with status icons (normal mode) and menu UI (menu mode) |
-| 7 | Deep Sleep | 5-minute inactivity triggers sleep; 1-minute warning on display; wake via wheel button |
-| 8 | LED Strip Control | Full menu control: power, brightness, modes, color — all persisted to NVS |
+| Priority | Feature | Description | Status |
+|----------|---------|-------------|--------|
+| 1 | Device Name Config | NVS namespace references device name from `device_config.h` | ✅ Complete |
+| 2 | Button Renaming | Single source of truth for button names (Top Left/Right, Bottom Left/Right) | ✅ Complete |
+| 3 | Button Poll Investigation | Evaluate whether button polling is necessary vs. event-driven approach like wheel. Outcome may go either way — goal is design validation, not forced change. | ✅ Complete |
+| 4 | Wheel Direction | Menu option to reverse wheel direction, persisted to NVS | ✅ Complete |
+| 5 | Bluetooth Menu | Pair and Disconnect options accessible from menu | ✅ Complete |
+| 6 | Physical Display | 128x32 OLED support with status icons (normal mode) and menu UI (menu mode) | ✅ Complete |
+| 7 | Deep Sleep | Inactivity triggers sleep with countdown warning; wake via wheel button | ✅ Complete (Enhanced in Sprint 2) |
+| 8 | LED Strip Control | Full menu control: power, brightness, modes, color — all persisted to NVS | 🔄 Backlog (Epic 14) |
+
+**New Quality-of-Life Features (Sprint 2):**
+
+| Priority | Feature | Description | Status |
+|----------|---------|-------------|--------|
+| 9 | Double-Press Menu Exit | Quick exit from any menu level via double-press encoder button | 📋 Ready (Epic 12) |
+| 10 | Quick Mode Cycling | Short-press macro button to cycle through wheel modes (Scroll/Volume/Zoom) | 📋 Ready (Epic 12) |
+| 11 | Configurable Sleep Timer | Menu option for sleep duration (1, 5, 10, 30, 60 min, Never) | 📋 Ready (Epic 13) |
+| 12 | Configurable Display Timeout | Menu option for display auto-off (30, 60, 120, 180, 300 sec, Never), independent of sleep | 📋 Ready (Epic 13) |
+| 13 | Live Sleep Countdown | Dynamic countdown display (MM:SS) 60 seconds before sleep | 📋 Ready (Epic 13) |
 
 ### Out of Scope
 
@@ -180,8 +198,15 @@ All 8 features are in scope for this iteration. Developers should implement in t
 
 ### MVP Success Criteria
 
-- All 8 features implemented and working
-- Settings persist via NVS across power cycles
+**Sprint 1 (Original 8 Features):**
+- ✅ Features 1-7 implemented and working
+- 🔄 Feature 8 (LED Control) deferred to Epic 14
+
+**Sprint 2 (Quality-of-Life Enhancements):**
+- 5 new features (9-13) enhance usability and configurability
+- Enhanced power management with independent display/sleep timers
+- Quick navigation and mode switching improve daily workflow
+- All settings persist via NVS across power cycles
 - No regressions in existing functionality
 - Menu system remains intuitive and self-explanatory
 - Code follows existing patterns and `.claude/skills` standards

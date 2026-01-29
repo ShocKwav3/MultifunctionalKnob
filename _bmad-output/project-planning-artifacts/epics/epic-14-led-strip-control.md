@@ -1,5 +1,5 @@
 ---
-epicNumber: 12
+epicNumber: 14
 title: "LED Strip Control"
 complexity: "Medium-High"
 dependencies: None
@@ -7,7 +7,7 @@ frsCovered: "FR23, FR24, FR25, FR26, FR27, FR28"
 stories: 5
 ---
 
-# Epic 12: LED Strip Control
+# Epic 14: LED Strip Control
 
 **Goal:** User can control an external LED strip (power, brightness, mode, color) via the menu.
 

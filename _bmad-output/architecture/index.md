@@ -60,3 +60,13 @@
   - [Implementation Patterns & Consistency Rules](./macro-feature-architecture.md#implementation-patterns--consistency-rules)
   - [Project Structure & Boundaries](./macro-feature-architecture.md#project-structure--boundaries)
   - [Architecture Validation Results](./macro-feature-architecture.md#architecture-validation-results)
+
+- [Power & Display Management](./power-display-management-architecture.md) - *Added 2026-01-29*
+  - [Overview](./power-display-management-architecture.md#overview)
+  - [Architectural Decisions](./power-display-management-architecture.md#architectural-decisions)
+  - [System Architecture](./power-display-management-architecture.md#system-architecture)
+  - [Implementation Patterns](./power-display-management-architecture.md#implementation-patterns)
+  - [NVS Configuration API](./power-display-management-architecture.md#nvs-configuration-api)
+  - [Sleep Countdown Architecture](./power-display-management-architecture.md#sleep-countdown-architecture)
+  - [Integration Points](./power-display-management-architecture.md#integration-points)
+  - [Anti-Patterns to Avoid](./power-display-management-architecture.md#anti-patterns-to-avoid)
