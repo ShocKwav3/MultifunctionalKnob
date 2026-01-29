@@ -27,14 +27,27 @@ development_status:
   11-4-system-integration: ready-for-dev
   epic-11-retrospective: optional
 
-  # Epic 12: LED Strip Control (FR23-FR28)
-  epic-12: in-progress
-  12-1-add-fastled-library-and-led-menu-structure: ready-for-dev
-  12-2-implement-led-power-toggle-with-nvs-persistence: ready-for-dev
-  12-3-implement-wheel-controlled-brightness-with-live-preview: ready-for-dev
-  12-4-implement-led-mode-selection-with-nvs-persistence: ready-for-dev
-  12-5-implement-led-color-selection-with-nvs-persistence: ready-for-dev
+  # Epic 12: Enhanced Input & Navigation (FR-20, FR-21)
+  epic-12: ready-for-dev
+  12-1-double-press-encoder-exit: ready-for-dev
+  12-2-macro-button-mode-cycling: ready-for-dev
   epic-12-retrospective: optional
+
+  # Epic 13: Configurable Power & Display Management (FR-22, FR-23, FR-24)
+  epic-13: ready-for-dev
+  13-1-sleep-timer-configuration: ready-for-dev
+  13-2-display-timeout-configuration: ready-for-dev
+  13-3-sleep-countdown-display: ready-for-dev
+  epic-13-retrospective: optional
+
+  # Epic 14: LED Strip Control (FR23-FR28) - BACKLOG (Deprioritized)
+  epic-14: backlog
+  14-1-add-fastled-library-and-led-menu-structure: backlog
+  14-2-implement-led-power-toggle-with-nvs-persistence: backlog
+  14-3-implement-wheel-controlled-brightness-with-live-preview: backlog
+  14-4-implement-led-mode-selection-with-nvs-persistence: backlog
+  14-5-implement-led-color-selection-with-nvs-persistence: backlog
+  epic-14-retrospective: optional
 
   # Ad-hoc Tasks
   button-action-mapping-refactor: done

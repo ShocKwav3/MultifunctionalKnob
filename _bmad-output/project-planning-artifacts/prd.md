@@ -165,25 +165,32 @@ Later, he forgets the device for 4 minutes. A warning appears: "Sleep in 1 min."
 
 ### Power Management
 
-- FR21: System enters deep sleep after 5 minutes of inactivity
-- FR22: System displays sleep warning 1 minute before sleep
+- FR21: User can configure sleep timer via menu (1, 5, 10, 30, 60 minutes, or Never)
+- FR22: System displays live countdown (MM:SS format) 60 seconds before sleep
 - FR23: User can wake device via wheel button
 - FR24: User input resets inactivity timer
+- FR25: User can configure display timeout via menu (30, 60, 120, 180, 300 seconds, or Never)
+- FR26: Display timeout is independent of sleep timer (display can turn off while device stays awake)
 
 ### LED Strip Control
 
-- FR25: User can toggle LED strip power via menu
-- FR26: User can adjust LED brightness via menu (wheel-controlled)
-- FR27: User can select LED mode via menu
-- FR28: User can select LED color via menu
-- FR29: System persists all LED settings to NVS
+- FR27: User can toggle LED strip power via menu
+- FR28: User can adjust LED brightness via menu (wheel-controlled)
+- FR29: User can select LED mode via menu
+- FR30: User can select LED color via menu
+- FR31: System persists all LED settings to NVS
 
 ### Menu Navigation
 
-- FR30: User can access menu via long-press on wheel button
-- FR31: User can navigate menu items using wheel rotation
-- FR32: User can select menu items using wheel button press
-- FR33: User can return to parent menu or exit menu
+- FR32: User can access menu via long-press on wheel button
+- FR33: User can navigate menu items using wheel rotation
+- FR34: User can select menu items using wheel button press
+- FR35: User can return to parent menu or exit menu
+- FR36: User can double-press encoder button to exit menu from any level
+
+### Quick Controls
+
+- FR37: User can short-press macro button to cycle through wheel modes (Scroll → Volume → Zoom)
 
 ## Non-Functional Requirements
 
