@@ -245,7 +245,7 @@ void setup()
 void loop()
 {
     // All operations now handled by FreeRTOS tasks:
-    // - PowerManager task monitors inactivity (Story 10.1)
+    // - PowerManager task monitors inactivity
     // - EncoderEventHandler task processes encoder events
     // - ButtonEventHandler task processes button events
     // - AppEventHandler task processes app events

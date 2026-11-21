@@ -51,9 +51,9 @@ struct HardwareState;
  *   - Bottom Right (branch)
  *     - None, Mute, Play, Pause, Next, Previous (leaf - SetButtonBehaviorAction)
  * - Bluetooth (branch)
- *   - Pair (leaf - placeholder, Story 8.2)
- *   - Disconnect (leaf - placeholder, Story 8.3)
- * - Display Off (leaf - DisplayPowerAction, Story 9.5)
+ *   - Pair (leaf - PairAction)
+ *   - Disconnect (leaf - DisconnectAction)
+ * - Display Off (leaf - DisplayPowerAction)
  * - Device Status (leaf - ShowStatusAction)
  * - About (leaf - ShowAboutAction)
  */
@@ -104,8 +104,8 @@ inline constexpr uint8_t BUTTON_BEHAVIOR_COUNT = BUTTON_ACTION_COUNT;
 
 // Bluetooth submenu items (leaf nodes with actions set at runtime - Stories 8.2 and 8.3)
 inline MenuItem bluetoothSubmenu[] = {
-    { "Pair",       nullptr, nullptr, 0, nullptr, nullptr },  // Action filled in Story 8.2
-    { "Disconnect", nullptr, nullptr, 0, nullptr, nullptr }   // Action filled in Story 8.3
+    { "Pair",       nullptr, nullptr, 0, nullptr, nullptr },
+    { "Disconnect", nullptr, nullptr, 0, nullptr, nullptr }
 };
 
 inline constexpr uint8_t BLUETOOTH_SUBMENU_COUNT = 2;
@@ -344,8 +344,8 @@ inline void initBluetoothActions(BleKeyboard* bleKeyboard, QueueHandle_t display
     static DisconnectAction disconnectAction(bleKeyboard, displayQueue);
 
     // Assign to Bluetooth submenu items
-    bluetoothSubmenu[0].action = &pairAction;       // "Pair" (Story 8.2)
-    bluetoothSubmenu[1].action = &disconnectAction; // "Disconnect" (Story 8.3)
+    bluetoothSubmenu[0].action = &pairAction;
+    bluetoothSubmenu[1].action = &disconnectAction;
 }
 
 /**
