@@ -102,7 +102,7 @@ inline MenuItem buttonBehaviorItems[BUTTON_ACTION_COUNT];
 
 inline constexpr uint8_t BUTTON_BEHAVIOR_COUNT = BUTTON_ACTION_COUNT;
 
-// Bluetooth submenu items (leaf nodes with actions set at runtime - Stories 8.2 and 8.3)
+// Bluetooth submenu items (leaf nodes with actions set at runtime)
 inline MenuItem bluetoothSubmenu[] = {
     { "Pair",       nullptr, nullptr, 0, nullptr, nullptr },
     { "Disconnect", nullptr, nullptr, 0, nullptr, nullptr }
