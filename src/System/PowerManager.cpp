@@ -126,11 +126,6 @@ void PowerManager::updateActivityState() {
 
     currentState = newState;
 
-    // Recovery mechanism: enforce visual state consistency
-    // Check if display state is out of sync with power state and needs correction
-    bool displayStateOutOfSync = (newState == PowerState::WARNING && !warningDisplayed) ||
-                                   (newState != PowerState::WARNING && warningDisplayed);
-
     // Determine what actions are needed based on committed state and sync status
     bool isTransitionToWarning = (newState == PowerState::WARNING && newState != previousState);
     bool needShowWarning = (newState == PowerState::WARNING && !warningDisplayed);  // Show on transition OR retry if failed
