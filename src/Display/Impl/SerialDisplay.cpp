@@ -58,3 +58,8 @@ void SerialDisplay::drawNormalMode(const HardwareState& hwState) {
     Serial.println(hwState.bleState.isPairingMode ? "Yes" : "No");
     Serial.println("=========================");
 }
+
+void SerialDisplay::setPower(bool on) {
+    hardwareState.displayPower = on;
+    LOG_INFO(TAG, "Display %s", on ? "ON" : "OFF");
+}

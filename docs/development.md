@@ -31,10 +31,9 @@ Reference: [Install Shell Commands](https://docs.platformio.org/en/latest/core/i
 | Environment | BLE stack | Display | Use |
 | --- | --- | --- | --- |
 | `use_nimble` | NimBLE | OLED | Default build |
-| `use_stdble` | Standard ESP32 BLE | OLED | Alternative stack |
 | `use_nimble_debug` | NimBLE | Serial | Debug build, JTAG |
-| `use_stdble_debug` | Standard ESP32 BLE | Serial | Debug build, JTAG |
 
+- The ESP32-C3 build of the Arduino core uses NimBLE only, so every environment sets `USE_NIMBLE`. The `debug` section is a base for `use_nimble_debug`. It does not build alone.
 - `USE_OLED_DISPLAY` selects the OLED. Without it, the firmware writes the display output to the serial port.
 - `LOG_LEVEL` sets the log level: 0 none, 1 error, 2 info (default), 3 debug. Add `-D LOG_LEVEL=3` to `build_flags` for debug logs.
 

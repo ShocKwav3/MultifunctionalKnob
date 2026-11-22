@@ -9,12 +9,12 @@ EncoderModeManager::EncoderModeManager(
     QueueHandle_t displayQueue,
     HardwareState* hwState
 )
-    : encoderEventHandler(encoderEventHandler),
+    : currentMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL),
+      previousMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL),
       encoderModeSelector(encoderModeSelector),
+      encoderEventHandler(encoderEventHandler),
       displayQueue(displayQueue),
-      hardwareState(hwState),
-      currentMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL),
-      previousMode(EventEnum::EncoderModeEventTypes::ENCODER_MODE_SCROLL) {}
+      hardwareState(hwState) {}
 
 void EncoderModeManager::registerHandler(EventEnum::EncoderModeEventTypes mode, EncoderModeHandlerInterface* handler) {
     if (static_cast<int>(mode) >= static_cast<int>(EventEnum::EncoderModeEventTypes::__ENCODER_MODE_SELECTION_LIMIT)) return;

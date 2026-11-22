@@ -19,6 +19,7 @@ public:
     void showStatus(const char* key, const char* value) override;
     void clear() override;
     void drawNormalMode(const HardwareState& hwState) override;
+    void setPower(bool on) override;
 
 private:
     static constexpr const char* TAG = "SerialDisplay";
